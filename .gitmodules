@@ -1,0 +1,3 @@
+[submodule "T4Loader"]
+	path = T4Loader
+	url = https://github.com/TurokMods/T4Loader.git
