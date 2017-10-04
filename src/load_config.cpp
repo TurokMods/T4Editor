@@ -36,12 +36,12 @@ namespace t4editor {
             if(q0 != q1) {
                 variable_value = line.substr(q0 + 1,(q1 - q0) - 1);
             } else {
-                size_t last_space = first_space;
+                size_t last_space = first_space + 1;
                 while(last_space < line.length()) {
-                    if(line[last_space] != ' ') break;
+                    if(line[last_space] == ' ') break;
                     last_space++;
                 }
-                variable_value = line.substr(last_space + 2, line.length() - last_space);
+                variable_value = line.substr(first_space + 1, last_space - first_space);
             }
             //printf("%s: %s\n", variable_name.c_str(), variable_value.c_str());
             handle_config_var(variable_name,variable_value);
