@@ -2,6 +2,8 @@
 #include <vector>
 using namespace std;
 
+#include <window.h>
+
 namespace t4editor {
     class application {
         public:
@@ -14,7 +16,10 @@ namespace t4editor {
             int run();
 
         protected:
+            window* m_window;
             vector <string> m_args;
             string m_dataPath;
+            int m_windowWidth;
+            int m_windowHeight;
     };
 }
