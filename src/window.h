@@ -8,6 +8,7 @@ namespace t4editor {
             ~window();
 
             bool isOpen() const;
+            void beginFrame();
             void endFrame();
             void poll();
             
