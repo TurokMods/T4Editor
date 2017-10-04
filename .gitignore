@@ -30,3 +30,7 @@
 *.exe
 *.out
 *.app
+
+
+# Mac ignores
+*.DS_Store
