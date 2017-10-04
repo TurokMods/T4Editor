@@ -1,5 +1,6 @@
 #include <app.h>
 #include <stdio.h>
+#include <stdlib.h>
 
 namespace t4editor {
     application::application(int argc, const char* argv[]) {
@@ -24,8 +25,15 @@ namespace t4editor {
         if(!load_config()) return -1;
         m_window = new window(m_windowWidth, m_windowHeight);
         if(!m_window->isOpen()) {
-            delete m_window;
             return -1;
+        }
+        
+        while(m_window->isOpen()) {
+            glClearColor(0, 0, 0, 1.0);
+            glClear(GL_COLOR_BUFFER_BIT);
+            m_window->poll();
+            
+            m_window->endFrame();
         }
 
         printf("Using '%s' as data directory\n", m_dataPath.c_str());

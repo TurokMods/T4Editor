@@ -8,6 +8,9 @@ namespace t4editor {
             ~window();
 
             bool isOpen() const;
+            void endFrame();
+            void poll();
+            
         protected:
             GLFWwindow* m_window;
     };
