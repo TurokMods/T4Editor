@@ -18,7 +18,7 @@ void logShaderError(GLuint ShaderID) {
         char errorLog[maxLength];
         glGetShaderInfoLog(ShaderID, maxLength, &maxLength, &errorLog[0]);
         glDeleteShader(ShaderID);
-        printf("%s", errorLog);
+        printf("%s\n", errorLog);
     }
 }
 
@@ -143,6 +143,8 @@ namespace t4editor {
         for(int i = 0; i < ActorDefs.size(); i++) {
             ActorMesh* m = ActorDefs[i]->GetMesh();
         }
+        
+        printf("Found %d actor definitions (meshes?)\n", ActorDefs.size());
         
         return;
     }
