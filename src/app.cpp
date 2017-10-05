@@ -32,6 +32,7 @@ namespace t4editor {
         m_window = 0;
         m_fs = 0;
     }
+    
     application::~application() {
         if(m_window) delete m_window;
         if(m_fs) delete m_fs;
@@ -126,14 +127,26 @@ namespace t4editor {
         }
         m_window->onEvent(e);
     }
+    
     void application::load_level(const string &path) {
         ATRFile* atr = new ATRFile();
-        atr->Load(path);
+        if(!atr->Load(path)) {
+            delete atr;
+            return;
+        }
         
-        Actor* act = atr->GetActors()->GetActorDef(0)->Actor->GetActor();
+        opent4::ATIFile* ATI = atr->GetActors();
+        std::vector<opent4::Actor*> ActorDefs;
+        ActorDefs.push_back(atr->GetActor());
+        for(int i = 0; i < ATI->GetActorCount(); i++) ActorDefs.push_back(ATI->GetActorDef(i)->Actor->GetActor());
+        
+        for(int i = 0; i < ActorDefs.size(); i++) {
+            ActorMesh* m = ActorDefs[i]->GetMesh();
+        }
         
         return;
     }
+    
     int application::run() {
         while(m_window->isOpen()) {
             m_window->poll();
