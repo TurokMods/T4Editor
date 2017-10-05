@@ -6,7 +6,13 @@
 #include <app.h>
 
 namespace t4editor {
+    void window_size_callback(GLFWwindow* window, int width, int height) {
+        app_resize_event e(width, height, window);
+        application* app = (application*)glfwGetWindowUserPointer(window);
+        app->onEvent(&e);
+    }
     window::window(application* app, int w, int h) {
+        m_app = app;
         if(!glfwInit()) {
             printf("Failed to initialize GLFW\n");
         }
@@ -23,6 +29,8 @@ namespace t4editor {
             m_window = 0;
         } else {
             glfwMakeContextCurrent(m_window);
+            glfwSetWindowUserPointer(m_window,m_app);
+            glfwSetWindowSizeCallback(m_window,window_size_callback);
             
             glewExperimental = GL_TRUE;
             if (glewInit() != GLEW_OK) {
@@ -47,19 +55,11 @@ namespace t4editor {
         }
     }
     
-    void window::add_panel(ui_panel *panel) {
-        m_panels.push_back(panel);
-    }
-    
-    void window::remove_panel(ui_panel *panel) {
-        for(auto i = m_panels.begin();i != m_panels.end();i++) {
-            if((*i) == panel) {
-                m_panels.erase(i);
-                return;
-            }
+    void window::onEvent(event *e) {
+        if(e->name == "shutdown") {
+            glfwSetWindowShouldClose(m_window,true);
         }
     }
-
     bool window::isOpen() const {
         if(!m_window) return false;
         return !glfwWindowShouldClose(m_window);
@@ -67,16 +67,16 @@ namespace t4editor {
     void window::beginFrame() {
         ImGui_ImplGlfwGL3_NewFrame();
     }
-    void window::endFrame() {
-        //render ImGui windows
-        for(auto i = m_panels.begin();i != m_panels.end();i++) {
-            (*i)->render();
-        }
-        
+    void window::endFrame() {        
         ImGui::Render();
         glfwSwapBuffers(m_window);
     }
     void window::poll() {
         glfwPollEvents();
+    }
+    vec2 window::getSize() const {
+        int x, y;
+        glfwGetWindowSize(m_window, &x, &y);
+        return vec2(x, y);
     }
 }

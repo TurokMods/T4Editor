@@ -11,6 +11,13 @@ class test_panel : public ui_panel {
         virtual ~test_panel() {
         }
     
+        virtual void onAttach(ui_panel* toPanel) {
+            printf("Panel attached to something\n");
+        }
+        virtual void onEvent(event* e) {
+            printf("Event: %s\n", e->name.c_str());
+        }
+    
     protected:
         virtual void renderContent() {
             ImGui::Text("Testy testola");
@@ -38,10 +45,14 @@ int main(int argc,const char* argv[]) {
         inner_panel->setPosition(vec2(0.0f, 0.0f));
         panel->add_panel(inner_panel);
         
-        app.getWindow()->add_panel(panel);
-        int ret = app.run();
-        app.getWindow()->remove_panel(panel);
+        app.add_panel(panel);
         
+        int ret = app.run();
+        
+        app.remove_panel(panel);
+        panel->remove_panel(inner_panel);
+        
+        delete inner_panel;
         delete panel;
         return ret;
     }

@@ -6,14 +6,20 @@ using namespace glm;
 #include <vector>
 using namespace std;
 
+#include <event.h>
+
 namespace t4editor {
-    class ui_panel {
+    class application;
+    class ui_panel : public event_receiver {
         public:
             ui_panel();
             virtual ~ui_panel();
         
             void add_panel(ui_panel* panel);
             void remove_panel(ui_panel* panel);
+        
+            // note: toPanel will only be set if the panel is added to another panel, not if it's added to the root through t4editor::application
+            virtual void onAttach(ui_panel* toPanel) { }
         
             void setName(const string& name) { m_name = name; }
             string name() const { return m_name; }
@@ -22,6 +28,7 @@ namespace t4editor {
             void setPosition(const vec2& pos) { m_initPos = pos; m_posUpdated = true; }
             vec2 getPosition() const { return m_curPos; }
             void setOpacity(f32 opacity) { m_bgAlpha = opacity; }
+            void setFlagsManually(int flag) { m_manualFlags = flag; }
         
             //flags
             void setCanResize(bool flag) { m_canResize = flag; }
@@ -38,6 +45,7 @@ namespace t4editor {
         
         protected:
             virtual void renderContent() = 0;
+            friend class application;
             vector<ui_panel*> m_panels;
             string m_name;
             bool m_isOpen;
@@ -57,6 +65,9 @@ namespace t4editor {
             bool m_hasTitleBar;
             bool m_canClose;
             bool m_canCollapse;
+            int m_manualFlags;
+        
             ui_panel* m_parent;
+            application* m_app;
     };
 }

@@ -1,5 +1,6 @@
 #include <gui/panel.h>
 #include <imgui.h>
+#include <app.h>
 
  namespace t4editor {
     ui_panel::ui_panel() {
@@ -14,6 +15,7 @@
         m_canClose = true;
         m_shouldBeClosed = false;
         m_parent = nullptr;
+        m_app = nullptr;
     }
     ui_panel::~ui_panel() {
     }
@@ -21,7 +23,10 @@
     void ui_panel::add_panel(ui_panel *panel) {
         m_panels.push_back(panel);
         panel->m_parent = this;
+        panel->m_app = m_app;
+        panel->onAttach(this);
     }
+    
     void ui_panel::remove_panel(ui_panel *panel) {
         for(auto i = m_panels.begin();i != m_panels.end();i++) {
             if((*i) == panel) {
@@ -39,6 +44,8 @@
             if(!m_canMove) f |= ImGuiWindowFlags_NoMove;
             if(!m_hasTitleBar) f |= ImGuiWindowFlags_NoTitleBar;
             if(!m_canCollapse) f |= ImGuiWindowFlags_NoCollapse;
+            
+            if(m_manualFlags != 0) f = m_manualFlags;
         
             if(!m_parent) ImGui::Begin(m_name.c_str(), m_canClose ? &m_isOpen : nullptr, ImVec2(m_initSize.x, m_initSize.y), m_bgAlpha, f);
             else ImGui::BeginChild(m_name.c_str(), ImVec2(m_initSize.x, m_initSize.y), f);

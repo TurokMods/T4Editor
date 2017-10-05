@@ -1,28 +1,34 @@
 #pragma once
+#include <glm/glm.hpp>
+using namespace glm;
+
 #include <vector>
 using namespace std;
 
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
 
+#include <event.h>
+
 namespace t4editor {
     class ui_panel;
     class application;
-    class window {
+    class window : public event_receiver {
         public:
             window(application* app, int width, int height);
             ~window();
         
-            void add_panel(ui_panel* panel);
-            void remove_panel(ui_panel* panel);
+            virtual void onEvent(event* e);
 
             bool isOpen() const;
             void beginFrame();
             void endFrame();
             void poll();
+        
+            vec2 getSize() const;
             
         protected:
-            vector<ui_panel*> m_panels;
             GLFWwindow* m_window;
+            application* m_app;
     };
 }
