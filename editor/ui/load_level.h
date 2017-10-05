@@ -35,7 +35,9 @@ namespace t4editor {
                         string name = (*i)->name();
                         string path = (*i)->path();
                         if(Selectable(name.c_str())) {
-                            printf("Loading %s\n", path.c_str());
+                            load_level_event e(path);
+                            m_app->onEvent(&e);
+                            close();
                         }
                         SameLine(200);
                         Text("%s", path.c_str());

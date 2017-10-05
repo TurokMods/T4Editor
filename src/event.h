@@ -38,4 +38,14 @@ namespace t4editor {
             int new_height;
             GLFWwindow* window;
     };
+    
+    class load_level_event : public event {
+        public:
+            load_level_event(const string& _path) : event("load_level") {
+                path = _path;
+            }
+            ~load_level_event() { }
+        
+            string path;
+    };
 }
