@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.9)
+cmake_minimum_required(VERSION 3.8)
 project(t4editor)
 
 find_package(glfw3 REQUIRED)
@@ -31,12 +31,18 @@ source_group(src\\turokfs FILES ${turokfs_src})
 source_group(src\\gui FILES ${gui_src})
 source_group(deps\\imgui FILES ${imgui_src})
 
+<<<<<<< HEAD
 add_executable(editor ${editor_src} ${turokfs_src} ${gui_src} ${imgui_src})
+=======
+include_directories(SYSTEM ${GLEWDIR}/include ${GLMDIR}/include)
+
+add_executable(editor ${editor_src} ${turokfs_src} ${imgui_src})
+>>>>>>> 62ed70ab6ac2f10b5e6cc089c9dabfc2433c9295
 target_link_libraries(editor t4 glfw Glew Bearclaw2)
 
 set(INCLUDE_DIRS ${CMAKE_CURRENT_SOURCE_DIR}/src)
-set(INCLUDE_DIRS ${INCLUDE_DIRS} ${CMAKE_CURRENT_SOURCE_DIR}/Bearclaw2/dependencies/glew)
-set(INCLUDE_DIRS ${INCLUDE_DIRS} ${CMAKE_CURRENT_SOURCE_DIR}/Bearclaw2/dependencies/glm)
+set(INCLUDE_DIRS ${INCLUDE_DIRS} ${CMAKE_CURRENT_SOURCE_DIR}/Bearclaw2/dependencies/glew/include)
+set(INCLUDE_DIRS ${INCLUDE_DIRS} ${CMAKE_CURRENT_SOURCE_DIR}/Bearclaw2/dependencies/glm/include)
 set(INCLUDE_DIRS ${INCLUDE_DIRS} ${CMAKE_CURRENT_SOURCE_DIR}/Bearclaw2/src)
 set(INCLUDE_DIRS ${INCLUDE_DIRS} ${OPENGL_INCLUDE_DIR})
 set(INCLUDE_DIRS ${INCLUDE_DIRS} ${CMAKE_CURRENT_SOURCE_DIR}/deps/imgui)
