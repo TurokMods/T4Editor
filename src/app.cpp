@@ -20,7 +20,7 @@ namespace t4editor {
     
     bool application::initialize() {
         if(!load_config()) return false;
-        m_window = new window(m_windowWidth, m_windowHeight);
+        m_window = new window(this, m_windowWidth, m_windowHeight);
         if(!m_window->isOpen()) {
             return false;
         }
@@ -29,9 +29,13 @@ namespace t4editor {
         return true;
     }
     void application::handle_config_var(const string &name, const string &value) {
-        if(name == "data_path") {
+        if(name == "game_data_path") {
             m_dataPath = value;
-            printf("Using '%s' as data directory\n", m_dataPath.c_str());
+            printf("Using '%s' as game data directory\n", m_dataPath.c_str());
+        }
+        else if(name == "editor_data_path") {
+            m_editorDataPath = value;
+            printf("Using %s as editor data directory\n", m_editorDataPath.c_str());
         }
         else if(name == "res_x") m_windowWidth = atoi(value.c_str());
         else if(name == "res_y") m_windowHeight = atoi(value.c_str());
@@ -42,7 +46,7 @@ namespace t4editor {
             m_window->poll();
             
             m_window->beginFrame();
-            glClearColor(0, 0, 0, 1.0);
+            glClearColor(0.5f, 0.5f, 0.5f, 1.0f);
             glClear(GL_COLOR_BUFFER_BIT);
             
             m_window->endFrame();

@@ -3,9 +3,10 @@
 #include <imgui.h>
 #include <gui/imgui_setup.h>
 #include <gui/panel.h>
+#include <app.h>
 
 namespace t4editor {
-    window::window(int w, int h) {
+    window::window(application* app, int w, int h) {
         if(!glfwInit()) {
             printf("Failed to initialize GLFW\n");
         }
@@ -36,7 +37,7 @@ namespace t4editor {
             printf("Vendor: %s\n", glGetString(GL_VENDOR));
             printf("Renderer: %s\n", glGetString(GL_RENDERER));
             
-            ImGui_ImplGlfwGL3_Init(m_window, true);
+            ImGui_ImplGlfwGL3_Init(m_window, true, app->editorDataPath());
         }
     }
     window::~window() {

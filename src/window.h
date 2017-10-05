@@ -1,3 +1,4 @@
+#pragma once
 #include <vector>
 using namespace std;
 
@@ -6,9 +7,10 @@ using namespace std;
 
 namespace t4editor {
     class ui_panel;
+    class application;
     class window {
         public:
-            window(int width, int height);
+            window(application* app, int width, int height);
             ~window();
         
             void add_panel(ui_panel* panel);

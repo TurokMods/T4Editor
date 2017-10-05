@@ -18,6 +18,8 @@ namespace t4editor {
             void handle_config_var(const string& name, const string& value);
         
             window* getWindow() const { return m_window; }
+            string gameDataPath() const { return m_dataPath; }
+            string editorDataPath() const { return m_editorDataPath; }
 
             int run();
 
@@ -27,6 +29,7 @@ namespace t4editor {
         
             vector <string> m_args;
             string m_dataPath;
+            string m_editorDataPath;
             int m_windowWidth;
             int m_windowHeight;
     };
