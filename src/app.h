@@ -7,6 +7,8 @@ using namespace std;
 
 #include <turokfs/fs.h>
 #include <turokfs/entry.h>
+#include <turokfs/level.h>
+#include <turokfs/actor.h>
 
 #include <OpenGL/gl.h>
 
@@ -46,6 +48,8 @@ namespace t4editor {
             int m_windowHeight;
             
             vector<ui_panel*> m_panels;
+        
+            level* m_level;
         
             GLuint VertexArrayID;
             GLuint VertexBufferID;

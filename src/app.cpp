@@ -3,8 +3,6 @@
 #include <stdlib.h>
 #include <imgui.h>
 #include <gui/panel.h>
-#include <Turok4.h>
-using namespace opent4;
 
 #include <cassert>
 
@@ -31,6 +29,7 @@ namespace t4editor {
         m_windowHeight = 900;
         m_window = 0;
         m_fs = 0;
+        m_level = 0;
     }
     application::~application() {
         if(m_window) delete m_window;
@@ -66,7 +65,9 @@ namespace t4editor {
         const char* VertexSource = "\
         #version 150 core\
         in vec3 position;\
-        void main() { gl_Position = vec4(position, 1.0); }";
+        in vec3 normal;\
+        in vec2 texc;\
+        void main() { gl_Position = vec4(position * 0.2, 1.0); }";
         
         glShaderSource(VertexID, 1, &VertexSource, NULL);
         glCompileShader(VertexID);
@@ -85,6 +86,10 @@ namespace t4editor {
         glAttachShader(ShaderID, FragmentID);
         glLinkProgram(ShaderID);
         
+        glBindAttribLocation(ShaderID, 0, "position");
+        glBindAttribLocation(ShaderID, 1, "normal");
+        glBindAttribLocation(ShaderID, 2, "texc");
+        
         return true;
     }
     
@@ -102,7 +107,6 @@ namespace t4editor {
         else if(name == "res_y") m_windowHeight = atoi(value.c_str());
     }
 
-    
     void application::add_panel(ui_panel *panel) {
         m_panels.push_back(panel);
         panel->m_app = this;
@@ -126,14 +130,18 @@ namespace t4editor {
         }
         m_window->onEvent(e);
     }
+    
     void application::load_level(const string &path) {
-        ATRFile* atr = new ATRFile();
-        atr->Load(path);
+        m_level = new level();
         
-        Actor* act = atr->GetActors()->GetActorDef(0)->Actor->GetActor();
+        if(!m_level->load(path)) {
+            delete m_level;
+            m_level = 0;
+        }
         
         return;
     }
+    
     int application::run() {
         while(m_window->isOpen()) {
             m_window->poll();
@@ -142,13 +150,20 @@ namespace t4editor {
             glClearColor(0.5f, 0.5f, 0.5f, 1.0f);
             glClear(GL_COLOR_BUFFER_BIT);
             
-            //render test triangle
             glUseProgram(ShaderID);
-            glEnableVertexAttribArray(0);
-            glBindBuffer(GL_ARRAY_BUFFER, VertexBufferID);
-            glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, (void*)0);
-            glDrawArrays(GL_TRIANGLES, 0, 3);
-            glDisableVertexAttribArray(0);
+            
+            if(m_level) {
+                vector<actor*> actors = m_level->actors();
+                for(int i = 0;i < actors.size();i++) {
+                    actor* a = actors[i];
+                    if(a->meshes.size() > 0) {
+                        for(int j = 0;j < a->meshes.size();j++) {
+                            actor_mesh* m = a->meshes[j];
+                            m->render();
+                        }
+                    }
+                }
+            }
             
             //render ImGui windows
             for(auto i = m_panels.begin();i != m_panels.end();i++) {

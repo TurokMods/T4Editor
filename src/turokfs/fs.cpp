@@ -11,9 +11,9 @@ namespace t4editor {
         
         printf("Filesystem initialized. Parsing game assets...\n");
         
-        recursiveParseLevels("levels");
+        recursiveParseLevels("data/levels");
         if(m_levels.size() > 0) printf("Found %lu levels\n", m_levels.size());
-        recursiveParseActors("actors");
+        recursiveParseActors("data/actors");
         if(m_actors.size() > 0) printf("Found %lu actors\n", m_actors.size());
     }
     
