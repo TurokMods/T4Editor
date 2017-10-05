@@ -11,9 +11,13 @@ namespace t4editor {
         public:
             application(int argc,const char* argv[]);
             ~application();
+        
+            bool initialize();
 
             bool load_config();
             void handle_config_var(const string& name, const string& value);
+        
+            window* getWindow() const { return m_window; }
 
             int run();
 

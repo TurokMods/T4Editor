@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include <imgui.h>
 #include <gui/imgui_setup.h>
+#include <gui/panel.h>
 
 namespace t4editor {
     window::window(int w, int h) {
@@ -44,6 +45,19 @@ namespace t4editor {
             ImGui_ImplGlfwGL3_Shutdown();
         }
     }
+    
+    void window::add_panel(ui_panel *panel) {
+        m_panels.push_back(panel);
+    }
+    
+    void window::remove_panel(ui_panel *panel) {
+        for(auto i = m_panels.begin();i != m_panels.end();i++) {
+            if((*i) == panel) {
+                m_panels.erase(i);
+                return;
+            }
+        }
+    }
 
     bool window::isOpen() const {
         if(!m_window) return false;
@@ -53,6 +67,12 @@ namespace t4editor {
         ImGui_ImplGlfwGL3_NewFrame();
     }
     void window::endFrame() {
+        //render ImGui windows
+        for(auto i = m_panels.begin();i != m_panels.end();i++) {
+            (*i)->render();
+        }
+        
+        ImGui::Render();
         glfwSwapBuffers(m_window);
     }
     void window::poll() {
