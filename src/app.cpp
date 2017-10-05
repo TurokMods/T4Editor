@@ -4,6 +4,22 @@
 #include <imgui.h>
 #include <gui/panel.h>
 
+#include <cassert>
+
+void logShaderError(GLuint ShaderID) {
+    GLint status = 0;
+    glGetShaderiv(ShaderID, GL_COMPILE_STATUS, &status);
+    if(status == GL_FALSE) {
+        GLint maxLength = 0;
+        glGetShaderiv(ShaderID, GL_INFO_LOG_LENGTH, &maxLength);
+        
+        char errorLog[maxLength];
+        glGetShaderInfoLog(ShaderID, maxLength, &maxLength, &errorLog[0]);
+        glDeleteShader(ShaderID);
+        printf("%s", errorLog);
+    }
+}
+
 namespace t4editor {
     application::application(int argc, const char* argv[]) {
         for(int i = 0;i < argc;i++) {
@@ -32,15 +48,40 @@ namespace t4editor {
         glGenVertexArrays(1, &VertexArrayID);
         glBindVertexArray(VertexArrayID);
         
-        static const GLfloat vertex_buffer_data[] = {
-            -1.0f, -1.0f, 0.0f,
-            1.0f, -1.0f, 0.0f,
-            0.0f, 1.0f, 0.0f,
+        static const GLfloat vertices[] = {
+            -0.5f, -0.5f, 0.0f,
+            0.5f, -0.5f, 0.0f,
+            0.0f, 0.5f, 0.0f,
         };
         
-        glGenBuffers(1, &vertexbuffer);
-        glBindBuffer(GL_ARRAY_BUFFER, vertexbuffer);
-        glBufferData(GL_ARRAY_BUFFER, sizeof(vertex_buffer_data), vertex_buffer_data, GL_STATIC_DRAW);
+        glGenBuffers(1, &VertexBufferID);
+        glBindBuffer(GL_ARRAY_BUFFER, VertexBufferID);
+        glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
+        
+        GLuint VertexID = glCreateShader(GL_VERTEX_SHADER);
+        GLuint FragmentID = glCreateShader(GL_FRAGMENT_SHADER);
+        
+        const char* VertexSource = "\
+        #version 150 core\
+        in vec3 position;\
+        void main() { gl_Position = vec4(position, 1.0); }";
+        
+        glShaderSource(VertexID, 1, &VertexSource, NULL);
+        glCompileShader(VertexID);
+        logShaderError(VertexID);
+        
+        const char* FragmentSource = "\
+        #version 150 core\
+        out vec4 outcolor;\
+        void main() { outcolor = vec4(0, 1, 1, 1); }";
+        glShaderSource(FragmentID, 1, &FragmentSource, NULL);
+        glCompileShader(FragmentID);
+        logShaderError(FragmentID);
+        
+        ShaderID = glCreateProgram();
+        glAttachShader(ShaderID, VertexID);
+        glAttachShader(ShaderID, FragmentID);
+        glLinkProgram(ShaderID);
         
         return true;
     }
@@ -91,8 +132,9 @@ namespace t4editor {
             glClear(GL_COLOR_BUFFER_BIT);
             
             //render test triangle
+            glUseProgram(ShaderID);
             glEnableVertexAttribArray(0);
-            glBindBuffer(GL_ARRAY_BUFFER, vertexbuffer);
+            glBindBuffer(GL_ARRAY_BUFFER, VertexBufferID);
             glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, (void*)0);
             glDrawArrays(GL_TRIANGLES, 0, 3);
             glDisableVertexAttribArray(0);
