@@ -6,19 +6,7 @@
 
 #include <cassert>
 
-void logShaderError(GLuint ShaderID) {
-    GLint status = 0;
-    glGetShaderiv(ShaderID, GL_COMPILE_STATUS, &status);
-    if(status == GL_FALSE) {
-        GLint maxLength = 0;
-        glGetShaderiv(ShaderID, GL_INFO_LOG_LENGTH, &maxLength);
-        
-        char errorLog[maxLength];
-        glGetShaderInfoLog(ShaderID, maxLength, &maxLength, &errorLog[0]);
-        glDeleteShader(ShaderID);
-        printf("%s", errorLog);
-    }
-}
+
 
 namespace t4editor {
     application::application(int argc, const char* argv[]) {
@@ -45,50 +33,11 @@ namespace t4editor {
         
         m_fs = new turokfs(m_dataPath);
         
-        // Setup test openGL triangle
-        glGenVertexArrays(1, &VertexArrayID);
-        glBindVertexArray(VertexArrayID);
-        
-        static const GLfloat vertices[] = {
-            -0.5f, -0.5f, 0.0f,
-            0.5f, -0.5f, 0.0f,
-            0.0f, 0.5f, 0.0f,
-        };
-        
-        glGenBuffers(1, &VertexBufferID);
-        glBindBuffer(GL_ARRAY_BUFFER, VertexBufferID);
-        glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
-        
-        GLuint VertexID = glCreateShader(GL_VERTEX_SHADER);
-        GLuint FragmentID = glCreateShader(GL_FRAGMENT_SHADER);
-        
-        const char* VertexSource = "\
-        #version 150 core\
-        in vec3 position;\
-        in vec3 normal;\
-        in vec2 texc;\
-        void main() { gl_Position = vec4(position * 0.2, 1.0); }";
-        
-        glShaderSource(VertexID, 1, &VertexSource, NULL);
-        glCompileShader(VertexID);
-        logShaderError(VertexID);
-        
-        const char* FragmentSource = "\
-        #version 150 core\
-        out vec4 outcolor;\
-        void main() { outcolor = vec4(0, 1, 1, 1); }";
-        glShaderSource(FragmentID, 1, &FragmentSource, NULL);
-        glCompileShader(FragmentID);
-        logShaderError(FragmentID);
-        
-        ShaderID = glCreateProgram();
-        glAttachShader(ShaderID, VertexID);
-        glAttachShader(ShaderID, FragmentID);
-        glLinkProgram(ShaderID);
-        
-        glBindAttribLocation(ShaderID, 0, "position");
-        glBindAttribLocation(ShaderID, 1, "normal");
-        glBindAttribLocation(ShaderID, 2, "texc");
+        m_shader = new shader(this);
+        m_shader->loadFromFile("shaders/simple.vsh", "shaders/simple.fsh");
+        m_shader->attribute("position", 0);
+        m_shader->attribute("normal", 1);
+        m_shader->attribute("texc", 2);
         
         return true;
     }
@@ -150,7 +99,7 @@ namespace t4editor {
             glClearColor(0.5f, 0.5f, 0.5f, 1.0f);
             glClear(GL_COLOR_BUFFER_BIT);
             
-            glUseProgram(ShaderID);
+            m_shader->bind();
             
             if(m_level) {
                 vector<actor*> actors = m_level->actors();

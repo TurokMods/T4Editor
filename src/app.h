@@ -9,6 +9,7 @@ using namespace std;
 #include <turokfs/entry.h>
 #include <turokfs/level.h>
 #include <turokfs/actor.h>
+#include <render/shader.h>
 
 #include <OpenGL/gl.h>
 
@@ -50,9 +51,6 @@ namespace t4editor {
             vector<ui_panel*> m_panels;
         
             level* m_level;
-        
-            GLuint VertexArrayID;
-            GLuint VertexBufferID;
-            GLuint ShaderID;
+            shader* m_shader;
     };
 }
