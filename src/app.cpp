@@ -117,12 +117,16 @@ namespace t4editor {
     }
     
     void application::onEvent(event *e) {
+        if(e->name == "load_level") {
+        }
         for(auto i = m_panels.begin();i != m_panels.end();i++) {
             (*i)->onEvent(e);
         }
         m_window->onEvent(e);
     }
-    
+    void application::load_level(const string &path) {
+        
+    }
     int application::run() {
         while(m_window->isOpen()) {
             m_window->poll();

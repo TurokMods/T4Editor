@@ -32,6 +32,7 @@ namespace t4editor {
             string editorDataPath() const { return m_editorDataPath; }
             turokfs* getTurokData() const { return m_fs; }
 
+            void load_level(const string& path);
             int run();
 
         protected:
