@@ -23,6 +23,11 @@ file(GLOB turokfs_src
     "src/turokfs/*.cpp"
 )
 
+file(GLOB render_src
+    "src/render/*.h"
+    "src/render/*.cpp"
+)
+
 file(GLOB imgui_src
     "deps/imgui/*.h"
     "deps/imgui/*cpp"
@@ -31,9 +36,10 @@ file(GLOB imgui_src
 source_group(src FILES ${editor_src})
 source_group(src\\turokfs FILES ${turokfs_src})
 source_group(src\\gui FILES ${gui_src})
+source_group(src\\render FILES ${render_src})
 source_group(deps\\imgui FILES ${imgui_src})
 
-add_library(t4editor ${editor_src} ${turokfs_src} ${gui_src} ${imgui_src})
+add_library(t4editor ${editor_src} ${turokfs_src} ${gui_src} ${imgui_src} ${render_src})
 
 include_directories(SYSTEM ${GLEWDIR}/include ${GLMDIR}/include)
 

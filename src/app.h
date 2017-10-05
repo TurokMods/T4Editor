@@ -48,6 +48,7 @@ namespace t4editor {
             vector<ui_panel*> m_panels;
         
             GLuint VertexArrayID;
-            GLuint vertexbuffer;
+            GLuint VertexBufferID;
+            GLuint ShaderID;
     };
 }
