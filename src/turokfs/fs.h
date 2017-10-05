@@ -21,7 +21,8 @@ namespace t4editor {
             vector<actor_entry*> actors() const { return m_actors; }
         
         protected:
-            void recursiveParse(const string& dir);
+            void recursiveParseLevels(const string& dir);
+            void recursiveParseActors(const string& dir);
             vector<level_entry*> m_levels;
             vector<actor_entry*> m_actors;
             FileSystem* m_fsys;

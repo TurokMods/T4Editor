@@ -11,8 +11,9 @@ namespace t4editor {
         
         printf("Filesystem initialized. Parsing game assets...\n");
         
-        recursiveParse(".");
+        recursiveParseLevels("levels");
         if(m_levels.size() > 0) printf("Found %lu levels\n", m_levels.size());
+        recursiveParseActors("actors");
         if(m_actors.size() > 0) printf("Found %lu actors\n", m_actors.size());
     }
     
@@ -20,7 +21,7 @@ namespace t4editor {
         delete m_fsys;
     }
     
-    void turokfs::recursiveParse(const string &dir) {
+    void turokfs::recursiveParseLevels(const string &dir) {
         DirectoryInfo* d = m_fsys->ParseDirectory(dir);
         if(!d) {
             printf("Error reading directory '%s'\n", dir.c_str());
@@ -35,15 +36,43 @@ namespace t4editor {
                 case DET_FILE: {
                     string ext = d->GetEntryExtension(i);
                     transform(ext.begin(), ext.end(), ext.begin(), tolower);
-                    if(ext == "ati") {
+                    if(ext == "atr") {
                         m_levels.push_back(new level_entry(this, name.substr(0, name.length() - 4), dir + "/" + name));
-                    } else if(ext == "atr") {
+                    }
+                    break;
+                }
+                case DET_FOLDER: {
+                    recursiveParseLevels(dir + "/" + name);
+                    break;
+                }
+                default: {
+                    break;
+                }
+            }
+        }
+    }
+    void turokfs::recursiveParseActors(const string &dir) {
+        DirectoryInfo* d = m_fsys->ParseDirectory(dir);
+        if(!d) {
+            printf("Error reading directory '%s'\n", dir.c_str());
+            return;
+        }
+        
+        for(u32 i = 0;i < d->GetEntryCount();i++) {
+            string name = d->GetEntryName(i);
+            if(name == "." || name == "..") continue;
+            
+            switch(d->GetEntryType(i)) {
+                case DET_FILE: {
+                    string ext = d->GetEntryExtension(i);
+                    transform(ext.begin(), ext.end(), ext.begin(), tolower);
+                    if(ext == "atr") {
                         m_actors.push_back(new actor_entry(this, name.substr(0, name.length() - 4), dir + "/" + name));
                     }
                     break;
                 }
                 case DET_FOLDER: {
-                    recursiveParse(dir + "/" + name);
+                    recursiveParseActors(dir + "/" + name);
                     break;
                 }
                 default: {

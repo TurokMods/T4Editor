@@ -3,6 +3,8 @@
 #include <stdlib.h>
 #include <imgui.h>
 #include <gui/panel.h>
+#include <Turok4.h>
+using namespace opent4;
 
 namespace t4editor {
     application::application(int argc, const char* argv[]) {
@@ -48,6 +50,7 @@ namespace t4editor {
     void application::handle_config_var(const string &name, const string &value) {
         if(name == "game_data_path") {
             m_dataPath = value;
+            SetTurokDirectory(value);
             printf("Using '%s' as game data directory\n", m_dataPath.c_str());
         }
         else if(name == "editor_data_path") {
@@ -76,15 +79,19 @@ namespace t4editor {
     }
     
     void application::onEvent(event *e) {
-        if(e->name == "load_level") {
-        }
+        if(e->name == "load_level") load_level(((load_level_event*)e)->path);
         for(auto i = m_panels.begin();i != m_panels.end();i++) {
             (*i)->onEvent(e);
         }
         m_window->onEvent(e);
     }
     void application::load_level(const string &path) {
+        ATRFile* atr = new ATRFile();
+        atr->Load(path);
         
+        Actor* act = atr->GetActors()->GetActorDef(0)->Actor->GetActor();
+        
+        return;
     }
     int application::run() {
         while(m_window->isOpen()) {
@@ -98,6 +105,7 @@ namespace t4editor {
             glEnableVertexAttribArray(0);
             glBindBuffer(GL_ARRAY_BUFFER, vertexbuffer);
             glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, (void*)0);
+            glUseProgram(0);
             glDrawArrays(GL_TRIANGLES, 0, 3);
             glDisableVertexAttribArray(0);
             
