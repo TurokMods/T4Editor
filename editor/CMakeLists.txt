@@ -14,7 +14,7 @@ add_executable(editorApp main.cpp ${ui_src})
 
 include_directories(SYSTEM ${GLEWDIR}/include ${GLMDIR}/include)
 
-target_link_libraries(editorApp t4editor t4 glfw Glew Bearclaw2)
+target_link_libraries(editorApp t4editor opent4 glfw Glew Bearclaw2)
 
 set(INCLUDE_DIRS ${CMAKE_CURRENT_SOURCE_DIR})
 set(INCLUDE_DIRS ${INCLUDE_DIRS} ${CMAKE_CURRENT_SOURCE_DIR}/../src)
