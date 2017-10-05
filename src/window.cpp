@@ -1,7 +1,7 @@
 #include <window.h>
 #include <stdio.h>
 #include <imgui.h>
-#include <imgui_setup.h>
+#include <gui/imgui_setup.h>
 
 namespace t4editor {
     window::window(int w, int h) {

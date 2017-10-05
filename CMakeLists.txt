@@ -11,6 +11,11 @@ file(GLOB editor_src
     "src/*.cpp"
 )
 
+file(GLOB gui_src
+    "src/gui/*.h"
+    "src/gui/*.cpp"
+)
+
 file(GLOB turokfs_src
     "src/turokfs/*.h"
     "src/turokfs/*.cpp"
@@ -23,9 +28,10 @@ file(GLOB imgui_src
 
 source_group(src FILES ${editor_src})
 source_group(src\\turokfs FILES ${turokfs_src})
+source_group(src\\gui FILES ${gui_src})
 source_group(deps\\imgui FILES ${imgui_src})
 
-add_executable(editor ${editor_src} ${turokfs_src} ${imgui_src})
+add_executable(editor ${editor_src} ${turokfs_src} ${gui_src} ${imgui_src})
 target_link_libraries(editor t4 glfw Glew Bearclaw2)
 
 set(INCLUDE_DIRS ${CMAKE_CURRENT_SOURCE_DIR}/src)

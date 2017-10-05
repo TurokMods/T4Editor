@@ -30,3 +30,14 @@
 *.exe
 *.out
 *.app
+
+# other stuff
+.DS_STORE
+*.build
+*.xcodeproj
+CMakeCache.txt
+CMakeFiles
+CMakeScripts
+Debug
+*.cmake
+data/
