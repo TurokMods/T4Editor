@@ -8,6 +8,8 @@ using namespace std;
 #include <turokfs/fs.h>
 #include <turokfs/entry.h>
 
+#include <OpenGL/gl.h>
+
 namespace t4editor {
     class ui_panel;
     class application : public event_receiver {
@@ -43,5 +45,8 @@ namespace t4editor {
             int m_windowHeight;
             
             vector<ui_panel*> m_panels;
+        
+            GLuint VertexArrayID;
+            GLuint vertexbuffer;
     };
 }
