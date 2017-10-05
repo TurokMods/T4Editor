@@ -28,6 +28,7 @@ namespace t4editor {
             window* getWindow() const { return m_window; }
             string gameDataPath() const { return m_dataPath; }
             string editorDataPath() const { return m_editorDataPath; }
+            turokfs* getTurokData() const { return m_fs; }
 
             int run();
 

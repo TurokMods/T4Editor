@@ -17,6 +17,9 @@ namespace t4editor {
         
             FileSystem* fileSys() const { return m_fsys; }
         
+            vector<level_entry*> levels() const { return m_levels; }
+            vector<actor_entry*> actors() const { return m_actors; }
+        
         protected:
             void recursiveParse(const string& dir);
             vector<level_entry*> m_levels;

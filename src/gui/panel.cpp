@@ -13,7 +13,6 @@
         m_posUpdated = false;
         m_canCollapse = false;
         m_canClose = true;
-        m_shouldBeClosed = false;
         m_parent = nullptr;
         m_app = nullptr;
     }
@@ -38,7 +37,7 @@
     }
     
     void ui_panel::render() {
-        if(!m_shouldBeClosed) {
+        if(m_isOpen) {
             ImGuiWindowFlags f = 0;
             if(!m_canResize) f |= ImGuiWindowFlags_NoResize;
             if(!m_canMove) f |= ImGuiWindowFlags_NoMove;

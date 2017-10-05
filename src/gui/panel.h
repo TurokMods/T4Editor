@@ -39,9 +39,9 @@ namespace t4editor {
         
             void render();
             bool isClosed() const { return !m_isOpen; }
-            bool isOpen() const { return m_isOpen && !m_shouldBeClosed; }
-            void open() { m_shouldBeClosed = true; }
-            void close() { m_shouldBeClosed = false; }
+            bool isOpen() const { return m_isOpen; }
+            void open() { m_isOpen = true; }
+            void close() { m_isOpen = false; }
         
         protected:
             virtual void renderContent() = 0;
@@ -49,7 +49,6 @@ namespace t4editor {
             vector<ui_panel*> m_panels;
             string m_name;
             bool m_isOpen;
-            bool m_shouldBeClosed;
         
             vec2 m_initSize;
             vec2 m_curSize;
