@@ -214,7 +214,6 @@ namespace t4editor {
             if(m_level) {
                 vector<actor*> actors = m_level->actors();
                 for(int i = 0;i < actors.size();i++) {
-                    actors[i]->position.x = -20.0f + float(i);
                     actors[i]->render(m_shader);
                 }
             }

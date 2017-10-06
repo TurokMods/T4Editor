@@ -126,7 +126,7 @@ namespace t4editor {
         meshes.clear();
     }
     void actor::render(t4editor::shader *s) {
-        mat4 model = glm::scale(scale) * eulerAngleXYZ(rotation.x,rotation.y,rotation.z) * translate(position);
+        mat4 model = translate(position) * eulerAngleXYZ(rotation.x, rotation.y, rotation.z) * glm::scale(scale);
         s->uniform("model", model);
         s->uniform("mvp", m_app->viewproj() * model);
         
