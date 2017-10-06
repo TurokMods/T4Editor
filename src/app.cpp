@@ -182,17 +182,17 @@ namespace t4editor {
     
     int application::run() {
         glEnable(GL_DEPTH_TEST);
-        glDepthFunc(GL_GEQUAL);
+        glDepthFunc(GL_LESS);
         glCullFace(GL_CW);
         while(m_window->isOpen()) {
             m_window->poll();
             
             float moveSpeed = 1.0f; // units per frame
             vec3 moveDir = vec3(0.0f, 0.0f, 0.0f);
-            if(m_keyDown[GLFW_KEY_W]) moveDir.z = 1;
+            if(m_keyDown[GLFW_KEY_W]) moveDir.z =  1;
             if(m_keyDown[GLFW_KEY_S]) moveDir.z = -1;
-            if(m_keyDown[GLFW_KEY_A]) moveDir.x = -1;
-            if(m_keyDown[GLFW_KEY_D]) moveDir.x = 1;
+            if(m_keyDown[GLFW_KEY_A]) moveDir.x =  1;
+            if(m_keyDown[GLFW_KEY_D]) moveDir.x = -1;
             if((moveDir.x + moveDir.y + moveDir.z) != 0.0f) {
                 moveDir = normalize(moveDir) * moveSpeed;
                 vec4 nPos = vec4(moveDir, 1.0f) * eulerAngleXYZ(m_camAngles.y, m_camAngles.x, 0.0f);
@@ -207,7 +207,7 @@ namespace t4editor {
             m_window->beginFrame();
             
             glClearColor(0.5f, 0.5f, 0.5f, 1.0f);
-            glClear(GL_COLOR_BUFFER_BIT);
+            glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
             
             m_shader->bind();
             
