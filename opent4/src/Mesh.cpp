@@ -5,6 +5,7 @@
 
 #include <cstring>
 #include <iostream>
+#include <algorithm>
 
 #include "Turok4.h"
 
@@ -66,6 +67,8 @@ namespace opent4
         std::string TypeString;
         if(bType[0] != 0) TypeString = std::string(bType, 4);
         else TypeString = std::string(&bType[1], 3);
+        //std::transform(TypeString.begin(), TypeString.end(), TypeString.begin(), ::toupper)
+        
 
         m_Type = BT_COUNT;
         for(size_t i = 0; i < BT_COUNT; i++)

@@ -49,6 +49,7 @@ namespace t4editor {
             vector<ui_panel*> m_panels;
             string m_name;
             bool m_isOpen;
+            bool m_wasOpen;
         
             vec2 m_initSize;
             vec2 m_curSize;

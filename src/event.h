@@ -2,6 +2,9 @@
 #include <string>
 using namespace std;
 
+#include <glm/glm.hpp>
+using namespace glm;
+
 struct GLFWwindow;
 
 namespace t4editor {
@@ -37,6 +40,32 @@ namespace t4editor {
             int new_width;
             int new_height;
             GLFWwindow* window;
+    };
+    
+    class input_event : public event {
+        public:
+            enum event_type {
+                ET_MOUSE_LEFT_DOWN,
+                ET_MOUSE_LEFT_UP,
+                ET_MOUSE_MIDDLE_DOWN,
+                ET_MOUSE_MIDDLE_UP,
+                ET_MOUSE_RIGHT_DOWN,
+                ET_MOUSE_RIGHT_UP,
+                ET_KEY_DOWN,
+                ET_KEY_UP,
+                ET_MOUSE_MOVE,
+                ET_SCROLL,
+            };
+            input_event() : event("input_event") {
+            }
+            ~input_event() {
+            }
+        
+            double time;
+            event_type type;
+            vec2 cursorPosition;
+            double scrollDelta;
+            unsigned char key;
     };
     
     class load_level_event : public event {

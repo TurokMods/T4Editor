@@ -5,8 +5,6 @@ find_package(glfw3 REQUIRED)
 
 add_subdirectory(opent4)
 add_subdirectory(Bearclaw2)
-add_subdirectory(editor)
-add_subdirectory(tests)
 
 file(GLOB editor_src
     "src/*.h"
@@ -39,7 +37,12 @@ source_group(src\\gui FILES ${gui_src})
 source_group(src\\render FILES ${render_src})
 source_group(deps\\imgui FILES ${imgui_src})
 
-add_library(t4editor ${editor_src} ${turokfs_src} ${gui_src} ${imgui_src} ${render_src})
+file(GLOB fonts_src "editorData/fonts/*.*")
+file(GLOB shaders_src "editorData/shaders/*.*")
+source_group(editorData\\fonts FILES ${fonts_src})
+source_group(editorData\\shaders FILES ${shaders_src})
+
+add_executable(t4editor ${editor_src} ${turokfs_src} ${gui_src} ${imgui_src} ${render_src} ${fonts_src} ${shaders_src})
 
 include_directories(SYSTEM ${GLEWDIR}/include ${GLMDIR}/include)
 

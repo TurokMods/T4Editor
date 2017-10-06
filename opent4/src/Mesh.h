@@ -110,7 +110,7 @@ namespace opent4
             void AddIndex(int16_t i)        { m_Indices.push_back(i);    }
             void AddChunk(MeshChunk* Chunk) { m_Chunks.push_back(Chunk); }
 
-            bool GetVertexType() const { return m_vType; }
+            int GetVertexType() const { return m_vType; }
             size_t GetVertexCount() const;
             void GetVertex  (size_t Idx, float* Ptr) const;
             void GetNormal  (size_t Idx, float* Ptr) const;

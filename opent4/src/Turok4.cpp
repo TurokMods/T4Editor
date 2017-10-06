@@ -141,9 +141,6 @@ namespace opent4
         else if(PseudoPath[0] == '/' && PseudoPath[1] == '\\') RealPath = PseudoPath.substr(1, PseudoPath.length() - 1);
         else RealPath = PseudoPath;
         
-        //We don't need to have 'Data' included in the pseudopath anymore
-        if(RealPath.substr(0,5) == "\\Data" || RealPath.substr(0,5) == "\\DATA") RealPath = RealPath.substr(5,RealPath.length() - 5);
-
         RealPath = GetTurokDirectory() + RealPath;
 
         for(int s = 0; s < RealPath.length(); s++) {

@@ -1,8 +1,8 @@
 #include <app.h>
 
-#include <ui/ui.h>
-#include <ui/main_window.h>
-#include <ui/load_level.h>
+#include <gui/ui.h>
+#include <gui/main_window.h>
+#include <gui/load_level.h>
 
 namespace t4editor {
     main_window* app_space;
