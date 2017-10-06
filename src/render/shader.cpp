@@ -95,11 +95,54 @@ namespace t4editor {
         m_shader = glCreateProgram();
         glAttachShader(m_shader, m_vert);
         glAttachShader(m_shader, m_frag);
+        for(size_t i = 0;i < m_attribs.size();i++) {
+            glBindAttribLocation(m_shader, m_attribs[i].idx, m_attribs[i].name.c_str());
+        }
         glLinkProgram(m_shader);
         return true;
     }
     void shader::attribute(const string &name, uint32_t idx) {
-        glBindAttribLocation(m_shader, idx, name.c_str());
+        attrib_mapping map;
+        map.idx = idx;
+        map.name = name;
+        m_attribs.push_back(map);
+    }
+    void shader::uniform(const string& name, const mat4& m4) {
+        GLint loc = getUniformLoc(name);
+        glUniformMatrix4fv(loc, 1, GL_FALSE, &m4[0][0]);
+    }
+    void shader::uniform(const string& name, const vec4& v4) {
+        GLint loc = getUniformLoc(name);
+        glUniform4fv(loc, 1, &v4[0]);
+    }
+    void shader::uniform(const string& name, const vec3& v3) {
+        GLint loc = getUniformLoc(name);
+        glUniform3fv(loc, 1, &v3[0]);
+    }
+    void shader::uniform(const string& name, const vec2& v2) {
+        GLint loc = getUniformLoc(name);
+        glUniform2fv(loc, 1, &v2[0]);
+    }
+    void shader::uniformi(const string& name, int int32) {
+        GLint loc = getUniformLoc(name);
+        glUniform1iv(loc, 1, &int32);
+    }
+    void shader::uniformui(const string& name, unsigned int uint32) {
+        GLint loc = getUniformLoc(name);
+        glUniform1uiv(loc, 1, &uint32);
+    }
+    void shader::uniform(const string& name, float f) {
+        GLint loc = getUniformLoc(name);
+        glUniform1fv(loc, 1, &f);
+    }
+    GLint shader::getUniformLoc(const string &name) {
+        auto it =  m_uniform_locs.find(name);
+        GLint loc = 0;
+        if(it == m_uniform_locs.end()) {
+            loc = glGetUniformLocation(m_shader, name.c_str());
+            m_uniform_locs[name] = loc;
+        } else return m_uniform_locs[name];
+        return loc;
     }
     void shader::bind() {
         glUseProgram(m_shader);

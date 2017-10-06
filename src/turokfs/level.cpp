@@ -2,7 +2,8 @@
 #include <turokfs/actor.h>
 
 namespace t4editor {
-    level::level() {
+    level::level(application* app) {
+        m_app = app;
         m_atr = nullptr;
     }
     level::~level() {
@@ -16,9 +17,10 @@ namespace t4editor {
         }
         
         ATIFile* actors = m_atr->GetActors();
+        m_actors.push_back(new actor(m_app, m_atr->GetActor()));
         for(size_t i = 0;i < actors->GetActorCount();i++) {
             const Actor* actor_def = actors->GetActorDef(i)->Actor->GetActor();
-            m_actors.push_back(new actor(actor_def));
+            m_actors.push_back(new actor(m_app, actor_def));
         }
         
         return true;

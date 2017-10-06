@@ -5,6 +5,7 @@
  namespace t4editor {
     ui_panel::ui_panel() {
         m_isOpen = true;
+        m_wasOpen = false;
         m_bgAlpha = 1.0f;
         m_canResize = true;
         m_canMove = true;
@@ -15,6 +16,7 @@
         m_canClose = true;
         m_parent = nullptr;
         m_app = nullptr;
+        m_manualFlags = 0;
     }
     ui_panel::~ui_panel() {
     }
@@ -38,6 +40,10 @@
     
     void ui_panel::render() {
         if(m_isOpen) {
+            if(!m_wasOpen) {
+                this->dispatchNamedEvent("opened");
+                m_wasOpen = true;
+            }
             ImGuiWindowFlags f = 0;
             if(!m_canResize) f |= ImGuiWindowFlags_NoResize;
             if(!m_canMove) f |= ImGuiWindowFlags_NoMove;
@@ -46,7 +52,7 @@
             
             if(m_manualFlags != 0) f = m_manualFlags;
         
-            if(!m_parent) ImGui::Begin(m_name.c_str(), m_canClose ? &m_isOpen : nullptr, ImVec2(m_initSize.x, m_initSize.y), m_bgAlpha, f);
+            if(!m_parent) ImGui::Begin(m_name.c_str(), m_canClose ? &m_isOpen : nullptr, ImVec2(0.0f, 0.0f), m_bgAlpha, f);
             else ImGui::BeginChild(m_name.c_str(), ImVec2(m_initSize.x, m_initSize.y), f);
             
             if(m_sizeUpdated) {
@@ -73,6 +79,11 @@
             renderContent();
             if(!m_parent) ImGui::End();
             else ImGui::EndChild();
+        } else {
+            if(m_wasOpen) {
+                this->dispatchNamedEvent("closed");
+                m_wasOpen = false;
+            }
         }
     }
  }

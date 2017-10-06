@@ -3,6 +3,14 @@ in vec3 position;
 in vec3 normal;
 in vec2 texc;
 
+out vec3 norm;
+out vec2 tex;
+
+uniform mat4 model;
+uniform mat4 mvp;
+
 void main() {
-    gl_Position = vec4(position * 0.2, 1.0);
+    gl_Position = mvp * vec4(position, 1.0);
+    norm = normal;
+    tex = texc;
 }

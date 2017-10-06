@@ -19,6 +19,9 @@
 #include <GLFW/glfw3native.h>
 #endif
 
+#include <app.h>
+#include <event.h>
+
 // Data
 static GLFWwindow*  g_Window = NULL;
 static double       g_Time = 0.0f;
@@ -147,24 +150,56 @@ static void ImGui_ImplGlfwGL3_SetClipboardText(void* user_data, const char* text
     glfwSetClipboardString((GLFWwindow*)user_data, text);
 }
 
-void ImGui_ImplGlfwGL3_MouseButtonCallback(GLFWwindow*, int button, int action, int /*mods*/)
+void ImGui_ImplGlfwGL3_MouseButtonCallback(GLFWwindow* win, int button, int action, int /*mods*/)
 {
     if (action == GLFW_PRESS && button >= 0 && button < 3)
         g_MousePressed[button] = true;
+    
+    
+    t4editor::application* app = (t4editor::application*)glfwGetWindowUserPointer(win);
+    t4editor::input_event evt;
+    if(action == GLFW_PRESS) {
+        if(button == GLFW_MOUSE_BUTTON_LEFT) evt.type = t4editor::input_event::ET_MOUSE_LEFT_DOWN;
+        else if(button == GLFW_MOUSE_BUTTON_RIGHT) evt.type = t4editor::input_event::ET_MOUSE_RIGHT_DOWN;
+        else if(button == GLFW_MOUSE_BUTTON_MIDDLE) evt.type = t4editor::input_event::ET_MOUSE_MIDDLE_DOWN;
+    } else if(action == GLFW_RELEASE) {
+        if(button == GLFW_MOUSE_BUTTON_LEFT) evt.type = t4editor::input_event::ET_MOUSE_LEFT_UP;
+        else if(button == GLFW_MOUSE_BUTTON_RIGHT) evt.type = t4editor::input_event::ET_MOUSE_RIGHT_UP;
+        else if(button == GLFW_MOUSE_BUTTON_MIDDLE) evt.type = t4editor::input_event::ET_MOUSE_MIDDLE_UP;
+    }
+    app->onEvent(&evt);
 }
-
-void ImGui_ImplGlfwGL3_ScrollCallback(GLFWwindow*, double /*xoffset*/, double yoffset)
+void ImGui_ImplGlfwGL3_CursorCallback(GLFWwindow* win, double xpos, double ypos) {
+    t4editor::application* app = (t4editor::application*)glfwGetWindowUserPointer(win);
+    t4editor::input_event evt;
+    evt.type = t4editor::input_event::ET_MOUSE_MOVE;
+    evt.cursorPosition = vec2(xpos, ypos);
+    app->onEvent(&evt);
+}
+void ImGui_ImplGlfwGL3_ScrollCallback(GLFWwindow* win, double /*xoffset*/, double yoffset)
 {
     g_MouseWheel += (float)yoffset; // Use fractional mouse wheel, 1.0 unit 5 lines.
+    t4editor::application* app = (t4editor::application*)glfwGetWindowUserPointer(win);
+    t4editor::input_event evt;
+    evt.type = t4editor::input_event::ET_SCROLL;
+    evt.scrollDelta = yoffset;
+    app->onEvent(&evt);
 }
 
-void ImGui_ImplGlfwGL3_KeyCallback(GLFWwindow*, int key, int, int action, int mods)
+void ImGui_ImplGlfwGL3_KeyCallback(GLFWwindow*win, int key, int, int action, int mods)
 {
     ImGuiIO& io = ImGui::GetIO();
     if (action == GLFW_PRESS)
         io.KeysDown[key] = true;
     if (action == GLFW_RELEASE)
         io.KeysDown[key] = false;
+    
+    t4editor::application* app = (t4editor::application*)glfwGetWindowUserPointer(win);
+    t4editor::input_event evt;
+    if(action == GLFW_PRESS || action == GLFW_REPEAT) evt.type = t4editor::input_event::ET_KEY_DOWN;
+    else evt.type = t4editor::input_event::ET_KEY_UP;
+    evt.key = key;
+    app->onEvent(&evt);
 
     (void)mods; // Modifiers are not reliable across systems
     io.KeyCtrl = io.KeysDown[GLFW_KEY_LEFT_CONTROL] || io.KeysDown[GLFW_KEY_RIGHT_CONTROL];
@@ -344,6 +379,7 @@ bool    ImGui_ImplGlfwGL3_Init(GLFWwindow* window, bool install_callbacks, const
 
     if (install_callbacks)
     {
+        glfwSetCursorPosCallback(window, ImGui_ImplGlfwGL3_CursorCallback);
         glfwSetMouseButtonCallback(window, ImGui_ImplGlfwGL3_MouseButtonCallback);
         glfwSetScrollCallback(window, ImGui_ImplGlfwGL3_ScrollCallback);
         glfwSetKeyCallback(window, ImGui_ImplGlfwGL3_KeyCallback);

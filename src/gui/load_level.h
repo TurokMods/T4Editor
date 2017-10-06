@@ -9,7 +9,7 @@ namespace t4editor {
     class level_window : public ui_panel {
         public:
             level_window() {
-                setName("Load Level");
+                setName("Select Level Actor");
                 setPosition(vec2(50, 50));
                 setCanResize(false);
                 setSize(vec2(820, 300));
@@ -21,9 +21,9 @@ namespace t4editor {
             virtual void onAttach(ui_panel* toPanel) {
             }
             virtual void onEvent(event* e) {
-                if(e->name == "prompt_load_level") {
-                    open();
-                }
+                if(e->name == "prompt_load_level") open();
+                if(e->name == "opened") m_app->dispatchNamedEvent("disable_input");
+                if(e->name == "closed") m_app->dispatchNamedEvent("enable_input");
             }
         
             virtual void renderContent() {

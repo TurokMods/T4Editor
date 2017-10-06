@@ -1,7 +1,7 @@
 #include <app.h>
 using namespace t4editor;
 
-#include <ui/ui.h>
+#include <gui/ui.h>
 
 int main(int argc,const char* argv[]) {
     application app(argc, argv);

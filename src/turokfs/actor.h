@@ -5,9 +5,14 @@ using namespace opent4;
 #include <vector>
 using namespace std;
 
+#include <glm/glm.hpp>
+using namespace glm;
+
 #include <GLFW/glfw3.h>
 
 namespace t4editor {
+    class shader;
+    class application;
     struct mesh_vec3 {
         float x, y, z;
     };
@@ -31,17 +36,29 @@ namespace t4editor {
         
             GLuint vao;
             GLuint vbo;
-            GLuint ibo;
         
             vector<mesh_vert> vertices;
-            vector<unsigned short> indices;
+            GLuint* ibos;
+            vector<vector<unsigned short> > chunkIndices;
     };
     
     class actor {
         public:
-            actor(const Actor* def);
+            actor(application* app, const Actor* def);
             ~actor();
         
+            //Expects shader to already be bound
+            void render(shader* s);
+        
             vector<actor_mesh*> meshes;
+        
+            //I know we normally use matrices, but I want to keep the transform representation
+            //exactly like it is in the files until it gets sent to the GPU
+            vec3 position;
+            vec3 scale;
+            vec3 rotation;
+            
+        protected:
+            application* m_app;
     };
 }
