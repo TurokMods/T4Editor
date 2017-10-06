@@ -21,6 +21,7 @@ namespace t4editor {
         glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
         glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
         glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 2);
+        glfwWindowHint(GLFW_DEPTH_BITS,24);
         
         m_window = glfwCreateWindow(w, h, "Turok4 Editor", 0, 0);
         if(!m_window) {
@@ -40,10 +41,15 @@ namespace t4editor {
                 return;
             }
             
+            GLint dbits, abits;
+            glGetIntegerv(GL_DEPTH_BITS, &dbits);
+            glGetIntegerv(GL_ALPHA_BITS, &abits);
             printf("GL Version: %s\n", glGetString(GL_VERSION));
             printf("GLSL Version: %s\n", glGetString(GL_SHADING_LANGUAGE_VERSION));
             printf("Vendor: %s\n", glGetString(GL_VENDOR));
             printf("Renderer: %s\n", glGetString(GL_RENDERER));
+            printf("Depth bits: %d\n", dbits);
+            printf("Alpha bits: %d\n", abits);
             
             ImGui_ImplGlfwGL3_Init(m_window, true, app->editorDataPath());
         }
