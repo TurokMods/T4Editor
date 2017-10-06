@@ -182,6 +182,7 @@ namespace t4editor {
     
     int application::run() {
         glEnable(GL_DEPTH_TEST);
+        //glEnable(GL_CULL_FACE);
         glDepthFunc(GL_LESS);
         glCullFace(GL_CW);
         while(m_window->isOpen()) {

@@ -130,6 +130,7 @@ namespace t4editor {
         mat4 S = glm::scale(scale);
         mat4 model = T * R * S;
         s->uniform("model", model);
+        s->uniform("view", m_app->view());
         s->uniform("mvp", m_app->viewproj() * model);
         
         for(size_t i = 0;i < meshes.size();i++) {
