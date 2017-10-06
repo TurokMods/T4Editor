@@ -28,6 +28,7 @@ namespace t4editor {
         memset(&m_mouseBtnDown, 0, sizeof(bool) * 3);
         memset(&m_keyDown, 0, sizeof(bool) * 256);
     }
+    
     application::~application() {
         if(m_window) delete m_window;
         if(m_fs) delete m_fs;
