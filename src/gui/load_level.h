@@ -12,7 +12,7 @@ namespace t4editor {
                 setName("Select Level Actor");
                 setPosition(vec2(50, 50));
                 setCanResize(false);
-                setSize(vec2(820, 300));
+                setSize(vec2(820, 900));
                 close();
             }
             ~level_window() {

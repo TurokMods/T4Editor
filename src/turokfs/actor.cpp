@@ -97,7 +97,6 @@ namespace t4editor {
         glDisableVertexAttribArray(2);
         err = glGetError(); if(err != 0) printf("err: %d | %s\n", err, glewGetErrorString(err));
     }
-    
     actor::actor(application* app, const Actor* def) {
         m_app = app;
         ActorMesh* mesh = def->GetMesh();
@@ -109,12 +108,12 @@ namespace t4editor {
         }
         
         if(def->GetDef()) {
-            ActorVec3 rot = def->GetDef()->Rotation;
             ActorVec3 pos = def->GetDef()->Position;
+            ActorVec3 rot = def->GetDef()->Rotation;
             ActorVec3 scl = def->GetDef()->Scale;
-            rotation = vec3(rot.x, rot.y, rot.z);
             position = vec3(pos.x, pos.y, pos.z);
-            scale = vec3(scl.x, scl.y, scl.z);
+            rotation = vec3(rot.x, rot.y, rot.z);
+            scale    = vec3(scl.x, scl.y, scl.z);
         } else {
             scale = vec3(1.0f, 1.0f, 1.0f);
         }
@@ -126,7 +125,10 @@ namespace t4editor {
         meshes.clear();
     }
     void actor::render(t4editor::shader *s) {
-        mat4 model = glm::scale(scale) * eulerAngleXYZ(rotation.x,rotation.y,rotation.z) * translate(position);
+        mat4 T = translate(position);
+        mat4 R = eulerAngleXYZ(radians(rotation.x),radians(rotation.y),radians(rotation.z));
+        mat4 S = glm::scale(scale);
+        mat4 model = T * R * S;
         s->uniform("model", model);
         s->uniform("mvp", m_app->viewproj() * model);
         
