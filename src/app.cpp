@@ -143,10 +143,10 @@ namespace t4editor {
                     m_keyDown[input->key] = false;
                     break;
                 case input_event::ET_SCROLL: {
-                    float fac = std::max((m_fov - 10.0f) / (170.0f - 10.0f), 0.01f);
+                    float fac = std::max((m_fov - 1.0f) / (110.0f - 1.0f), 0.01f);
                     m_fov += input->scrollDelta * fac;
-                    if(m_fov > 170.0f) m_fov = 170.0f;
-                    if(m_fov < 10.0f) m_fov = 10.0f;
+                    if(m_fov > 110.0f) m_fov = 110.0f;
+                    if(m_fov < 1.0f) m_fov = 1.0f;
                     printf("fov: %f | scroll fac: %f\n", m_fov, fac);
                     m_proj = perspective(radians(m_fov), m_window->getSize().x / m_window->getSize().y, 1.0f, 10000.0f);
                     m_vp = m_proj * m_view;
