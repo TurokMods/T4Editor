@@ -1,9 +1,3 @@
-[submodule "T4Loader"]
-	path = T4Loader
-	url = https://github.com/TurokMods/T4Loader.git
-[submodule "Bearclaw2"]
-	path = Bearclaw2
-	url = https://github.com/djdduty/Bearclaw2.git
 [submodule "imgui"]
 	path = deps/imgui
 	url = https://github.com/ocornut/imgui.git
