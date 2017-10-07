@@ -27,12 +27,7 @@ namespace t4editor {
         
         char* vs_code = new char[vs_sz + 1];
         memset(vs_code, 0, vs_sz + 1);
-        if(fread(vs_code,vs_sz,1,vs_fp) != 1) {
-            printf("Failed to read %lu bytes from shader file %s\n", vs_sz, vert.c_str());
-            delete [] vs_code;
-            fclose(vs_fp);
-            return false;
-        }
+		fread(vs_code, vs_sz, 1, vs_fp);
         fclose(vs_fp);
         
         string vs_src = string(vs_code, vs_sz);
@@ -50,12 +45,7 @@ namespace t4editor {
         
         char* fs_code = new char[fs_sz + 1];
         memset(fs_code, 0, fs_sz + 1);
-        if(fread(fs_code,fs_sz,1,fs_fp) != 1) {
-            printf("Failed to read %lu bytes from shader file %s\n", fs_sz, frag.c_str());
-            delete [] fs_code;
-            fclose(fs_fp);
-            return false;
-        }
+		fread(fs_code, fs_sz, 1, fs_fp);
         fclose(fs_fp);
         
         string fs_src = string(fs_code, fs_sz);
