@@ -243,13 +243,14 @@ namespace t4editor {
             }
             
             //get actor info under cursor
-            if(m_curCursor.x > 0 && m_curCursor.x < m_window->getSize().x && m_curCursor.y >= 20 && m_curCursor.y < m_window->getSize().y) {
+            if(m_curCursor.x > 0 && m_curCursor.x < m_window->getSize(false).x && m_curCursor.y >= 20 && m_curCursor.y < m_window->getSize(false).y) {
                 unsigned char asset_id[3];
                 unsigned char asset_submesh_id[3];
                 unsigned char asset_submesh_chunk_id[3];
+                vec2 buffer_scale = m_window->getSize() / m_window->getSize(false);
                 
-                int x = m_curCursor.x;
-                int y = m_window->getSize().y - 1 - m_curCursor.y;
+                int x = m_curCursor.x * buffer_scale.x;
+                int y = (m_window->getSize(false).y - 1 - m_curCursor.y) * buffer_scale.y;
                 printf("%d, %d\n", x, y);
                 
                 glReadBuffer(GL_COLOR_ATTACHMENT1);

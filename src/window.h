@@ -25,7 +25,7 @@ namespace t4editor {
             void endFrame();
             void poll();
         
-            vec2 getSize() const;
+            vec2 getSize(bool UseBufferSize=true) const;
         
             GLFWwindow* getWindow() const { return m_window; }
             
