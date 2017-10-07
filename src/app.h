@@ -65,7 +65,7 @@ namespace t4editor {
             vec3 m_camPos;
             float m_fov;
             bool m_mouseBtnDown[3];
-            bool m_keyDown[256];
+            bool m_keyDown[GLFW_KEY_LAST];
             mat4 m_view;
             mat4 m_proj;
             mat4 m_vp;

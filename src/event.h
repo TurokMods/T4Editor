@@ -65,7 +65,7 @@ namespace t4editor {
             event_type type;
             vec2 cursorPosition;
             double scrollDelta;
-            unsigned char key;
+            unsigned int key;
     };
     
     class load_level_event : public event {

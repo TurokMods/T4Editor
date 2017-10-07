@@ -26,7 +26,7 @@ namespace t4editor {
         m_vp = m_proj * m_view;
         m_inputEnabledCounter = 0;
         memset(&m_mouseBtnDown, 0, sizeof(bool) * 3);
-        memset(&m_keyDown, 0, sizeof(bool) * 256);
+        memset(&m_keyDown, 0, sizeof(bool) * GLFW_KEY_LAST);
         m_framebuffer = 0;
         
         actorUnderCursor = -1;
@@ -109,7 +109,7 @@ namespace t4editor {
         else if(e->name == "disable_input") {
             m_inputEnabledCounter--;
             memset(&m_mouseBtnDown, 0, sizeof(bool) * 3);
-            memset(&m_keyDown, 0, sizeof(bool) * 256);
+            memset(&m_keyDown, 0, sizeof(bool) * GLFW_KEY_LAST);
         } else if(e->name == "enable_input") {
             m_inputEnabledCounter++;
             if(m_inputEnabledCounter > 0) m_inputEnabledCounter = 0;
@@ -216,7 +216,9 @@ namespace t4editor {
             if(m_keyDown[GLFW_KEY_S]) moveDir.z = -1;
             if(m_keyDown[GLFW_KEY_A]) moveDir.x =  1;
             if(m_keyDown[GLFW_KEY_D]) moveDir.x = -1;
-            if((moveDir.x + moveDir.y + moveDir.z) != 0.0f) {
+			if(m_keyDown[GLFW_KEY_SPACE]) moveDir.y = -1;
+			if(m_keyDown[GLFW_KEY_LEFT_SHIFT]) moveDir.y = 1;
+            if(moveDir.x != 0.0f || moveDir.z != 0 || moveDir.y != 0) {
                 moveDir = normalize(moveDir) * moveSpeed;
                 vec4 nPos = vec4(moveDir, 1.0f) * eulerAngleXYZ(m_camAngles.y, m_camAngles.x, 0.0f);
                 m_camPos.x += nPos.x;
