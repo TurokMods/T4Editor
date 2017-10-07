@@ -2,6 +2,8 @@
 #include <vector>
 using namespace std;
 
+#include <EngineTypes.h>
+
 #include <window.h>
 #include <gui/panel.h>
 
@@ -10,8 +12,6 @@ using namespace std;
 #include <turokfs/level.h>
 #include <turokfs/actor.h>
 #include <render/shader.h>
-
-#include <OpenGL/gl.h>
 
 namespace t4editor {
     class ui_panel;

@@ -1,5 +1,5 @@
 #pragma once
-#include <Bearclaw/EngineTypes.h>
+#include <EngineTypes.h>
 
 #include <stdio.h>
 #include <string>

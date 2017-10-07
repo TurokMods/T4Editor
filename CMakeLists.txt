@@ -1,10 +1,25 @@
 cmake_minimum_required(VERSION 3.8)
 project(t4editor)
 
-find_package(glfw3 REQUIRED)
+set(CMAKE_CONFIGURATION_TYPES "Debug;Release" CACHE STRING "" FORCE)
+if(NOT CMAKE_BUILD_TYPE)
+    set(CMAKE_BUILD_TYPE Debug CACHE STRING "Choose the type of build (Debug or Release)" FORCE)
+endif()
+
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_CURRENT_LIST_DIR}/bin)
+set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_CURRENT_LIST_DIR}/lib)
+set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_CURRENT_LIST_DIR}/lib)
+
+set(CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}/cmake-extras/")
+
+add_subdirectory(deps)
+
+ADD_DEFINITIONS(
+    -std=c++11 # Or -std=c++0x
+    # Other flags
+)
 
 add_subdirectory(opent4)
-add_subdirectory(Bearclaw2)
 
 file(GLOB editor_src
     "src/*.h"
@@ -44,14 +59,14 @@ source_group(editorData\\shaders FILES ${shaders_src})
 
 add_executable(t4editor ${editor_src} ${turokfs_src} ${gui_src} ${imgui_src} ${render_src} ${fonts_src} ${shaders_src})
 
-include_directories(SYSTEM ${GLEWDIR}/include ${GLMDIR}/include)
+include_directories(SYSTEM ${GLEWDIR}/include ${GLMDIR}/include ${GLFWDIR}/include)
 
-target_link_libraries(t4editor opent4 glfw Glew Bearclaw2)
+target_link_libraries(t4editor opent4 Glfw Glew ${GLFW_LIBRARIES})
 
 set(INCLUDE_DIRS ${CMAKE_CURRENT_SOURCE_DIR}/src)
-set(INCLUDE_DIRS ${INCLUDE_DIRS} ${CMAKE_CURRENT_SOURCE_DIR}/Bearclaw2/dependencies/glew/include)
-set(INCLUDE_DIRS ${INCLUDE_DIRS} ${CMAKE_CURRENT_SOURCE_DIR}/Bearclaw2/dependencies/glm/include)
-set(INCLUDE_DIRS ${INCLUDE_DIRS} ${CMAKE_CURRENT_SOURCE_DIR}/Bearclaw2/src)
+set(INCLUDE_DIRS ${INCLUDE_DIRS} ${CMAKE_CURRENT_SOURCE_DIR}/deps/glew/include)
+set(INCLUDE_DIRS ${INCLUDE_DIRS} ${CMAKE_CURRENT_SOURCE_DIR}/deps/glm/include)
+set(INCLUDE_DIRS ${INCLUDE_DIRS} ${CMAKE_CURRENT_SOURCE_DIR}/deps/glfw/include)
 set(INCLUDE_DIRS ${INCLUDE_DIRS} ${CMAKE_CURRENT_SOURCE_DIR}/opent4/src)
 set(INCLUDE_DIRS ${INCLUDE_DIRS} ${OPENGL_INCLUDE_DIR})
 set(INCLUDE_DIRS ${INCLUDE_DIRS} ${CMAKE_CURRENT_SOURCE_DIR}/deps/imgui)

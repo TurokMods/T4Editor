@@ -4,10 +4,9 @@
 #include <vector>
 using namespace std;
 
+#include <EngineTypes.h>
 #include <glm/glm.hpp>
 using namespace glm;
-
-#include <GLFW/glfw3.h>
 
 namespace t4editor {
     class application;

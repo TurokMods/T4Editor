@@ -47,3 +47,6 @@ data/
 # Mac ignores
 *.DS_Store
 >>>>>>> 62ed70ab6ac2f10b5e6cc089c9dabfc2433c9295
+
+# MSVC ignores
+bin/

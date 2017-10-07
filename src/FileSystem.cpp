@@ -1,9 +1,9 @@
 #include <FileSystem.h>
-#include <Bearclaw/EngineTypes.h>
+#include <EngineTypes.h>
 
 
 #ifdef _WIN32
-#include <Bearclaw/Resources/dirent.h>
+#include <turokfs/dirent.h>
 #include <direct.h>
 #define atoll _atoi64
 #else

@@ -1,6 +1,8 @@
 #include "Turok4.h"
 
 #include <assert.h>
+#include <string>
+#include <cctype>
 
 #if !defined(_WIN32)
 #include <stdlib.h>
