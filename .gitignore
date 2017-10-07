@@ -50,3 +50,4 @@ data/
 
 # MSVC ignores
 bin/
+lib/
