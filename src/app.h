@@ -10,6 +10,8 @@ using namespace std;
 #include <turokfs/level.h>
 #include <turokfs/actor.h>
 #include <render/shader.h>
+#include <render/framebuffer.h>
+#include <render/texture.h>
 
 #include <OpenGL/gl.h>
 
@@ -41,6 +43,10 @@ namespace t4editor {
 
             void load_level(const string& path);
             int run();
+        
+            int actorUnderCursor;
+            int actorSubmeshUnderCursor;
+            int actorSubmeshChunkUnderCursor;
 
         protected:
             window* m_window;
@@ -67,5 +73,6 @@ namespace t4editor {
         
             level* m_level;
             shader* m_shader;
+            framebuffer* m_framebuffer;
     };
 }
