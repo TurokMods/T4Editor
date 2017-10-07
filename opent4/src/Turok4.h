@@ -15,7 +15,8 @@ namespace opent4
     std::string GetTurokDirectory();
     std::string TransformPseudoPathToRealPath(const std::string& PseudoPath);
     std::string TransformRealPathToPseudoPath(const std::string& RealPath  );
-
+    
+    class ATRFile;
     class ATIFile
     {
         public:
@@ -33,10 +34,14 @@ namespace opent4
             void ProcessBlocks();
             void ProcessActorBlock(size_t Idx);
             void SaveActorBlock(size_t Idx);
+            ATRFile* LoadATR(const std::string& path);
 
             char m_Hdr[4];
             std::vector<Block*> m_Blocks;
             std::vector<ActorDef*> m_Actors;
+            std::vector<ATRFile*> m_LoadedAtrs;
+            std::vector<std::string> m_LoadedAtrPaths;
+            std::vector<uint32_t> m_LoadedAttrRefs;
 
             std::string m_File;
     };
@@ -44,14 +49,11 @@ namespace opent4
     class ATRFile
     {
         public:
-            ATRFile() : m_Actor(0), m_Data(0), m_Root(0) {}
+            ATRFile() : m_Mesh(0), m_Data(0), m_Root(0) {}
             ~ATRFile();
 
             bool Load(const std::string& Filename);
             bool Save(const std::string& Filename);
-
-            /* For singular actors only */
-            Actor* GetActor() const { return m_Actor; }
 
             /* For levels only */
             ATIFile* GetActors() const { if(m_ActorInstanceFiles.size() <= 0) return 0; return m_ActorInstanceFiles[0]; }
@@ -63,6 +65,8 @@ namespace opent4
             std::string GetActorMeshFile()  const { return m_ActorMeshFile; }
             std::string GetInstancesFile()  const { return m_InstancesFile; }
             std::string GetPrecacheFile()   const { return m_PrecacheFile;  }
+            ActorMesh* GetMesh() const { return m_Mesh; }
+
 
         protected:
             friend class Actor;
@@ -80,12 +84,12 @@ namespace opent4
             ByteStream* m_Data;
             Block* m_Root;
             std::string m_File;
+            ActorMesh* m_Mesh;
 
             /*
              * Only actor .ATR files use these
              */
             ATIFile* m_Parent;
-            Actor* m_Actor;
 
             /*
              * Only level .ATR files use these

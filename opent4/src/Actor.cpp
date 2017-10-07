@@ -60,7 +60,6 @@ namespace opent4
     /* Actor */
     Actor::~Actor()
     {
-        if(m_Mesh) delete m_Mesh;
     }
 
     std::string Actor::GetFilename() const

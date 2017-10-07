@@ -13,6 +13,7 @@ namespace opent4
     class ATRFile;
     class ATIFile;
     class Block;
+    class Actor;
 
     class ActorVec3
     {
@@ -25,14 +26,13 @@ namespace opent4
     struct ActorDef
     {
         std::string ActorFile;
-        ATRFile* Actor;
+        Actor* Actor;
         int BlockIdx;
         ATIFile* Parent;
 
         //Actor Props
         int ID;
         int PathID;
-        ActorMesh* Mesh;
         ActorVec3 Position;
         ActorVec3 Rotation;
         ActorVec3 Scale;
@@ -61,13 +61,13 @@ namespace opent4
     class Actor
     {
         public:
-            Actor(ATRFile* File = 0) : m_Mesh(0), m_Def(0), m_Variables(0), m_File(File) {}
+            Actor(ATRFile* File = 0) : m_Def(0), m_Variables(0), m_File(File) {}
             ~Actor();
 
-            ActorMesh* GetMesh() const { return m_Mesh; }
             std::string GetFilename() const;
 
             ActorDef* GetDef() const { return m_Def; }
+            ATRFile* GetATR() const { return m_File; }
 
             void SetActorVariables(ActorVariables* v) { m_Variables = v; }
             ActorVariables* GetActorVariables() const { return m_Variables; }
@@ -76,7 +76,6 @@ namespace opent4
             friend class ATRFile;
             friend class ATIFile;
 
-            ActorMesh* m_Mesh;
             ActorDef* m_Def;
             ActorVariables* m_Variables;
             ATRFile* m_File;

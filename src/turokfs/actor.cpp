@@ -97,9 +97,8 @@ namespace t4editor {
         glDisableVertexAttribArray(2);
         err = glGetError(); if(err != 0) printf("err: %d | %s\n", err, glewGetErrorString(err));
     }
-    actor::actor(application* app, const Actor* def) {
+    actor::actor(application* app, const ActorMesh* mesh, const ActorDef* def) {
         m_app = app;
-        ActorMesh* mesh = def->GetMesh();
         if(mesh) {
             for(size_t i = 0;i < mesh->GetSubMeshCount();i++) {
                 SubMesh* sm = mesh->GetSubMesh(i);
@@ -107,10 +106,10 @@ namespace t4editor {
             }
         }
         
-        if(def->GetDef()) {
-            ActorVec3 pos = def->GetDef()->Position;
-            ActorVec3 rot = def->GetDef()->Rotation;
-            ActorVec3 scl = def->GetDef()->Scale;
+        if(def) {
+            ActorVec3 pos = def->Position;
+            ActorVec3 rot = def->Rotation;
+            ActorVec3 scl = def->Scale;
             position = vec3(pos.x, pos.y, pos.z);
             rotation = vec3(rot.x, rot.y, rot.z);
             scale    = vec3(scl.x, scl.y, scl.z);

@@ -44,7 +44,7 @@ namespace t4editor {
     
     class actor {
         public:
-            actor(application* app, const Actor* def);
+            actor(application* app, const ActorMesh* mesh, const ActorDef* def);
             ~actor();
         
             //Expects shader to already be bound

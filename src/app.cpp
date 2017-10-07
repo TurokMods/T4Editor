@@ -30,8 +30,9 @@ namespace t4editor {
     }
     
     application::~application() {
-        if(m_window) delete m_window;
+        if(m_shader) delete m_shader;
         if(m_fs) delete m_fs;
+        if(m_window) delete m_window;
     }
     
     bool application::initialize() {

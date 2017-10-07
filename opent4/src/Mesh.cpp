@@ -82,7 +82,7 @@ namespace opent4
 
         if(m_Type == BT_COUNT)
         {
-            std::cout << "Unexpected type string: \"" << TypeString << "\"." << std::endl;
+            //std::cout << "Unexpected type string: \"" << TypeString << "\"." << std::endl;
 
         }
 

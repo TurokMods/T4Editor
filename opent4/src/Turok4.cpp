@@ -187,20 +187,20 @@ namespace opent4
     
     ATRFile::~ATRFile() {
         if(m_Data) delete m_Data;
-        if(m_Actor) delete m_Actor;
         if(m_Root) delete m_Root;
+        if(m_Mesh) delete m_Mesh;
     }
 
     /* ATRFile */
     bool ATRFile::Load(const std::string& Filename)
     {
+        printf("ATR: %s\n", Filename.c_str());
         FILE* fp = std::fopen(Filename.c_str(), "rb");
         if(!fp) { printf("Unable to open file.\n"); return false; }
 
         m_Data = new ByteStream(fp);
         std::fclose(fp);
 
-        m_Actor = new Actor(this);
         if(!CheckHeader()) return false;
         m_Root = new Block();
         m_Root->Load(m_Data);
@@ -234,9 +234,10 @@ namespace opent4
                     Data->GetByte(); //Path length (not needed)
                     m_ActorMeshFile = Data->GetString();
 
-                    ActorMesh* m = new ActorMesh();
-                    m->Load(TransformPseudoPathToRealPath(m_ActorMeshFile));
-                    m_Actor->m_Mesh = m;
+                    m_Mesh = new ActorMesh();
+                    if(!m_Mesh->Load(TransformPseudoPathToRealPath(m_ActorMeshFile))) {
+                        delete m_Mesh;
+                    }
 
                     break;
                 }
@@ -337,16 +338,18 @@ namespace opent4
         for(size_t i = 0; i < m_Blocks.size(); i++) delete m_Blocks[i];
         for(size_t i = 0; i < m_Actors.size(); i++)
         {
-            if(m_Actors[i]->Actor->GetActor()->GetActorVariables()) delete m_Actors[i]->Actor->GetActor()->GetActorVariables();
-            if(m_Actors[i]->Mesh) delete m_Actors[i]->Mesh;
-            delete m_Actors[i]->Actor;
+            if(m_Actors[i]->Actor->GetActorVariables()) delete m_Actors[i]->Actor->GetActorVariables();
             delete m_Actors[i];
+        }
+        
+        for(size_t i = 0;i < m_LoadedAtrs.size();i++) {
+            delete m_LoadedAtrs[i];
         }
     }
 
     bool ATIFile::Load(const std::string& File)
     {
-        printf("Ati loading: %s\n", File.c_str());
+        printf("ATI: %s\n", File.c_str());
         FILE* fp = std::fopen(File.c_str(), "rb");
         if(!fp) { printf("Unable to open file at path: %s\n", File.c_str()); return false; }
         ByteStream* Data = new ByteStream(fp);
@@ -417,18 +420,16 @@ namespace opent4
             aBlock->Load(b->GetData());
             b->AddChildBlock(aBlock);
         }
+        
+        ATRFile* atr = LoadATR(TransformPseudoPathToRealPath(Path));
+        if(!atr) return;
 
         ActorDef* d = new ActorDef();
         d->ActorFile = Path;
         d->BlockIdx  = Idx ;
         d->Parent    = this;
         d->PathID = d->ID = -1;
-        d->Actor = new ATRFile();
-        if(!d->Actor->Load(TransformPseudoPathToRealPath(Path)))
-        {
-            delete d->Actor;
-            return;
-        }
+        d->Actor = new Actor(atr);
 
         for(int i = 0;i < b->GetChildCount();i++)
         {
@@ -477,7 +478,7 @@ namespace opent4
                 {
                     ActorVariables* v = new ActorVariables();
                     if(!v->Load(Data)) { printf("Unable to load actor variables.\n"); }
-                    d->Actor->GetActor()->SetActorVariables(v);
+                    d->Actor->SetActorVariables(v);
                     break;
                 }
                 case BT_ACTOR_LINK:
@@ -492,11 +493,35 @@ namespace opent4
         }
 
         m_Actors.push_back(d);
-        d->Actor->GetActor()->m_Def = d;
+        d->Actor->m_Def = d;
     }
 
     void ATIFile::SaveActorBlock(size_t Idx)
     {
         //TODO:
+    }
+    
+    ATRFile* ATIFile::LoadATR(const std::string &path) {
+        //see if the file was loaded already
+        for(size_t i = 0;i < m_LoadedAtrs.size();i++) {
+            if(m_LoadedAtrPaths[i] == path) {
+                m_LoadedAttrRefs[i]++;
+                return m_LoadedAtrs[i];
+            }
+        }
+        
+        //nope
+        ATRFile* file = new ATRFile();
+        if(!file->Load(path)) {
+            printf("Failed to load an ATR file referenced by the level\n");
+            printf("The file was %s\n", path.c_str());
+            delete file;
+            return 0;
+        }
+        
+        m_LoadedAtrs.push_back(file);
+        m_LoadedAtrPaths.push_back(path);
+        m_LoadedAttrRefs.push_back(1);
+        return file;
     }
 }
