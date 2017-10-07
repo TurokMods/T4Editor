@@ -102,7 +102,7 @@ namespace opent4
     {
         public:
             SubMesh() {}
-            ~SubMesh() {}
+            ~SubMesh();
 
             void AddVertex(const MTFVertexTypeA& v) { m_VerticesA.push_back(v); }
             void AddVertex(const MTFVertexTypeB& v) { m_VerticesB.push_back(v); }

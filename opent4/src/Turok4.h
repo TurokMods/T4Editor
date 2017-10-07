@@ -45,7 +45,7 @@ namespace opent4
     {
         public:
             ATRFile() : m_Actor(0), m_Data(0), m_Root(0) {}
-            ~ATRFile() {}
+            ~ATRFile();
 
             bool Load(const std::string& Filename);
             bool Save(const std::string& Filename);

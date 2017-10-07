@@ -128,7 +128,13 @@ namespace opent4
         }
         return BT_COUNT;
     }
-
+    Block::~Block() {
+        if(m_Data) delete m_Data;
+        for(size_t i = 0;i < m_Children.size();i++) {
+            delete m_Children[i];
+        }
+    }
+    
     bool Block::Load(ByteStream *Data)
     {
         //Determine whether or not the block's size is a 16 bit integer or an 8 bit integer

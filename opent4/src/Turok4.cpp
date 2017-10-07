@@ -184,6 +184,12 @@ namespace opent4
     {
         return "Not needed yet.";
     }
+    
+    ATRFile::~ATRFile() {
+        if(m_Data) delete m_Data;
+        if(m_Actor) delete m_Actor;
+        if(m_Root) delete m_Root;
+    }
 
     /* ATRFile */
     bool ATRFile::Load(const std::string& Filename)
@@ -331,7 +337,8 @@ namespace opent4
         for(size_t i = 0; i < m_Blocks.size(); i++) delete m_Blocks[i];
         for(size_t i = 0; i < m_Actors.size(); i++)
         {
-            delete m_Actors[i]->Mesh;
+            if(m_Actors[i]->Actor->GetActor()->GetActorVariables()) delete m_Actors[i]->Actor->GetActor()->GetActorVariables();
+            if(m_Actors[i]->Mesh) delete m_Actors[i]->Mesh;
             delete m_Actors[i]->Actor;
             delete m_Actors[i];
         }

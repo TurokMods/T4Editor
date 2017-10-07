@@ -7,6 +7,10 @@ namespace t4editor {
         m_atr = nullptr;
     }
     level::~level() {
+        for(size_t i = 0;i < m_actors.size();i++) {
+            delete m_actors[i];
+        }
+        if(m_atr) delete m_atr;
     }
     
     bool level::load(const string &file) {

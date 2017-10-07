@@ -138,8 +138,8 @@ namespace opent4
     class Block
     {
         public:
-            Block() {}
-            ~Block() {}
+            Block() : m_Data(0), m_Type(BT_COUNT) { memset(m_Hdr, 0, 8); }
+            ~Block();
 
             bool Load(ByteStream* Data);
             bool Save(ByteStream* Data);

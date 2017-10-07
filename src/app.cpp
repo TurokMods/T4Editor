@@ -170,6 +170,8 @@ namespace t4editor {
     }
     
     void application::load_level(const string &path) {
+        if(m_level) delete m_level;
+        
         m_level = new level(this);
         
         if(!m_level->load(path)) {

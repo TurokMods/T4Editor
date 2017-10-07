@@ -102,6 +102,10 @@ namespace opent4
     }
 
     /* Sub Mesh */
+    SubMesh::~SubMesh() {
+        for(size_t i = 0;i < m_Chunks.size();i++) delete m_Chunks[i];
+    }
+    
     size_t SubMesh::GetVertexCount() const
     {
         switch(m_vType)
@@ -180,8 +184,8 @@ namespace opent4
     /* ActorMesh */
     ActorMesh::~ActorMesh()
     {
-        for(size_t i = 0; i < m_Blocks.size(); i++)
-            delete m_Blocks[i];
+        for(size_t i = 0;i < m_Blocks.size();i++) delete m_Blocks[i];
+        for(size_t i = 0;i < m_SubMeshes.size();i++) delete m_SubMeshes[i];
 
         m_Blocks.clear();
     }
@@ -218,6 +222,7 @@ namespace opent4
             if(std::fread(m_Blocks[i]->m_Data, m_Blocks[i]->m_DataSize, 1, fp) != 1)
             {
                 delete [] m_Blocks[i]->m_Data;
+                m_Blocks[i]->m_Data = 0;
                 std::fclose(fp);
                 return false;
             }
