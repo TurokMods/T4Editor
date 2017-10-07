@@ -27,12 +27,23 @@ namespace t4editor {
         m_inputEnabledCounter = 0;
         memset(&m_mouseBtnDown, 0, sizeof(bool) * 3);
         memset(&m_keyDown, 0, sizeof(bool) * 256);
+        m_framebuffer = 0;
+        
+        actorUnderCursor = -1;
+        actorSubmeshUnderCursor = -1;
+        actorSubmeshChunkUnderCursor = -1;
     }
     
     application::~application() {
         if(m_shader) delete m_shader;
         if(m_fs) delete m_fs;
         if(m_window) delete m_window;
+        if(m_framebuffer) {
+            for(size_t i = 0;i < m_framebuffer->attachments.size();i++) {
+                delete m_framebuffer->attachments[i];
+            }
+            delete m_framebuffer;
+        }
     }
     
     bool application::initialize() {
@@ -54,6 +65,12 @@ namespace t4editor {
         m_shader->attribute("texc", 2);
         m_shader->loadFromFile("shaders/simple.vsh", "shaders/simple.fsh");
         
+        vec2 dims = m_window->getSize();
+        m_framebuffer = new framebuffer(dims.x, dims.y, true);
+        m_framebuffer->attachments.push_back(new texture(dims.x, dims.y, GL_RGB, GL_UNSIGNED_BYTE, true)); //color buffer
+        m_framebuffer->attachments.push_back(new texture(dims.x, dims.y, GL_RGB, GL_UNSIGNED_BYTE, true)); //asset_id
+        m_framebuffer->attachments.push_back(new texture(dims.x, dims.y, GL_RGB, GL_UNSIGNED_BYTE, true)); //asset_submesh_id
+        m_framebuffer->attachments.push_back(new texture(dims.x, dims.y, GL_RGB, GL_UNSIGNED_BYTE, true)); //asset_submesh_chunk_id
         return true;
     }
     
@@ -161,6 +178,8 @@ namespace t4editor {
             app_resize_event* evt = (app_resize_event*)e;
             m_proj = perspective(m_fov, float(evt->new_width) / float(evt->new_height), 1.0f, 1000.0f);
             m_vp = m_proj * m_view;
+            m_framebuffer->w = evt->new_width;
+            m_framebuffer->h = evt->new_height;
         }
         
         for(auto i = m_panels.begin();i != m_panels.end();i++) {
@@ -208,6 +227,7 @@ namespace t4editor {
                 m_vp = m_proj * m_view;
             }
             
+            m_framebuffer->bind();
             m_window->beginFrame();
             
             glClearColor(0.5f, 0.5f, 0.5f, 1.0f);
@@ -222,6 +242,39 @@ namespace t4editor {
                 }
             }
             
+            //get actor info under cursor
+            if(m_curCursor.x > 0 && m_curCursor.x < m_window->getSize(false).x && m_curCursor.y >= 20 && m_curCursor.y < m_window->getSize(false).y) {
+                unsigned char asset_id[3];
+                unsigned char asset_submesh_id[3];
+                unsigned char asset_submesh_chunk_id[3];
+                vec2 buffer_scale = m_window->getSize() / m_window->getSize(false);
+                
+                int x = m_curCursor.x * buffer_scale.x;
+                int y = (m_window->getSize(false).y - 1 - m_curCursor.y) * buffer_scale.y;
+                //printf("%d, %d\n", x, y);
+                
+                glReadBuffer(GL_COLOR_ATTACHMENT1);
+                glReadPixels(x, y, 1, 1, GL_RGB, GL_UNSIGNED_BYTE, &asset_id);
+                actorUnderCursor = asset_id[0] + (asset_id[1] * 256) + (asset_id[2] * 256 * 256);
+                
+                glReadBuffer(GL_COLOR_ATTACHMENT2);
+                glReadPixels(x, y, 1, 1, GL_RGB, GL_UNSIGNED_BYTE, &asset_submesh_id);
+                actorSubmeshUnderCursor = asset_submesh_id[0] + (asset_submesh_id[1] * 256) + (asset_submesh_id[2] * 256 * 256);
+                
+                glReadBuffer(GL_COLOR_ATTACHMENT3);
+                glReadPixels(x, y, 1, 1, GL_RGB, GL_UNSIGNED_BYTE, &asset_submesh_chunk_id);
+                actorSubmeshChunkUnderCursor = asset_submesh_chunk_id[0] + (asset_submesh_chunk_id[1] * 256) + (asset_submesh_chunk_id[2] * 256 * 256);
+                //printf("cursor: %d - %d - %d\n", actorUnderCursor, actorSubmeshUnderCursor, actorSubmeshChunkUnderCursor);
+
+                
+            } else {
+                actorUnderCursor = -1;
+                actorSubmeshUnderCursor = -1;
+                actorSubmeshChunkUnderCursor = -1;
+            }
+            
+            m_framebuffer->blit();
+            glBindFramebuffer(GL_FRAMEBUFFER, 0);
             //render ImGui windows
             for(auto i = m_panels.begin();i != m_panels.end();i++) {
                 (*i)->render();

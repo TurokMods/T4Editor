@@ -8,6 +8,13 @@
 #include <render/shader.h>
 
 namespace t4editor {
+    vec3 int_to_vec3(int i) {
+        int r = (i & 0x000000FF) >>  0;
+        int g = (i & 0x0000FF00) >>  8;
+        int b = (i & 0x00FF0000) >> 16;
+        //printf("%d -> %d, %d, %d -> %f, %f, %f\n", i, r, g, b, float(r) / 255.0f, float(g) / 255.0f, float(b) / 255.0f);
+        return vec3(float(r) / 255.0f, float(g) / 255.0f, float(b) / 255.0f);
+    }
     actor_mesh::actor_mesh(SubMesh* mesh) {
         for(size_t i = 0;i < mesh->GetVertexCount();i++) {
             mesh_vert vert;
@@ -69,7 +76,7 @@ namespace t4editor {
         }
     }
     
-    void actor_mesh::render() {
+    void actor_mesh::render(shader* s) {
         if(vertices.size() == 0) return;
         int err = 0;
         err = glGetError(); if(err != 0) printf("err: %d | %s\n", err, glewGetErrorString(err));
@@ -83,11 +90,23 @@ namespace t4editor {
         
         if(chunkIndices.size() > 0) {
             for(size_t i = 0;i < chunkIndices.size();i++) {
+                float selectionFactor = 0.0f;
+                if(app->actorUnderCursor == parent->editor_id) {
+                    selectionFactor += 0.33f;
+                    if(app->actorSubmeshUnderCursor == submesh_id) {
+                        selectionFactor += 0.33f;
+                        if(app->actorSubmeshChunkUnderCursor == i) selectionFactor += 0.33f;
+                    }
+                }
+                
+                s->uniform("actor_submesh_chunk_id", int_to_vec3(i));
+                s->uniform("actor_selection_factor", selectionFactor);
                 glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ibos[i]);
                 glDrawElements(GL_TRIANGLE_STRIP, chunkIndices[i].size(), GL_UNSIGNED_SHORT, 0);
             }
         } else {
-            glDrawArrays(GL_LINE_STRIP, 0, vertices.size());
+            //s->uniform("actor_submesh_chunk", int_to_vec3(0));
+            //glDrawArrays(GL_LINE_STRIP, 0, vertices.size());
         }
         
         glBindBuffer(GL_ARRAY_BUFFER, 0);
@@ -103,6 +122,9 @@ namespace t4editor {
             for(size_t i = 0;i < mesh->GetSubMeshCount();i++) {
                 SubMesh* sm = mesh->GetSubMesh(i);
                 meshes.push_back(new actor_mesh(sm));
+                meshes[i]->app = app;
+                meshes[i]->parent = this;
+                meshes[i]->submesh_id = i;
             }
         }
         
@@ -113,6 +135,7 @@ namespace t4editor {
             position = vec3(pos.x, pos.y, pos.z);
             rotation = vec3(rot.x, rot.y, rot.z);
             scale    = vec3(scl.x, scl.y, scl.z);
+            actor_id = def->ID;
         } else {
             scale = vec3(1.0f, 1.0f, 1.0f);
         }
@@ -131,9 +154,11 @@ namespace t4editor {
         s->uniform("model", model);
         s->uniform("view", m_app->view());
         s->uniform("mvp", m_app->viewproj() * model);
+        s->uniform("actor_id", int_to_vec3(editor_id));
         
         for(size_t i = 0;i < meshes.size();i++) {
-            meshes[i]->render();
+            s->uniform("actor_submesh_id", int_to_vec3(i));
+            meshes[i]->render(s);
         }
     }
 }

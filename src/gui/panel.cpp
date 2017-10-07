@@ -13,6 +13,7 @@
         m_hasTitleBar = true;
         m_posUpdated = false;
         m_canCollapse = false;
+        m_isWindow = true;
         m_canClose = true;
         m_parent = nullptr;
         m_app = nullptr;
@@ -52,33 +53,45 @@
             
             if(m_manualFlags != 0) f = m_manualFlags;
         
-            if(!m_parent) ImGui::Begin(m_name.c_str(), m_canClose ? &m_isOpen : nullptr, ImVec2(0.0f, 0.0f), m_bgAlpha, f);
-            else ImGui::BeginChild(m_name.c_str(), ImVec2(m_initSize.x, m_initSize.y), f);
+            if(m_isWindow) {
+                if(!m_parent) ImGui::Begin(m_name.c_str(), m_canClose ? &m_isOpen : nullptr, ImVec2(0.0f, 0.0f), m_bgAlpha, f);
+                else ImGui::BeginChild(m_name.c_str(), ImVec2(m_initSize.x, m_initSize.y), f);
             
-            if(m_sizeUpdated) {
-                ImGui::SetWindowSize(ImVec2(m_initSize.x, m_initSize.y));
-                m_sizeUpdated = false;
+                
+                if(m_sizeUpdated) {
+                    ImGui::SetWindowSize(ImVec2(m_initSize.x, m_initSize.y));
+                    m_sizeUpdated = false;
+                }
+                
+                if(m_posUpdated) {
+                    ImGui::SetWindowPos(ImVec2(m_initPos.x, m_initPos.y));
+                    m_posUpdated = false;
+                }
+                
+                ImVec2 sz = ImGui::GetWindowSize();
+                m_curSize = vec2(sz.x, sz.y);
+                
+                ImVec2 pos = ImGui::GetWindowPos();
+                m_curPos = vec2(pos.x, pos.y);
+                
+                // render children
+                for(auto i = m_panels.begin();i != m_panels.end();i++) {
+                    (*i)->render();
+                }
+                
+                renderContent();
+            
+                if(!m_parent) ImGui::End();
+                else ImGui::EndChild();
             }
-            
-            if(m_posUpdated) {
-                ImGui::SetWindowPos(ImVec2(m_initPos.x, m_initPos.y));
-                m_posUpdated = false;
+            else {
+                // render children
+                for(auto i = m_panels.begin();i != m_panels.end();i++) {
+                    (*i)->render();
+                }
+                
+                renderContent();
             }
-            
-            ImVec2 sz = ImGui::GetWindowSize();
-            m_curSize = vec2(sz.x, sz.y);
-            
-            ImVec2 pos = ImGui::GetWindowPos();
-            m_curPos = vec2(pos.x, pos.y);
-            
-            // render children
-            for(auto i = m_panels.begin();i != m_panels.end();i++) {
-                (*i)->render();
-            }
-            
-            renderContent();
-            if(!m_parent) ImGui::End();
-            else ImGui::EndChild();
         } else {
             if(m_wasOpen) {
                 this->dispatchNamedEvent("closed");
