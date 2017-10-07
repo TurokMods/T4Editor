@@ -27,12 +27,13 @@ namespace t4editor {
         mesh_vec2 texcoord;
     };
     
+    class actor;
     class actor_mesh {
         public:
             actor_mesh(SubMesh* mesh);
             ~actor_mesh();
         
-            void render();
+            void render(shader* s);
         
             GLuint vao;
             GLuint vbo;
@@ -40,6 +41,9 @@ namespace t4editor {
             vector<mesh_vert> vertices;
             GLuint* ibos;
             vector<vector<unsigned short> > chunkIndices;
+            application* app;
+            actor* parent;
+            int submesh_id;
     };
     
     class actor {
@@ -57,6 +61,8 @@ namespace t4editor {
             vec3 position;
             vec3 scale;
             vec3 rotation;
+            int actor_id;
+            int editor_id;
             
         protected:
             application* m_app;

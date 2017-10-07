@@ -9,6 +9,7 @@ namespace t4editor {
     class main_window : public ui_panel {
         public:
             main_window() {
+                setIsWindow(false);
             }
             ~main_window() {
             }
@@ -30,13 +31,22 @@ namespace t4editor {
             }
         
             virtual void renderContent() {
-                if(BeginMenuBar()) {
+                if(BeginMainMenuBar()) {
                     if(BeginMenu("File")) {
                         if(MenuItem("Load Level")) {
                             m_app->dispatchNamedEvent("prompt_load_level");
                         }
                         if(MenuItem("Exit")) {
                             m_app->dispatchNamedEvent("shutdown");
+                        }
+                        EndMenu();
+                    }
+                    if(BeginMenu("View")) {
+                        if(BeginMenu("Debug")) {
+                            if(MenuItem("Framebuffer")) {
+                                m_app->dispatchNamedEvent("prompt_framebuffer_view");
+                            }
+                            EndMenu();
                         }
                         EndMenu();
                     }
@@ -49,7 +59,7 @@ namespace t4editor {
                     
                     ImGui::Text("Average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
                     
-                    EndMenuBar();
+                    EndMainMenuBar();
                 }
             }
     };

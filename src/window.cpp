@@ -7,7 +7,9 @@
 
 namespace t4editor {
     void window_size_callback(GLFWwindow* window, int width, int height) {
-        app_resize_event e(width, height, window);
+        int x, y;
+        glfwGetFramebufferSize(window, &x, &y);
+        app_resize_event e(x, y, window);
         application* app = (application*)glfwGetWindowUserPointer(window);
         app->onEvent(&e);
     }
@@ -80,9 +82,12 @@ namespace t4editor {
     void window::poll() {
         glfwPollEvents();
     }
-    vec2 window::getSize() const {
+    vec2 window::getSize(bool UseBufferSize) const {
         int x, y;
-        glfwGetWindowSize(m_window, &x, &y);
+        if(UseBufferSize)
+            glfwGetFramebufferSize(m_window, &x, &y);
+        else
+            glfwGetWindowSize(m_window, &x, &y);
         return vec2(x, y);
     }
 }
