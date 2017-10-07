@@ -36,6 +36,7 @@ namespace t4editor {
             string gameDataPath() const { return m_dataPath; }
             string editorDataPath() const { return m_editorDataPath; }
             turokfs* getTurokData() const { return m_fs; }
+            framebuffer* getFrame() const { return m_framebuffer; }
         
             mat4 view() const { return m_view; }
             mat4 proj() const { return m_proj; }

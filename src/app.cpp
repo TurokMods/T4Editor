@@ -67,7 +67,7 @@ namespace t4editor {
         
         vec2 dims = m_window->getSize();
         m_framebuffer = new framebuffer(dims.x, dims.y, true);
-        m_framebuffer->attachments.push_back(new texture(dims.x, dims.y, GL_RGB, GL_BYTE, false)); //color buffer
+        m_framebuffer->attachments.push_back(new texture(dims.x, dims.y, GL_RGB, GL_UNSIGNED_BYTE, true)); //color buffer
         m_framebuffer->attachments.push_back(new texture(dims.x, dims.y, GL_RGB, GL_UNSIGNED_BYTE, true)); //asset_id
         m_framebuffer->attachments.push_back(new texture(dims.x, dims.y, GL_RGB, GL_UNSIGNED_BYTE, true)); //asset_submesh_id
         m_framebuffer->attachments.push_back(new texture(dims.x, dims.y, GL_RGB, GL_UNSIGNED_BYTE, true)); //asset_submesh_chunk_id
@@ -251,7 +251,7 @@ namespace t4editor {
                 
                 int x = m_curCursor.x * buffer_scale.x;
                 int y = (m_window->getSize(false).y - 1 - m_curCursor.y) * buffer_scale.y;
-                printf("%d, %d\n", x, y);
+                //printf("%d, %d\n", x, y);
                 
                 glReadBuffer(GL_COLOR_ATTACHMENT1);
                 glReadPixels(x, y, 1, 1, GL_RGB, GL_UNSIGNED_BYTE, &asset_id);
@@ -264,7 +264,7 @@ namespace t4editor {
                 glReadBuffer(GL_COLOR_ATTACHMENT3);
                 glReadPixels(x, y, 1, 1, GL_RGB, GL_UNSIGNED_BYTE, &asset_submesh_chunk_id);
                 actorSubmeshChunkUnderCursor = asset_submesh_chunk_id[0] + (asset_submesh_chunk_id[1] * 256) + (asset_submesh_chunk_id[2] * 256 * 256);
-                printf("cursor: %d - %d - %d\n", actorUnderCursor, actorSubmeshUnderCursor, actorSubmeshChunkUnderCursor);
+                //printf("cursor: %d - %d - %d\n", actorUnderCursor, actorSubmeshUnderCursor, actorSubmeshChunkUnderCursor);
 
                 
             } else {
@@ -279,7 +279,6 @@ namespace t4editor {
             for(auto i = m_panels.begin();i != m_panels.end();i++) {
                 (*i)->render();
             }
-            
             
             m_window->endFrame();
         }

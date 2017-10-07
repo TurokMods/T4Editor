@@ -36,6 +36,7 @@ namespace t4editor {
             void setHasTitleBar(bool flag) { m_hasTitleBar = flag; }
             void setCanClose(bool flag) { m_canClose = flag; }
             void setCanCollapse(bool flag) { m_canCollapse = flag; }
+            void setIsWindow(bool flag) { m_isWindow = false; }
         
             void render();
             bool isClosed() const { return !m_isOpen; }
@@ -65,6 +66,7 @@ namespace t4editor {
             bool m_hasTitleBar;
             bool m_canClose;
             bool m_canCollapse;
+            bool m_isWindow;
             int m_manualFlags;
         
             ui_panel* m_parent;
