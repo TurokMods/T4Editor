@@ -82,7 +82,7 @@ namespace t4editor {
 
             actorUnderCursor m_actorUnderCursor;
             actorUnderCursor m_selectedActor;
-        
+            
             mat4 m_view;
             mat4 m_proj;
             mat4 m_vp;
