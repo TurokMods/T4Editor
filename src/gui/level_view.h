@@ -198,34 +198,38 @@ namespace t4editor {
                 max_bound.x += wPos.x;
                 max_bound.y += wPos.y;
 
-                
-                if(cursorOverView()) {
-                    float moveSpeed = 1.0f; // units per frame
-                    vec3 moveDir = vec3(0.0f, 0.0f, 0.0f);
-                    if(m_keyDown[GLFW_KEY_W] > 0.0f) moveDir.z =  1;
-                    if(m_keyDown[GLFW_KEY_S] > 0.0f) moveDir.z = -1;
-                    if(m_keyDown[GLFW_KEY_A] > 0.0f) moveDir.x =  1;
-                    if(m_keyDown[GLFW_KEY_D] > 0.0f) moveDir.x = -1;
-                    
-                    if(!(moveDir.x == 0 && moveDir.y == 0 && moveDir.z == 0)) {
-                        moveDir = normalize(moveDir) * moveSpeed;
-                        vec4 nPos = vec4(moveDir, 1.0f) * eulerAngleXYZ(m_camAngles.y, m_camAngles.x, 0.0f);
-                        m_camPos.x += nPos.x;
-                        m_camPos.y += nPos.y;
-                        m_camPos.z += nPos.z;
+                if(m_level) {
+                    if(cursorOverView()) {
+                        float moveSpeed = 1.0f; // units per frame
+                        vec3 moveDir = vec3(0.0f, 0.0f, 0.0f);
+                        if(m_keyDown[GLFW_KEY_W] > 0.0f) moveDir.z =  1;
+                        if(m_keyDown[GLFW_KEY_S] > 0.0f) moveDir.z = -1;
+                        if(m_keyDown[GLFW_KEY_A] > 0.0f) moveDir.x =  1;
+                        if(m_keyDown[GLFW_KEY_D] > 0.0f) moveDir.x = -1;
                         
-                        m_view = eulerAngleXYZ(m_camAngles.y, m_camAngles.x, 0.0f) * translate(m_camPos);
-                        m_app->set_view(m_view, m_proj);
+                        if(!(moveDir.x == 0 && moveDir.y == 0 && moveDir.z == 0)) {
+                            moveDir = normalize(moveDir) * moveSpeed;
+                            vec4 nPos = vec4(moveDir, 1.0f) * eulerAngleXYZ(m_camAngles.y, m_camAngles.x, 0.0f);
+                            m_camPos.x += nPos.x;
+                            m_camPos.y += nPos.y;
+                            m_camPos.z += nPos.z;
+                            
+                            m_view = eulerAngleXYZ(m_camAngles.y, m_camAngles.x, 0.0f) * translate(m_camPos);
+                            m_app->set_view(m_view, m_proj);
+                        }
+                        
+                        picking();
                     }
                     
-                    picking();
+                    framebuffer* fb = m_app->getFrame();
+                    vec2 dims = getActualSize();
+                    ImGui::Image((GLuint*)fb->attachments[0]->id, ImVec2(dims.x,dims.y), ImVec2(0, 1), ImVec2(1, 0));
+                } else {
+                    SetCursorPos(ImVec2(getSize().x / 2,(getSize().y / 2) - 10));
+                    SetWindowFontScale(1.5f);
+                    Text("Select a level to edit from the file menu");
+                    SetWindowFontScale(1.0f);
                 }
-                
-                
-                
-                framebuffer* fb = m_app->getFrame();
-                vec2 dims = getActualSize();
-                ImGui::Image((GLuint*)fb->attachments[0]->id, ImVec2(dims.x,dims.y), ImVec2(0, 1), ImVec2(1, 0));
             }
         
             bool cursorOverView() const {

@@ -1,8 +1,7 @@
 #include <app.h>
 
-#define LEVEL_VIEW_WIDTH_FRACTION 0.8f
-#define LEVEL_VIEW_HEIGHT_FRACTION 0.75f
 #include <gui/ui.h>
+#include <gui/memory_editor.h>
 #include <gui/main_window.h>
 #include <gui/load_level.h>
 #include <gui/framebuffer_view.h>
@@ -17,6 +16,7 @@ namespace t4editor {
     level_view* level_display;
     bottom_panel* lower_panel;
     sidebar* tools;
+    memory_editor* mem_edit;
     
     void register_ui(application* app) {
         app_space = new main_window();
@@ -36,9 +36,13 @@ namespace t4editor {
         
         tools = new sidebar();
         app->add_panel(tools);
+        
+        mem_edit = new memory_editor();
+        app->add_panel(mem_edit);
     }
     
     void destroy_ui() {
+        delete mem_edit;
         delete tools;
         delete lower_panel;
         delete level_display;

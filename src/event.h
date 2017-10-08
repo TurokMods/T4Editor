@@ -116,4 +116,18 @@ namespace t4editor {
             string vname;
             string vtype;
     };
+    
+    class open_memory_editor_event : public event {
+        public:
+            open_memory_editor_event(const string& _title, u8* _data, size_t _size) : event("show_memory_editor") {
+                title = _title;
+                data = _data;
+                size = _size;
+            }
+            ~open_memory_editor_event() { }
+            
+            string title;
+            u8* data;
+            size_t size;
+    };
 }
