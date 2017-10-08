@@ -7,6 +7,7 @@
 #include <gui/actor_instance_properties.h>
 #include <gui/level_view.h>
 #include <gui/bottom_panel.h>
+#include <gui/sidebar.h>
 
 namespace t4editor {
     main_window* app_space;
@@ -15,6 +16,7 @@ namespace t4editor {
     actor_instance_properties* actor_instance_info;
     level_view* level_display;
     bottom_panel* lower_panel;
+    sidebar* tools;
     
     void register_ui(application* app) {
         app_space = new main_window();
@@ -34,9 +36,13 @@ namespace t4editor {
         
         lower_panel = new bottom_panel();
         app->add_panel(lower_panel);
+        
+        tools = new sidebar();
+        app->add_panel(tools);
     }
     
     void destroy_ui() {
+        delete tools;
         delete lower_panel;
         delete level_display;
         delete actor_instance_info;

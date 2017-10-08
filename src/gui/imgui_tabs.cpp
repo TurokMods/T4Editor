@@ -148,9 +148,9 @@ void ImGui::TabBar::_drawTabBarTop(const char *label) {
     const float division = ((wind->Size.x - 2*padding.x)/(float)tabCount);
 
     // Compile-time constants
-    static constexpr const float rounding = 6.0f;
+    static constexpr const float rounding = 0.0f;
     // This is the border shrink in px. Not sure why it needs to be 1, but it works. Adjust to your border size
-    static constexpr const float shrink = 1.0f;
+    static constexpr const float shrink = 0.0f;
 
     const float tab_height = CalcTextSize(tabTitles[0]).y + (frame_padding.y * 2);
 
@@ -233,7 +233,7 @@ void ImGui::TabBar::_drawTabBarTop(const char *label) {
     // Draw the selected tab on top of everything else
     dl->AddRectFilled(bb.Min, bb.Max, GetColorU32(ImGuiUserCol_TabNormal), rounding, ImGuiCorner_TopLeft | ImGuiCorner_TopRight);
 
-    dl->AddRectFilled(bb.Min, bb.Max, ImColor(1.0f, 1.0f, 1.0f, 0.35f), rounding, ImGuiCorner_TopLeft | ImGuiCorner_TopRight);
+    dl->AddRectFilled(bb.Min, bb.Max, ImColor(0.4f, 0.4f, 1.0f, 0.75f), rounding, ImGuiCorner_TopLeft | ImGuiCorner_TopRight);
     // Draw the border
     _drawPartialRect(bb.Min, bb.Max,rounding, ImGuiCorner_TopLeft | ImGuiCorner_TopRight, dl,
                      (_EdgeType) (EDGE_LEFT | EDGE_RIGHT | EDGE_TOP), GetColorU32(ImGuiUserCol_TabBorderShadow),
