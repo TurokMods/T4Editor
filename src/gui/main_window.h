@@ -42,16 +42,17 @@ namespace t4editor {
                         EndMenu();
                     }
                     if(BeginMenu("View")) {
-                        if(BeginMenu("Windows")) {
+                        //if(BeginMenu("Windows")) {
                             //I'll just let this be open by default...
                             //if(MenuItem("Level View")) {
                             //    m_app->dispatchNamedEvent("show_level_view");
                             //}
-                            if(MenuItem("Actor Instance Properties")) {
-                                m_app->dispatchNamedEvent("show_instance_properties");
-                            }
-                            EndMenu();
-                        }
+                            //This one too...
+                            //if(MenuItem("Actor Instance Properties")) {
+                            //    m_app->dispatchNamedEvent("show_instance_properties");
+                            //}
+                        //    EndMenu();
+                        //}
                         if(BeginMenu("Debug")) {
                             if(MenuItem("Framebuffer")) {
                                 m_app->dispatchNamedEvent("prompt_framebuffer_view");

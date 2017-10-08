@@ -20,9 +20,14 @@ namespace t4editor {
         m_fs = 0;
         m_level = 0;
         m_framebuffer = 0;
+        m_windowPosX = 0;
+        m_windowPosY = 0;
     }
     
     application::~application() {
+        vec2 wSize = m_window->getSize(false);
+        vec2 wPos = m_window->getPosition();
+        
         if(m_shader) delete m_shader;
         if(m_fs) delete m_fs;
         if(m_window) delete m_window;
@@ -32,6 +37,28 @@ namespace t4editor {
             }
             delete m_framebuffer;
         }
+        
+        string exePath = m_args[0];
+        exePath = exePath.substr(0, exePath.find_last_of("/"));
+        
+        FILE* fp = fopen((exePath + "/config.txt").c_str(), "w");
+        if(!fp) {
+            printf("WARNING: The application is closing but we can't open the config file to save the modified settings. Sorry...\n");
+        } else {
+            fprintf(fp, "[PATHS]\n");
+            fprintf(fp, "game_data_path '%s'\n", m_dataPath.c_str());
+            fprintf(fp, "editor_data_path '%s'\n\n", m_editorDataPath.c_str());
+            fprintf(fp, "[WINDOW]\n");
+            fprintf(fp, "res_x %d\n", (int)wSize.x);
+            fprintf(fp, "res_y %d\n\n", (int)wSize.y);
+            fprintf(fp, "pos_x %d\n", (int)wPos.x);
+            fprintf(fp, "pos_y %d\n\n", (int)wPos.y);
+            fprintf(fp, "[ACTOR VARIABLES]\n");
+            for(auto i = m_actor_var_types.begin();i != m_actor_var_types.end();i++) {
+                fprintf(fp, "av__%s %s\n", i->first.c_str(), i->second.c_str());
+            }
+            fclose(fp);
+        }
     }
     
     bool application::initialize() {
@@ -40,6 +67,8 @@ namespace t4editor {
         if(!m_window->isOpen()) {
             return false;
         }
+        
+        glfwSetWindowPos(m_window->getWindow(), m_windowPosX, m_windowPosY);
         
         m_fs = new turokfs(m_dataPath);
         
@@ -70,6 +99,12 @@ namespace t4editor {
         }
         else if(name == "res_x") m_windowWidth = atoi(value.c_str());
         else if(name == "res_y") m_windowHeight = atoi(value.c_str());
+        else if(name == "pos_x") m_windowPosX = atoi(value.c_str());
+        else if(name == "pos_y") m_windowPosY = atoi(value.c_str());
+        else if(name.find("av__") != name.npos) {
+            string vName = name.substr(4, name.length() - 4);
+            define_actor_var_type(vName, value);
+        }
     }
 
     void application::add_panel(ui_panel *panel) {
@@ -95,6 +130,9 @@ namespace t4editor {
         }
         else if(e->name == "window_resize") {
             app_resize_event* evt = (app_resize_event*)e;
+        } else if(e->name == "define_av_type") {
+            set_actor_var_type_event* evt = (set_actor_var_type_event*)e;
+            define_actor_var_type(evt->vname, evt->vtype);
         }
         
         for(auto i = m_panels.begin();i != m_panels.end();i++) {
@@ -119,6 +157,13 @@ namespace t4editor {
         dispatchNamedEvent("level_loaded");
         
         return;
+    }
+    
+    string application::get_actor_var_type(const string &vname) const {
+        auto i = m_actor_var_types.find(vname);
+        if(i == m_actor_var_types.end()) return "";
+        
+        return i->second;
     }
     
     int application::run() {

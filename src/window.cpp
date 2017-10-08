@@ -91,4 +91,9 @@ namespace t4editor {
             glfwGetWindowSize(m_window, &x, &y);
         return vec2(x, y);
     }
+    vec2 window::getPosition() const {
+        int x, y;
+        glfwGetWindowPos(m_window, &x, &y);
+        return vec2(x, y);
+    }
 }

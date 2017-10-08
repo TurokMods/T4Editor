@@ -103,4 +103,17 @@ namespace t4editor {
             int meshChunkId;
             bool deselected;
     };
+    
+    //this would just be a function call, but it might need to propogate to the UI
+    class set_actor_var_type_event : public event {
+        public:
+            set_actor_var_type_event(const string& _vname, const string& _vtype) : event("define_av_type") {
+                vname = _vname;
+                vtype = _vtype;
+            }
+            ~set_actor_var_type_event() { }
+        
+            string vname;
+            string vtype;
+    };
 }

@@ -1,5 +1,6 @@
 #include <string>
 #include <vector>
+#include <unordered_map>
 using namespace std;
 
 #include <EngineTypes.h>
@@ -66,9 +67,12 @@ namespace t4editor {
             }
 
             void load_level(const string& path);
+        
+            //actor variables
+            void define_actor_var_type(const string& vname, const string& vtype) { m_actor_var_types[vname] = vtype; }
+            string get_actor_var_type(const string& vname) const;
+            
             int run();
-        
-        
 
         protected:
             window* m_window;
@@ -79,6 +83,8 @@ namespace t4editor {
             string m_editorDataPath;
             int m_windowWidth;
             int m_windowHeight;
+            int m_windowPosX;
+            int m_windowPosY;
 
             actorUnderCursor m_actorUnderCursor;
             actorUnderCursor m_selectedActor;
@@ -92,5 +98,7 @@ namespace t4editor {
             level* m_level;
             shader* m_shader;
             framebuffer* m_framebuffer;
+        
+            unordered_map<string, string> m_actor_var_types;
     };
 }
