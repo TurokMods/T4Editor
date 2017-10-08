@@ -68,6 +68,7 @@
 #ifndef IMGUI_TABS_HPP
 #define IMGUI_TABS_HPP
 
+#define IMGUI_DEFINE_MATH_OPERATORS
 #include <vector>
 #include <string>
 #include <iostream>

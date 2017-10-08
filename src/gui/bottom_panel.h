@@ -10,7 +10,7 @@ namespace t4editor {
     class bottom_panel : public ui_panel {
         public:
             bottom_panel() {
-                setName("Lower panel");
+                setName("LowerPanel");
                 setHasTitleBar(false);
                 setCanResize(false);
                 setCanMove(false);
@@ -19,20 +19,20 @@ namespace t4editor {
         
             ~bottom_panel() {
             }
+            
         
             virtual void onAttach(ui_panel* toPanel) {
                 vec2 sz = m_app->getWindow()->getSize();
-                sz.y *= 0.7f;
-                sz.x -= (sz.x * 0.75f);
+                sz.y -= (sz.y * 0.7f) + 16.0f;
                 
-                setPosition(vec2(m_app->getWindow()->getSize().x * 0.75f, 20.0f));
+                setPosition(vec2(0, m_app->getWindow()->getSize().y - sz.y));
                 setSize(sz);
             }
         
             virtual void onEvent(event* e) {
                 if(e->name == "window_resize") {
                     vec2 sz = m_app->getWindow()->getSize();
-                    sz.y -= (sz.y * 0.7f) + 24.0f;
+                    sz.y -= (sz.y * 0.7f) + 16.0f;
                     
                     setPosition(vec2(0, m_app->getWindow()->getSize().y - sz.y));
                     setSize(sz);
