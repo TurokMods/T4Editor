@@ -116,17 +116,17 @@ namespace t4editor {
                                         if(m_selectedActor.actorId != -1) sendDeselected = true;
                                     }
                                     
-                                    if(sendSelected) {
-                                        actor* a = m_level->actors()[m_actorUnderCursor.actorId];
-                                        actor_mesh* m = a->meshes[m_actorUnderCursor.actorSubmeshId];
-                                        actor_selection_event e(m_level, a, m, m_actorUnderCursor.actorId, m_actorUnderCursor.actorSubmeshId, m_actorUnderCursor.actorSubmeshChunkId, false);
-                                        m_app->onEvent(&e);
-                                    }
-                                    
                                     if(sendDeselected) {
                                         actor* a = m_level->actors()[m_selectedActor.actorId];
                                         actor_mesh* m = m_level->actors()[m_selectedActor.actorId]->meshes[m_selectedActor.actorSubmeshId];
                                         actor_selection_event e(m_level, a, m, m_selectedActor.actorId, m_selectedActor.actorSubmeshId, m_selectedActor.actorSubmeshChunkId, true);
+                                        m_app->onEvent(&e);
+                                    }
+                                    
+                                    if(sendSelected) {
+                                        actor* a = m_level->actors()[m_actorUnderCursor.actorId];
+                                        actor_mesh* m = a->meshes[m_actorUnderCursor.actorSubmeshId];
+                                        actor_selection_event e(m_level, a, m, m_actorUnderCursor.actorId, m_actorUnderCursor.actorSubmeshId, m_actorUnderCursor.actorSubmeshChunkId, false);
                                         m_app->onEvent(&e);
                                     }
                                     

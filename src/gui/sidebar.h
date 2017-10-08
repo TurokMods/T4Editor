@@ -70,7 +70,10 @@ namespace t4editor {
             }
         
             virtual void renderContent() {
-                if(Actor) Text("Actor: %s", Actor->actorTraits->Name.c_str());
+                if(Actor) {
+                    if(Actor->actorTraits) Text("Actor: %s", Actor->actorTraits->Name.c_str());
+                    else Text("%s", Level->levelFile()->GetActorMeshFile().c_str());;
+                }
                 else Text("No selection");
                 renderActorVariables();
             }
@@ -82,21 +85,26 @@ namespace t4editor {
                             //actor instance
                             ActorVariables* vars = Actor->actorTraits->variables();
                             
-                            BeginChild("av_view");
                             if(vars) {
                                 for(size_t i = 0;i < vars->GetBlockCount();i++) {
                                     Block* var = vars->GetBlock(i);
                                     
                                     string name = var->GetTypeString();
-                                    string data = var->GetData()->GetString();
-                                    Selectable(name.c_str());
-                                    SameLine(200);
-                                    Text("%s", data.c_str());
+                                    
+                                    ByteStream* data = var->GetData();
+                                    void* ptr = data->Ptr();
+                                    if(CollapsingHeader(name.c_str())) {
+                                        size_t sz = data->GetSize();
+                                        InputText("String", (char*)var->GetData()->Ptr(), sz);
+                                        if(sz == 4) {
+                                            InputInt("int32", (int*)ptr);
+                                            InputFloat("float",(float*)ptr);
+                                        }
+                                    }
                                 }
                             } else {
-                                Selectable("No Variables Set");
+                                Text("No Variables Set");
                             }
-                            EndChild();
                         } else {
                             //level
                             Text("No data to show yet");

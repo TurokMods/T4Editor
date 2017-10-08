@@ -18,6 +18,8 @@ namespace t4editor {
         
             vector<actor*> actors() const { return m_actors; }
         
+            ATRFile* levelFile() const { return m_atr; }
+        
         protected:
             application* m_app;
             ATRFile* m_atr;
