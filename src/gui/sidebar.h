@@ -77,9 +77,13 @@ namespace t4editor {
                 }
                 else Text("No selection");
                 renderActorVariables();
+                renderActorProperties();
             }
         
-            void renderActorVariables();
+            void renderActorVariables(); //Stored in the ATI file
+            void renderActorProperties() { //Stored in the actor's ATR file (global)
+                
+            }
         
         protected:
             level* Level;
