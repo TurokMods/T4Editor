@@ -22,6 +22,8 @@ namespace t4editor {
 
         for(auto i = lines.begin();i != lines.end();i++) {
             string line = *i;
+            if(line[0] == '[' || line[0] == '#') continue;
+            
             size_t first_space = 0;
             while(first_space < line.length()) {
                 if(line[first_space] == ' ') break;

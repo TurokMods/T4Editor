@@ -1,5 +1,7 @@
 #include <app.h>
 
+#define LEVEL_VIEW_WIDTH_FRACTION 0.8f
+#define LEVEL_VIEW_HEIGHT_FRACTION 0.75f
 #include <gui/ui.h>
 #include <gui/main_window.h>
 #include <gui/load_level.h>
