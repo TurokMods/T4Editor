@@ -9,6 +9,8 @@ using namespace ImGui;
 #include <glm/gtx/transform.hpp>
 #include <glm/gtx/euler_angles.hpp>
 
+#include <algorithm>
+
 //todo: make these configurable
 #define MOUSE_BTN_DRAG_VIEW_HOLD_TIME 0.1f
 #define MOUSE_BTN_SELECT_ACTOR_MAX_CLICK_HOLD_TIME 0.4f
