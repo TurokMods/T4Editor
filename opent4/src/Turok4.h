@@ -27,7 +27,7 @@ namespace opent4
             bool Save(const std::string& File);
 
             size_t GetActorCount() const { return m_Actors.size(); }
-            const ActorDef* GetActorDef(size_t Idx) const { return m_Actors[Idx]; }
+            ActorDef* GetActorDef(size_t Idx) const { return m_Actors[Idx]; }
             std::string GetFile() const { return m_File; }
 
         protected:
@@ -65,7 +65,7 @@ namespace opent4
             std::string GetActorMeshFile()  const { return m_ActorMeshFile; }
             std::string GetInstancesFile()  const { return m_InstancesFile; }
             std::string GetPrecacheFile()   const { return m_PrecacheFile;  }
-            ActorMesh* GetMesh() const { return m_Mesh; }
+            ActorMesh* GetMesh() { return m_Mesh; }
 
 
         protected:

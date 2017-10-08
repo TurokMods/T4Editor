@@ -15,8 +15,17 @@ using namespace std;
 #include <render/framebuffer.h>
 #include <render/texture.h>
 
+#include <glm/glm.hpp>
+
 namespace t4editor {
     class ui_panel;
+            
+    typedef struct {
+        int actorId;
+        int actorSubmeshId;
+        int actorSubmeshChunkId;
+    } actorUnderCursor;
+    
     class application : public event_receiver {
         public:
             application(int argc,const char* argv[]);
@@ -38,16 +47,28 @@ namespace t4editor {
             turokfs* getTurokData() const { return m_fs; }
             framebuffer* getFrame() const { return m_framebuffer; }
         
+            level* getLevel() const { return m_level; }
+        
+            void set_view(const mat4& v, const mat4& p) {
+                m_view = v;
+                m_proj = p;
+                m_vp = p * v;
+            }
             mat4 view() const { return m_view; }
             mat4 proj() const { return m_proj; }
             mat4 viewproj() const { return m_vp; }
+        
+            actorUnderCursor getActorUnderCursor() const { return m_actorUnderCursor; }
+            actorUnderCursor getSelectedActor() const { return m_selectedActor; }
+            void set_picked_actor_info(actorUnderCursor hovered, actorUnderCursor selected) {
+                m_actorUnderCursor = hovered;
+                m_selectedActor = selected;
+            }
 
             void load_level(const string& path);
             int run();
         
-            int actorUnderCursor;
-            int actorSubmeshUnderCursor;
-            int actorSubmeshChunkUnderCursor;
+        
 
         protected:
             window* m_window;
@@ -58,14 +79,10 @@ namespace t4editor {
             string m_editorDataPath;
             int m_windowWidth;
             int m_windowHeight;
+
+            actorUnderCursor m_actorUnderCursor;
+            actorUnderCursor m_selectedActor;
         
-            int m_inputEnabledCounter;
-            vec2 m_curCursor;
-            vec2 m_camAngles;
-            vec3 m_camPos;
-            float m_fov;
-            bool m_mouseBtnDown[3];
-            bool m_keyDown[256];
             mat4 m_view;
             mat4 m_proj;
             mat4 m_vp;

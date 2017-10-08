@@ -14,6 +14,7 @@ namespace opent4
     class ATIFile;
     class Block;
     class Actor;
+    class ActorVariables;
 
     class ActorVec3
     {
@@ -29,6 +30,8 @@ namespace opent4
         Actor* Actor;
         int BlockIdx;
         ATIFile* Parent;
+        
+        ActorVariables* variables();
 
         //Actor Props
         int ID;
@@ -48,8 +51,8 @@ namespace opent4
             bool Load(ByteStream* Data);
             bool Save(ByteStream* Data);
 
-            size_t GetBlockCount()         const { return m_Blocks.size(); }
-            const Block* GetBlock(int Idx) const { return m_Blocks[Idx];   }
+            size_t GetBlockCount()   const { return m_Blocks.size(); }
+            Block* GetBlock(int Idx) const { return m_Blocks[Idx];   }
 
             ActorVec3 Spin;
 

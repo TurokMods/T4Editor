@@ -12,11 +12,24 @@ namespace t4editor {
         }
         
         glBindTexture(GL_TEXTURE_2D, 0);
+        
+        m_w = w;
+        m_h = h;
+        m_fmt = fmt;
+        m_comp_type = comp_type;
+        m_isRtt = rtt;
     }
     texture::~texture() {
         if(id) glDeleteTextures(1, &id);
     }
     
+    void texture::resize(int w, int h) {
+        m_w = w;
+        m_h = h;
+        glBindTexture(GL_TEXTURE_2D, id);
+        glTexImage2D(GL_TEXTURE_2D, 0, m_fmt, m_w, m_h, 0, m_fmt, m_comp_type, 0);
+        glBindTexture(GL_TEXTURE_2D, 0);
+    }
     void texture::bind() {
         glBindTexture(GL_TEXTURE_2D, id);
     }

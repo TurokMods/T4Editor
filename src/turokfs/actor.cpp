@@ -90,17 +90,7 @@ namespace t4editor {
         
         if(chunkIndices.size() > 0) {
             for(size_t i = 0;i < chunkIndices.size();i++) {
-                float selectionFactor = 0.0f;
-                if(app->actorUnderCursor == parent->editor_id) {
-                    selectionFactor += 0.33f;
-                    if(app->actorSubmeshUnderCursor == submesh_id) {
-                        selectionFactor += 0.33f;
-                        if(app->actorSubmeshChunkUnderCursor == i) selectionFactor += 0.33f;
-                    }
-                }
-                
                 s->uniform("actor_submesh_chunk_id", int_to_vec3(i));
-                s->uniform("actor_selection_factor", selectionFactor);
                 glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ibos[i]);
                 glDrawElements(GL_TRIANGLE_STRIP, chunkIndices[i].size(), GL_UNSIGNED_SHORT, 0);
             }
@@ -116,8 +106,10 @@ namespace t4editor {
         glDisableVertexAttribArray(2);
         err = glGetError(); if(err != 0) printf("err: %d | %s\n", err, glewGetErrorString(err));
     }
-    actor::actor(application* app, const ActorMesh* mesh, const ActorDef* def) {
+    actor::actor(application* app, ActorMesh* mesh, ActorDef* def) {
         m_app = app;
+        actorTraits = def;
+        meshTraits = mesh;
         if(mesh) {
             for(size_t i = 0;i < mesh->GetSubMeshCount();i++) {
                 SubMesh* sm = mesh->GetSubMesh(i);
@@ -155,6 +147,10 @@ namespace t4editor {
         s->uniform("view", m_app->view());
         s->uniform("mvp", m_app->viewproj() * model);
         s->uniform("actor_id", int_to_vec3(editor_id));
+        
+        if(m_app->getSelectedActor().actorId == editor_id) {
+            s->uniform("actor_selected", 1.0f);
+        } else s->uniform("actor_selected", 0.0f);
         
         for(size_t i = 0;i < meshes.size();i++) {
             s->uniform("actor_submesh_id", int_to_vec3(i));

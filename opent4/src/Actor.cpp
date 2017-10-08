@@ -3,6 +3,9 @@
 
 namespace opent4
 {
+    ActorVariables* ActorDef::variables() {
+        return Actor->GetActorVariables();
+    }
     /* Actor Variables */
     bool ActorVariables::Load(ByteStream *Data)
     {

@@ -54,6 +54,7 @@ namespace t4editor {
             printf("Alpha bits: %d\n", abits);
             
             ImGui_ImplGlfwGL3_Init(m_window, true, app->editorDataPath());
+            glfwSetInputMode(m_window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
         }
     }
     window::~window() {

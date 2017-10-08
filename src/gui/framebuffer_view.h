@@ -10,6 +10,8 @@ namespace t4editor {
         public:
             framebuffer_window() {
                 setName("Framebuffers");
+                setSize(vec2(130, 458));
+                setCanResize(false);
                 close();
             }
             ~framebuffer_window() {

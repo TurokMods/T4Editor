@@ -48,7 +48,7 @@ namespace t4editor {
     
     class actor {
         public:
-            actor(application* app, const ActorMesh* mesh, const ActorDef* def);
+            actor(application* app, ActorMesh* mesh, ActorDef* def);
             ~actor();
         
             //Expects shader to already be bound
@@ -63,6 +63,9 @@ namespace t4editor {
             vec3 rotation;
             int actor_id;
             int editor_id;
+        
+            ActorDef* actorTraits;
+            ActorMesh* meshTraits;
             
         protected:
             application* m_app;

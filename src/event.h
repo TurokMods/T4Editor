@@ -65,7 +65,7 @@ namespace t4editor {
             event_type type;
             vec2 cursorPosition;
             double scrollDelta;
-            unsigned char key;
+            unsigned int key;
     };
     
     class load_level_event : public event {
@@ -76,5 +76,31 @@ namespace t4editor {
             ~load_level_event() { }
         
             string path;
+    };
+    
+    class level;
+    class actor;
+    class actor_mesh;
+    class actor_selection_event : public event {
+        public:
+            actor_selection_event(level* l, actor* a, actor_mesh* m, int aid, int asmid, int asmcid, bool wasDeselected) : event("actor_selection") {
+                parentLevel = l;
+                selectedActor = a;
+                actorMesh = m;
+                actorId = aid;
+                subMeshId = asmid;
+                meshChunkId = asmcid;
+                deselected = wasDeselected;
+            }
+            ~actor_selection_event() {
+            }
+        
+            level* parentLevel;
+            actor* selectedActor;
+            actor_mesh* actorMesh;
+            int actorId;
+            int subMeshId;
+            int meshChunkId;
+            bool deselected;
     };
 }

@@ -24,7 +24,7 @@ namespace t4editor {
         m_actors.push_back(new actor(m_app, m_atr->GetMesh(), nullptr));
         m_actors[0]->editor_id = 0;
         for(size_t i = 0;i < actors->GetActorCount();i++) {
-            const ActorDef* def = actors->GetActorDef(i);
+            ActorDef* def = actors->GetActorDef(i);
             m_actors.push_back(new actor(m_app, def->Actor->GetATR()->GetMesh(), def));
             m_actors[i]->editor_id = i;
         }

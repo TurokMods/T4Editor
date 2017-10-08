@@ -368,6 +368,7 @@ bool    ImGui_ImplGlfwGL3_Init(GLFWwindow* window, bool install_callbacks, const
     io.KeyMap[ImGuiKey_X] = GLFW_KEY_X;
     io.KeyMap[ImGuiKey_Y] = GLFW_KEY_Y;
     io.KeyMap[ImGuiKey_Z] = GLFW_KEY_Z;
+    io.MouseDrawCursor = true;
 
     io.RenderDrawListsFn = ImGui_ImplGlfwGL3_RenderDrawLists;       // Alternatively you can set this to NULL and call ImGui::GetDrawData() after ImGui::Render() to get the same ImDrawData pointer.
     io.SetClipboardTextFn = ImGui_ImplGlfwGL3_SetClipboardText;
@@ -388,12 +389,12 @@ bool    ImGui_ImplGlfwGL3_Init(GLFWwindow* window, bool install_callbacks, const
     
     ImGuiStyle* style = &ImGui::GetStyle();
  
-	style->WindowPadding = ImVec2(5, 3);
-	style->WindowRounding = 3.0f;
-	style->FramePadding = ImVec2(5, 5);
-	style->FrameRounding = 4.0f;
-	style->ItemSpacing = ImVec2(12, 8);
-	style->ItemInnerSpacing = ImVec2(8, 6);
+	style->WindowPadding = ImVec2(2, 2);
+	style->WindowRounding = 0.0f;
+	style->FramePadding = ImVec2(2, 2);
+	style->FrameRounding = 0.0f;
+	style->ItemSpacing = ImVec2(5,0);
+	style->ItemInnerSpacing = ImVec2(0,0);
 	style->IndentSpacing = 25.0f;
 	style->ScrollbarSize = 15.0f;
 	style->ScrollbarRounding = 9.0f;
