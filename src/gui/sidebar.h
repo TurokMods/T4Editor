@@ -70,7 +70,10 @@ namespace t4editor {
             }
         
             virtual void renderContent() {
-                if(Actor) Text("Actor: %s", Actor->actorTraits->Name.c_str());
+                if(Actor) {
+                    if(Actor->actorTraits) Text("Actor: %s", Actor->actorTraits->Name.c_str());
+                    else Text("%s", Level->levelFile()->GetActorMeshFile().c_str());;
+                }
                 else Text("No selection");
                 renderActorVariables();
             }
