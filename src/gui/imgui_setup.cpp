@@ -392,8 +392,8 @@ bool    ImGui_ImplGlfwGL3_Init(GLFWwindow* window, bool install_callbacks, const
 	style->WindowPadding = ImVec2(2, 2);
 	style->WindowRounding = 0.0f;
 	style->FramePadding = ImVec2(2, 2);
-	style->FrameRounding = 0.2f;
-	style->ItemSpacing = ImVec2(5,0);
+	style->FrameRounding = 3.0f;
+	style->ItemSpacing = ImVec2(5,1);
 	style->ItemInnerSpacing = ImVec2(0,0);
 	style->IndentSpacing = 25.0f;
 	style->ScrollbarSize = 15.0f;
@@ -405,10 +405,10 @@ bool    ImGui_ImplGlfwGL3_Init(GLFWwindow* window, bool install_callbacks, const
  
 	style->Colors[ImGuiCol_Text] = ImVec4(0.60f, 0.60f, 0.63f, 1.00f);
 	style->Colors[ImGuiCol_TextDisabled] = ImVec4(0.24f, 0.23f, 0.29f, 1.00f);
-	style->Colors[ImGuiCol_WindowBg] = ImVec4(0.06f, 0.05f, 0.07f, 1.00f);
+	style->Colors[ImGuiCol_WindowBg] = ImVec4(0.16f, 0.15f, 0.17f, 1.00f);
 	style->Colors[ImGuiCol_ChildWindowBg] = ImVec4(0.07f, 0.07f, 0.09f, 1.00f);
 	style->Colors[ImGuiCol_PopupBg] = ImVec4(0.07f, 0.07f, 0.09f, 1.00f);
-	style->Colors[ImGuiCol_Border] = ImVec4(0.80f, 0.80f, 0.83f, 0.88f);
+	style->Colors[ImGuiCol_Border] = ImVec4(0.80f, 0.80f, 0.83f, 0.38f);
 	style->Colors[ImGuiCol_BorderShadow] = ImVec4(0.92f, 0.91f, 0.88f, 0.00f);
 	style->Colors[ImGuiCol_FrameBg] = ImVec4(0.30f, 0.29f, 0.32f, 1.00f);
 	style->Colors[ImGuiCol_FrameBgHovered] = ImVec4(0.44f, 0.43f, 0.49f, 1.00f);
@@ -422,7 +422,7 @@ bool    ImGui_ImplGlfwGL3_Init(GLFWwindow* window, bool install_callbacks, const
 	style->Colors[ImGuiCol_ScrollbarGrabHovered] = ImVec4(0.56f, 0.56f, 0.58f, 1.00f);
 	style->Colors[ImGuiCol_ScrollbarGrabActive] = ImVec4(0.06f, 0.05f, 0.07f, 1.00f);
 	style->Colors[ImGuiCol_ComboBg] = ImVec4(0.19f, 0.18f, 0.21f, 1.00f);
-	style->Colors[ImGuiCol_CheckMark] = ImVec4(0.80f, 0.80f, 0.83f, 0.31f);
+	style->Colors[ImGuiCol_CheckMark] = ImVec4(0.60f, 0.90f, 0.63f, 0.41f);
 	style->Colors[ImGuiCol_SliderGrab] = ImVec4(0.80f, 0.80f, 0.83f, 0.31f);
 	style->Colors[ImGuiCol_SliderGrabActive] = ImVec4(0.06f, 0.05f, 0.07f, 1.00f);
 	style->Colors[ImGuiCol_Button] = ImVec4(0.20f, 0.19f, 0.22f, 1.00f);

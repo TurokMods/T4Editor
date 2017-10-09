@@ -14,9 +14,8 @@ namespace t4editor {
         public:
             sidebar() {
                 setName("Tools View");
-                setCanResize(false);
-                setCanMove(false);
                 setCanClose(false);
+                setFlagsManually(ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoFocusOnAppearing | ImGuiWindowFlags_ShowBorders | ImGuiWindowFlags_NoCollapse);
                 
                 Level = 0;
                 Actor = 0;
@@ -46,8 +45,6 @@ namespace t4editor {
         
             virtual void onAttach(ui_panel* toPanel) {
                 vec2 sz = m_app->getWindow()->getSize();
-                sz.y *= LEVEL_VIEW_HEIGHT_FRACTION;
-                sz.y -= 3;
                 sz.x -= (sz.x * LEVEL_VIEW_WIDTH_FRACTION);
                 
                 setPosition(vec2(m_app->getWindow()->getSize().x * LEVEL_VIEW_WIDTH_FRACTION, 20.0f));
@@ -57,8 +54,6 @@ namespace t4editor {
             virtual void onEvent(event* e) {
                 if(e->name == "window_resize") {
                     vec2 sz = m_app->getWindow()->getSize();
-                    sz.y *= LEVEL_VIEW_HEIGHT_FRACTION;
-                    sz.y -= 3;
                     sz.x -= (sz.x * LEVEL_VIEW_WIDTH_FRACTION);
                     
                     setPosition(vec2(m_app->getWindow()->getSize().x * LEVEL_VIEW_WIDTH_FRACTION, 20.0f));
@@ -73,7 +68,12 @@ namespace t4editor {
             virtual void renderContent() {
                 if(Actor) {
                     if(Actor->actorTraits) Text("Actor: %s", Actor->actorTraits->Name.c_str());
-                    else Text("%s", Level->levelFile()->GetActorMeshFile().c_str());;
+                    else {
+                        string file = TransformPseudoPathToRealPath(Level->levelFile()->GetActorMeshFile());
+                        int last_slash = file.find_last_of("/");
+                        file = file.substr(last_slash + 1, file.length() - (last_slash + 1));
+                        Text("Level: %s", file.c_str());
+                    }
                 }
                 else Text("No selection");
                 renderActorVariables();

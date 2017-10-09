@@ -11,10 +11,8 @@ namespace t4editor {
         public:
             bottom_panel() {
                 setName("LowerPanel");
-                setHasTitleBar(false);
-                setCanResize(false);
-                setCanMove(false);
                 setCanClose(false);
+                setFlagsManually(ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoFocusOnAppearing | ImGuiWindowFlags_ShowBorders);
             }
         
             ~bottom_panel() {
@@ -23,7 +21,8 @@ namespace t4editor {
         
             virtual void onAttach(ui_panel* toPanel) {
                 vec2 sz = m_app->getWindow()->getSize();
-                sz.y -= (sz.y * LEVEL_VIEW_HEIGHT_FRACTION) + 16.0f;
+                sz.x *= LEVEL_VIEW_WIDTH_FRACTION;
+                sz.y -= (sz.y * LEVEL_VIEW_HEIGHT_FRACTION);
                 
                 setPosition(vec2(0, m_app->getWindow()->getSize().y - sz.y));
                 setSize(sz);
@@ -32,7 +31,8 @@ namespace t4editor {
             virtual void onEvent(event* e) {
                 if(e->name == "window_resize") {
                     vec2 sz = m_app->getWindow()->getSize();
-                    sz.y -= (sz.y * LEVEL_VIEW_HEIGHT_FRACTION) + 16.0f;
+                    sz.x *= LEVEL_VIEW_WIDTH_FRACTION;
+                    sz.y -= (sz.y * LEVEL_VIEW_HEIGHT_FRACTION);
                     
                     setPosition(vec2(0, m_app->getWindow()->getSize().y - sz.y));
                     setSize(sz);
