@@ -64,34 +64,37 @@ namespace t4editor {
                                                 else ht = 44.0f;
                                                 
                                                 if(sz > 64) ht = 66.0f;
+                                                
+                                                string input_prefix = "##" + Actor->actorTraits->Name + "_unk_av_";
                                             
                                                 Indent(10.0f);
                                                     if(sz <= 64) {
                                                         vector<int> validTypeIndices;
-                                                        Columns(2);
-                                                            SetColumnWidth(-1, (getSize().x - 30.0f) - 108.0f);
-                                                            InputText("String", (char*)var->GetData()->Ptr(), sz, ImGuiInputTextFlags_ReadOnly); validTypeIndices.push_back(0);
+                                                        Columns(2, (Actor->actorTraits->Name + "_unk_av").c_str());
+                                                            PushItemWidth(GetColumnWidth() - 10.0f);
+                                                            InputText((input_prefix + "String").c_str(), (char*)var->GetData()->Ptr(), sz, ImGuiInputTextFlags_ReadOnly); validTypeIndices.push_back(0);
                                                             if(sz == 1) {
-                                                                Checkbox("boolean", (bool*)ptr); validTypeIndices.push_back(1);
+                                                                Checkbox((input_prefix + "boolean").c_str(), (bool*)ptr); validTypeIndices.push_back(1);
                                                             } else if(sz == 4) {
-                                                                DragInt("int", (int*)ptr); validTypeIndices.push_back(2);
-                                                                DragFloat("float", (float*)ptr); validTypeIndices.push_back(3);
+                                                                DragInt((input_prefix + "int").c_str(), (int*)ptr); validTypeIndices.push_back(2);
+                                                                DragFloat((input_prefix + "float").c_str(), (float*)ptr); validTypeIndices.push_back(3);
                                                             } else if(sz == 8) {
-                                                                DragFloat2("vec2", (float*)ptr); validTypeIndices.push_back(4);
-                                                                DragInt2("ivec2", (int*)ptr); validTypeIndices.push_back(5);
+                                                                DragFloat2((input_prefix + "vec2").c_str(), (float*)ptr); validTypeIndices.push_back(4);
+                                                                DragInt2((input_prefix + "ivec2").c_str(), (int*)ptr); validTypeIndices.push_back(5);
                                                             } else if(sz == 12) {
-                                                                DragFloat3("vec3", (float*)ptr); validTypeIndices.push_back(6);
-                                                                DragInt3("ivec3", (int*)ptr); validTypeIndices.push_back(7);
-                                                                ColorEdit3("rgb", (float*)ptr); validTypeIndices.push_back(8);
+                                                                DragFloat3((input_prefix + "vec3").c_str(), (float*)ptr); validTypeIndices.push_back(6);
+                                                                DragInt3((input_prefix + "ivec3").c_str(), (int*)ptr); validTypeIndices.push_back(7);
+                                                                ColorEdit3((input_prefix + "rgb").c_str(), (float*)ptr); validTypeIndices.push_back(8);
                                                             } else if(sz == 16) {
-                                                                DragFloat4("vec4", (float*)ptr); validTypeIndices.push_back(9);
-                                                                DragInt4("ivec4", (int*)ptr); validTypeIndices.push_back(10);
-                                                                ColorEdit4("rgba", (float*)ptr); validTypeIndices.push_back(11);
+                                                                DragFloat4((input_prefix + "vec4").c_str(), (float*)ptr); validTypeIndices.push_back(9);
+                                                                DragInt4((input_prefix + "ivec4").c_str(), (int*)ptr); validTypeIndices.push_back(10);
+                                                                ColorEdit4((input_prefix + "rgba").c_str(), (float*)ptr); validTypeIndices.push_back(11);
                                                             }
+                                                            PopItemWidth();
                                                         NextColumn();
                                                             for(size_t i = 0;i < validTypeIndices.size();i++) {
                                                                 const char* typeName = types[validTypeIndices[i]];
-                                                                if(Button((string("use ") + typeName).c_str(), ImVec2(100.0f, 22.0f))) {
+                                                                if(Button((string("use ") + typeName).c_str(), ImVec2(GetColumnWidth() - 10.0f, 22.0f))) {
                                                                     printf("using input type %s for %s\n", typeName, name.c_str());
                                                                     set_actor_var_type_event evt(name, typeName);
                                                                     m_app->onEvent(&evt);
@@ -123,33 +126,57 @@ namespace t4editor {
                             Text("(%d)", knownCount);
                             if(knwOpen) {
                                 Indent(10.0f);
-                                    for(size_t i = 0;i < vars->GetBlockCount();i++) {
-                                        Block* var = vars->GetBlock(i);
-                                        
-                                        string name = var->GetTypeString();
-                                        string set_type = m_app->get_actor_var_type(name);
-                                        
-                                        ByteStream* data = var->GetData();
-                                        void* ptr = data->Ptr();
-                                        size_t sz = data->GetSize();
-                                        if(set_type != "") {
-                                            //this AV type has been defined
-                                            PushItemWidth(160);
-                                            if(set_type == "string") InputText(name.c_str(), (char*)var->GetData()->Ptr(), sz, ImGuiInputTextFlags_ReadOnly);
-                                            else if(set_type == "bool") Checkbox(name.c_str(), (bool*)ptr);
-                                            else if(set_type == "int") DragInt(name.c_str(), (int*)ptr);
-                                            else if(set_type == "float") DragFloat(name.c_str(), (float*)ptr);
-                                            else if(set_type == "vec2") DragFloat2(name.c_str(), (float*)ptr);
-                                            else if(set_type == "ivec2") DragInt2(name.c_str(), (int*)ptr);
-                                            else if(set_type == "vec3") DragFloat3(name.c_str(), (float*)ptr);
-                                            else if(set_type == "ivec3") DragInt3(name.c_str(), (int*)ptr);
-                                            else if(set_type == "rgb") ColorEdit3(name.c_str(), (float*)ptr);
-                                            else if(set_type == "vec4") DragFloat4(name.c_str(), (float*)ptr);
-                                            else if(set_type == "ivec4") DragInt4(name.c_str(), (int*)ptr);
-                                            else if(set_type == "rgba") ColorEdit4(name.c_str(), (float*)ptr);
-                                            PopItemWidth();
+                                    Columns(2, (Actor->actorTraits->Name + "_knw_av").c_str());
+                                        float col_pad = 10.0f;
+                                        for(size_t i = 0;i < vars->GetBlockCount();i++) {
+                                            Block* var = vars->GetBlock(i);
+                                            
+                                            string name = var->GetTypeString();
+                                            string set_type = m_app->get_actor_var_type(name);
+                                            
+                                            ByteStream* data = var->GetData();
+                                            void* ptr = data->Ptr();
+                                            size_t sz = data->GetSize();
+                                            if(set_type != "") {
+                                                //this AV type has been defined
+                                                PushItemWidth(GetColumnWidth() - col_pad);
+                                                name = "##"+Actor->actorTraits->Name+"_knw_"+name;
+                                                if(set_type == "string") InputText(name.c_str(), (char*)var->GetData()->Ptr(), sz, ImGuiInputTextFlags_ReadOnly);
+                                                else if(set_type == "bool") {
+                                                    float indent = ((GetColumnWidth() - col_pad) / 2.0f) - 11.0f;
+                                                    Indent(indent);
+                                                    Checkbox(name.c_str(), (bool*)ptr);
+                                                    Unindent(indent);
+                                                }
+                                                else if(set_type == "int") DragInt(name.c_str(), (int*)ptr);
+                                                else if(set_type == "float") DragFloat(name.c_str(), (float*)ptr);
+                                                else if(set_type == "vec2") DragFloat2(name.c_str(), (float*)ptr);
+                                                else if(set_type == "ivec2") DragInt2(name.c_str(), (int*)ptr);
+                                                else if(set_type == "vec3") DragFloat3(name.c_str(), (float*)ptr);
+                                                else if(set_type == "ivec3") DragInt3(name.c_str(), (int*)ptr);
+                                                else if(set_type == "rgb") ColorEdit3(name.c_str(), (float*)ptr);
+                                                else if(set_type == "vec4") DragFloat4(name.c_str(), (float*)ptr);
+                                                else if(set_type == "ivec4") DragInt4(name.c_str(), (int*)ptr);
+                                                else if(set_type == "rgba") ColorEdit4(name.c_str(), (float*)ptr);
+                                                PopItemWidth();
+                                            }
                                         }
-                                    }
+                                    NextColumn();
+                                        for(size_t i = 0;i < vars->GetBlockCount();i++) {
+                                            Block* var = vars->GetBlock(i);
+                                            
+                                            string name = var->GetTypeString();
+                                            string set_type = m_app->get_actor_var_type(name);
+                                            
+                                            if(set_type != "") {
+                                                ImVec2 cp = GetCursorPos();
+                                                SetCursorPos(ImVec2(cp.x, cp.y + 2.0f));
+                                                Text("%s", name.c_str());
+                                                cp = GetCursorPos();
+                                                SetCursorPos(ImVec2(cp.x, cp.y + 2.0f));
+                                            }
+                                        }
+                                    EndColumns();
                                 Unindent(10.0f);
                             }
                         } else {
@@ -157,7 +184,7 @@ namespace t4editor {
                         }
                     } else {
                         //level
-                        Text("No data to show yet");
+                        Text("Level actors have no actor variables");
                     }
                 } else {
                     Text("No actor selected");
