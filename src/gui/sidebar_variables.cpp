@@ -6,7 +6,7 @@
 
 namespace t4editor {
     void use_btn(const string& type, const string& actorname, const string& varname, application* app) {
-        if(Button(("use " + type + "##" + actorname + "_unk_av_" + varname).c_str(), ImVec2(GetColumnWidth() - 10.0f, 20.0f))) {
+        if(Button(("use " + type + "##" + actorname + "_unk_av_" + varname).c_str(), ImVec2(GetColumnWidth() - 7.0f, 20.0f))) {
             printf("using input type %s for %s\n", type.c_str(), varname.c_str());
             set_actor_var_type_event evt(varname, type);
             app->onEvent(&evt);
@@ -58,7 +58,6 @@ namespace t4editor {
                                         ByteStream* data = var->GetData();
                                         void* ptr = data->Ptr();
                                         size_t sz = data->GetSize();
-                                        const char* types[13] = { "string", "bool", "int", "float", "vec2", "ivec2", "vec3", "ivec3", "rgb", "vec4", "ivec4", "rgba" };
                                         if(set_type == "") {
                                             //AV has unknown type, present options
                                             if(CollapsingHeader(name.c_str())) {
@@ -75,27 +74,29 @@ namespace t4editor {
                                                 string input_prefix = "##" + Actor->actorTraits->Name + "_unk_av_";
                                             
                                                 Indent(10.0f);
-                                                    vector<int> validTypeIndices;
                                                     Columns(2, (Actor->actorTraits->Name + "_unk_av").c_str());
                                                         if(sz <= 64) {
                                                             PushItemWidth(GetColumnWidth() - 10.0f);
-                                                            InputText((input_prefix + name + "_String").c_str(), (char*)var->GetData()->Ptr(), sz, ImGuiInputTextFlags_ReadOnly); validTypeIndices.push_back(0);
+                                                            InputText((input_prefix + name + "_String").c_str(), (char*)var->GetData()->Ptr(), sz, ImGuiInputTextFlags_ReadOnly);
                                                             if(sz == 1) {
-                                                                Checkbox((input_prefix + name + "_boolean").c_str(), (bool*)ptr); validTypeIndices.push_back(1);
+                                                                float indent = ((GetColumnWidth() - 10.0f) / 2.0f) - 11.0f;
+                                                                Indent(indent);
+                                                                Checkbox((input_prefix + name + "_boolean").c_str(), (bool*)ptr);
+                                                                Unindent(indent);
                                                             } else if(sz == 4) {
-                                                                DragInt((input_prefix + name + "_int").c_str(), (int*)ptr); validTypeIndices.push_back(2);
-                                                                DragFloat((input_prefix + name + "_float").c_str(), (float*)ptr); validTypeIndices.push_back(3);
+                                                                DragInt((input_prefix + name + "_int").c_str(), (int*)ptr);
+                                                                DragFloat((input_prefix + name + "_float").c_str(), (float*)ptr);
                                                             } else if(sz == 8) {
-                                                                DragFloat2((input_prefix + name + "_vec2").c_str(), (float*)ptr); validTypeIndices.push_back(4);
-                                                                DragInt2((input_prefix + name + "_ivec2").c_str(), (int*)ptr); validTypeIndices.push_back(5);
+                                                                DragFloat2((input_prefix + name + "_vec2").c_str(), (float*)ptr);
+                                                                DragInt2((input_prefix + name + "_ivec2").c_str(), (int*)ptr);
                                                             } else if(sz == 12) {
-                                                                DragFloat3((input_prefix + name + "_vec3").c_str(), (float*)ptr); validTypeIndices.push_back(6);
-                                                                DragInt3((input_prefix + name + "_ivec3").c_str(), (int*)ptr); validTypeIndices.push_back(7);
-                                                                ColorEdit3((input_prefix + name + "_rgb").c_str(), (float*)ptr); validTypeIndices.push_back(8);
+                                                                DragFloat3((input_prefix + name + "_vec3").c_str(), (float*)ptr);
+                                                                DragInt3((input_prefix + name + "_ivec3").c_str(), (int*)ptr);
+                                                                ColorEdit3((input_prefix + name + "_rgb").c_str(), (float*)ptr);
                                                             } else if(sz == 16) {
-                                                                DragFloat4((input_prefix + name + "_vec4").c_str(), (float*)ptr); validTypeIndices.push_back(9);
-                                                                DragInt4((input_prefix + name + "_ivec4").c_str(), (int*)ptr); validTypeIndices.push_back(10);
-                                                                ColorEdit4((input_prefix + name + "_rgba").c_str(), (float*)ptr); validTypeIndices.push_back(11);
+                                                                DragFloat4((input_prefix + name + "_vec4").c_str(), (float*)ptr);
+                                                                DragInt4((input_prefix + name + "_ivec4").c_str(), (int*)ptr);
+                                                                ColorEdit4((input_prefix + name + "_rgba").c_str(), (float*)ptr);
                                                             }
                                                             PopItemWidth();
                                                         }
