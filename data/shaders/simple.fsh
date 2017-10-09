@@ -3,6 +3,8 @@ in vec3 norm;
 in vec2 tex;
 in vec3 lightDir;
 
+uniform sampler2D diffuse_map;
+
 uniform vec3 actor_id;
 uniform vec3 actor_submesh_id;
 uniform vec3 actor_submesh_chunk_id;
@@ -24,4 +26,5 @@ void main() {
     out_actor_id = actor_id;
     out_actor_submesh_id = actor_submesh_id;
     out_actor_submesh_chunk_id = actor_submesh_chunk_id;
+	outcolor = vec3(texture(diffuse_map, tex));
 }

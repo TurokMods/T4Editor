@@ -1,5 +1,6 @@
 #pragma once
 #include <Turok4.h>
+#include <render/texture.h>
 using namespace opent4;
 
 #include <string>
@@ -19,6 +20,8 @@ namespace t4editor {
             vector<actor*> actors() const { return m_actors; }
         
             ATRFile* levelFile() const { return m_atr; }
+
+			texture* loadTexture(std::string file_path);
         
         protected:
             application* m_app;
