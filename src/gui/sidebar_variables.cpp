@@ -5,6 +5,13 @@
 #include <imgui_internal.h>
 
 namespace t4editor {
+    void use_btn(const string& type, const string& actorname, const string& varname, application* app) {
+        if(Button(("use " + type + "##" + actorname + "_unk_av_" + varname).c_str(), ImVec2(GetColumnWidth() - 10.0f, 20.0f))) {
+            printf("using input type %s for %s\n", type.c_str(), varname.c_str());
+            set_actor_var_type_event evt(varname, type);
+            app->onEvent(&evt);
+        }
+    }
     void sidebar::renderActorVariables() {
         int count = 0;
         int knownCount = 0;
@@ -68,48 +75,56 @@ namespace t4editor {
                                                 string input_prefix = "##" + Actor->actorTraits->Name + "_unk_av_";
                                             
                                                 Indent(10.0f);
-                                                    if(sz <= 64) {
-                                                        vector<int> validTypeIndices;
-                                                        Columns(2, (Actor->actorTraits->Name + "_unk_av").c_str());
+                                                    vector<int> validTypeIndices;
+                                                    Columns(2, (Actor->actorTraits->Name + "_unk_av").c_str());
+                                                        if(sz <= 64) {
                                                             PushItemWidth(GetColumnWidth() - 10.0f);
-                                                            InputText((input_prefix + "String").c_str(), (char*)var->GetData()->Ptr(), sz, ImGuiInputTextFlags_ReadOnly); validTypeIndices.push_back(0);
+                                                            InputText((input_prefix + name + "_String").c_str(), (char*)var->GetData()->Ptr(), sz, ImGuiInputTextFlags_ReadOnly); validTypeIndices.push_back(0);
                                                             if(sz == 1) {
-                                                                Checkbox((input_prefix + "boolean").c_str(), (bool*)ptr); validTypeIndices.push_back(1);
+                                                                Checkbox((input_prefix + name + "_boolean").c_str(), (bool*)ptr); validTypeIndices.push_back(1);
                                                             } else if(sz == 4) {
-                                                                DragInt((input_prefix + "int").c_str(), (int*)ptr); validTypeIndices.push_back(2);
-                                                                DragFloat((input_prefix + "float").c_str(), (float*)ptr); validTypeIndices.push_back(3);
+                                                                DragInt((input_prefix + name + "_int").c_str(), (int*)ptr); validTypeIndices.push_back(2);
+                                                                DragFloat((input_prefix + name + "_float").c_str(), (float*)ptr); validTypeIndices.push_back(3);
                                                             } else if(sz == 8) {
-                                                                DragFloat2((input_prefix + "vec2").c_str(), (float*)ptr); validTypeIndices.push_back(4);
-                                                                DragInt2((input_prefix + "ivec2").c_str(), (int*)ptr); validTypeIndices.push_back(5);
+                                                                DragFloat2((input_prefix + name + "_vec2").c_str(), (float*)ptr); validTypeIndices.push_back(4);
+                                                                DragInt2((input_prefix + name + "_ivec2").c_str(), (int*)ptr); validTypeIndices.push_back(5);
                                                             } else if(sz == 12) {
-                                                                DragFloat3((input_prefix + "vec3").c_str(), (float*)ptr); validTypeIndices.push_back(6);
-                                                                DragInt3((input_prefix + "ivec3").c_str(), (int*)ptr); validTypeIndices.push_back(7);
-                                                                ColorEdit3((input_prefix + "rgb").c_str(), (float*)ptr); validTypeIndices.push_back(8);
+                                                                DragFloat3((input_prefix + name + "_vec3").c_str(), (float*)ptr); validTypeIndices.push_back(6);
+                                                                DragInt3((input_prefix + name + "_ivec3").c_str(), (int*)ptr); validTypeIndices.push_back(7);
+                                                                ColorEdit3((input_prefix + name + "_rgb").c_str(), (float*)ptr); validTypeIndices.push_back(8);
                                                             } else if(sz == 16) {
-                                                                DragFloat4((input_prefix + "vec4").c_str(), (float*)ptr); validTypeIndices.push_back(9);
-                                                                DragInt4((input_prefix + "ivec4").c_str(), (int*)ptr); validTypeIndices.push_back(10);
-                                                                ColorEdit4((input_prefix + "rgba").c_str(), (float*)ptr); validTypeIndices.push_back(11);
+                                                                DragFloat4((input_prefix + name + "_vec4").c_str(), (float*)ptr); validTypeIndices.push_back(9);
+                                                                DragInt4((input_prefix + name + "_ivec4").c_str(), (int*)ptr); validTypeIndices.push_back(10);
+                                                                ColorEdit4((input_prefix + name + "_rgba").c_str(), (float*)ptr); validTypeIndices.push_back(11);
                                                             }
                                                             PopItemWidth();
-                                                        NextColumn();
-                                                            for(size_t i = 0;i < validTypeIndices.size();i++) {
-                                                                const char* typeName = types[validTypeIndices[i]];
-                                                                if(Button((string("use ") + typeName).c_str(), ImVec2(GetColumnWidth() - 10.0f, 22.0f))) {
-                                                                    printf("using input type %s for %s\n", typeName, name.c_str());
-                                                                    set_actor_var_type_event evt(name, typeName);
-                                                                    m_app->onEvent(&evt);
-                                                                }
-                                                            }
-                                                        EndColumns();
-                                                    } else {
-                                                        Text("Value too large for input");
-                                                    }
-                                                    ImVec2 cp = GetCursorPos();
-                                                    SetCursorPos(ImVec2(cp.x, cp.y + 3));
-                                                    if(Button("View data in hex editor", ImVec2(getSize().x - 30.0f, 22.0f))) {
-                                                        open_memory_editor_event evt("Data of " + Actor->actorTraits->Name + " variable: " + name, (u8*)ptr, sz);
-                                                        m_app->onEvent(&evt);
-                                                    }
+                                                        }
+                                                        if(Button(("Raw Data##" + Actor->actorTraits->Name + "_unk_av_"+name).c_str(), ImVec2(GetColumnWidth() - 10.0f, 20.0f))) {
+                                                            open_memory_editor_event evt("Data of " + Actor->actorTraits->Name + " variable: " + name, (u8*)ptr, sz);
+                                                            m_app->onEvent(&evt);
+                                                        }
+                                                    NextColumn();
+                                                        use_btn("string", Actor->actorTraits->Name, name, m_app);
+                                                        if(sz == 1) {
+                                                            use_btn("boolean", Actor->actorTraits->Name, name, m_app);
+                                                        } else if(sz == 4) {
+                                                            use_btn("int", Actor->actorTraits->Name, name, m_app);
+                                                            use_btn("float", Actor->actorTraits->Name, name, m_app);
+                                                            
+                                                        } else if(sz == 8) {
+                                                            use_btn("vec2", Actor->actorTraits->Name, name, m_app);
+                                                            use_btn("ivec2", Actor->actorTraits->Name, name, m_app);
+                                                        } else if(sz == 12) {
+                                                            use_btn("vec3", Actor->actorTraits->Name, name, m_app);
+                                                            use_btn("ivec3", Actor->actorTraits->Name, name, m_app);
+                                                            use_btn("rgb", Actor->actorTraits->Name, name, m_app);
+                                                        } else if(sz == 16) {
+                                                            use_btn("vec4", Actor->actorTraits->Name, name, m_app);
+                                                            use_btn("ivec4", Actor->actorTraits->Name, name, m_app);
+                                                            use_btn("rgba", Actor->actorTraits->Name, name, m_app);
+                                                        }
+                                                        use_btn("data", Actor->actorTraits->Name, name, m_app);
+                                                    EndColumns();
                                                 Unindent(10.0f);
                                             }
                                             ImVec2 cp = GetCursorPos();
@@ -158,6 +173,12 @@ namespace t4editor {
                                                 else if(set_type == "vec4") DragFloat4(name.c_str(), (float*)ptr);
                                                 else if(set_type == "ivec4") DragInt4(name.c_str(), (int*)ptr);
                                                 else if(set_type == "rgba") ColorEdit4(name.c_str(), (float*)ptr);
+                                                else if(set_type == "data") {
+                                                    if(Button(("Raw Data##" + Actor->actorTraits->Name + "_knw_av_"+name).c_str(), ImVec2(GetColumnWidth() - 10.0f, 20.0f))) {
+                                                        open_memory_editor_event evt("Data of " + Actor->actorTraits->Name + " variable: " + var->GetTypeString(), (u8*)ptr, sz);
+                                                        m_app->onEvent(&evt);
+                                                    }
+                                                }
                                                 PopItemWidth();
                                             }
                                         }
