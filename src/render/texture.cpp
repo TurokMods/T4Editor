@@ -1,7 +1,7 @@
 #include <render/texture.h>
 
 namespace t4editor {
-    texture::texture(int w, int h, GLenum fmt, GLenum comp_type, bool rtt, Byte* data) {
+    texture::texture(int w, int h, GLenum fmt, GLenum comp_type, bool rtt, unsigned char* data) {
         glGenTextures(1, &id);
         glBindTexture(GL_TEXTURE_2D, id);
 		if(!data) {

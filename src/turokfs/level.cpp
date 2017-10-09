@@ -23,7 +23,7 @@ namespace t4editor {
 		unsigned char* Data = SOIL_load_image(filename.c_str(), &w, &h, &ch, 4);
 		if (Data)
 		{
-			texture* t = new texture(w, h, GL_RGBA, GL_UNSIGNED_BYTE, true);
+			texture* t = new texture(w, h, GL_RGBA, GL_UNSIGNED_BYTE, true, Data);
 			SOIL_free_image_data(Data);
 			return t;
 		}

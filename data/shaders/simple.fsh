@@ -26,5 +26,7 @@ void main() {
     out_actor_id = actor_id;
     out_actor_submesh_id = actor_submesh_id;
     out_actor_submesh_chunk_id = actor_submesh_chunk_id;
-	outcolor = vec3(texture(diffuse_map, tex));
+	vec4 diffuse = texture(diffuse_map, tex);
+	if(diffuse.a < 0.5) discard;
+	outcolor = vec3(diffuse);
 }

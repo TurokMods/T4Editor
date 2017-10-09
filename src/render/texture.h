@@ -7,7 +7,7 @@
 namespace t4editor {
     class texture {
         public:
-            texture(int w, int h, GLenum fmt, GLenum comp_type, bool rtt = false, Byte* data = 0);
+            texture(int w, int h, GLenum fmt, GLenum comp_type, bool rtt = false, unsigned char* data = 0);
             ~texture();
         
             void resize(int w, int h);
