@@ -31,7 +31,8 @@ namespace opent4
         int BlockIdx;
         ATIFile* Parent;
         
-        ActorVariables* variables();
+        ActorVariables* localVariables();
+        ActorVariables* globalVariables();
 
         //Actor Props
         int ID;

@@ -191,6 +191,7 @@ namespace opent4
         if(m_Data) delete m_Data;
         if(m_Root) delete m_Root;
         if(m_Mesh) delete m_Mesh;
+        if(m_Variables) delete m_Variables;
     }
 
     /* ATRFile */
@@ -281,6 +282,14 @@ namespace opent4
                     break;
                 }
                 case BT_ACTOR_VARIABLES  :
+                {
+                    m_Variables = new ActorVariables();
+                    if(!m_Variables->Load(Data)) {
+                        printf("Failed to load global actor variables for %s\n", m_File.c_str());
+                        delete m_Variables;
+                        m_Variables = 0;
+                    }
+                }
                 case BT_ACTOR_MESH_BOUNDS:
                 case BT_ACTOR_TEXTURE_SET:
                 case BT_ACTOR_PROPERTIES :

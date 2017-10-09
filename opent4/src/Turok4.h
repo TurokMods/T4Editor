@@ -49,7 +49,7 @@ namespace opent4
     class ATRFile
     {
         public:
-            ATRFile() : m_Mesh(0), m_Data(0), m_Root(0) {}
+            ATRFile() : m_Mesh(0), m_Data(0), m_Root(0), m_Variables(0) {}
             ~ATRFile();
 
             bool Load(const std::string& Filename);
@@ -66,6 +66,9 @@ namespace opent4
             std::string GetInstancesFile()  const { return m_InstancesFile; }
             std::string GetPrecacheFile()   const { return m_PrecacheFile;  }
             ActorMesh* GetMesh() { return m_Mesh; }
+            ActorVariables* GetActorVariables() const { return m_Variables; }
+        
+            Block* GetRootBlock() const { return m_Root; }
 
 
         protected:
@@ -85,6 +88,7 @@ namespace opent4
             Block* m_Root;
             std::string m_File;
             ActorMesh* m_Mesh;
+            ActorVariables* m_Variables;
 
             /*
              * Only actor .ATR files use these

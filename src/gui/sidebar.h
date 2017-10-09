@@ -67,8 +67,37 @@ namespace t4editor {
         
             virtual void renderContent() {
                 if(Actor) {
-                    if(Actor->actorTraits) Text("Actor: %s", Actor->actorTraits->Name.c_str());
-                    else {
+                    if(Actor->actorTraits) {
+                        Text("Actor: %s", Actor->actorTraits->Name.c_str());
+                        
+                        if(CollapsingHeader("Transform")) {
+                            Columns(2);
+                                Indent(10.0f);
+                                    PushItemWidth(GetColumnWidth() - 16.0f);
+                                        DragFloat3("##pos", &Actor->actorTraits->Position.x);
+                                        DragFloat3("##rot", &Actor->actorTraits->Rotation.x);
+                                        DragFloat3("##sca", &Actor->actorTraits->Scale.x);
+                                    PopItemWidth();
+                                Unindent(10.0f);
+                            NextColumn();
+                                ImVec2 cp = GetCursorPos();
+                                SetCursorPos(ImVec2(cp.x, cp.y + 2.0f));
+                                Text("Position");
+                                cp = GetCursorPos();
+                                SetCursorPos(ImVec2(cp.x, cp.y + 2.0f));
+                                cp = GetCursorPos();
+                                SetCursorPos(ImVec2(cp.x, cp.y + 2.0f));
+                                Text("Rotation");
+                                cp = GetCursorPos();
+                                SetCursorPos(ImVec2(cp.x, cp.y + 2.0f));
+                                cp = GetCursorPos();
+                                SetCursorPos(ImVec2(cp.x, cp.y + 2.0f));
+                                Text("Scale");
+                                cp = GetCursorPos();
+                                SetCursorPos(ImVec2(cp.x, cp.y + 2.0f));
+                            EndColumns();
+                        }
+                    } else {
                         string file = TransformPseudoPathToRealPath(Level->levelFile()->GetActorMeshFile());
                         int last_slash = file.find_last_of("/");
                         file = file.substr(last_slash + 1, file.length() - (last_slash + 1));
@@ -76,14 +105,15 @@ namespace t4editor {
                     }
                 }
                 else Text("No selection");
-                renderActorVariables();
-                renderActorProperties();
+                
+                renderLocalActorVariables();
+                renderGlobalActorVariables();
+                renderActorData();
             }
         
-            void renderActorVariables(); //Stored in the ATI file
-            void renderActorProperties() { //Stored in the actor's ATR file (global)
-                
-            }
+            void renderLocalActorVariables(); //Stored in the ATI file
+            void renderGlobalActorVariables(); //Stored in the actor's ATR file
+            void renderActorData();
         
         protected:
             level* Level;

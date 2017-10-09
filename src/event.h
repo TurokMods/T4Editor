@@ -104,7 +104,7 @@ namespace t4editor {
             bool deselected;
     };
     
-    //this would just be a function call, but it might need to propogate to the UI
+    //these would just be a function call, but it might need to propogate to the UI
     class set_actor_var_type_event : public event {
         public:
             set_actor_var_type_event(const string& _vname, const string& _vtype) : event("define_av_type") {
@@ -115,6 +115,17 @@ namespace t4editor {
         
             string vname;
             string vtype;
+    };
+    class set_actor_block_type_event : public event {
+        public:
+            set_actor_block_type_event(const string& _bname, const string& _btype) : event("define_ab_type") {
+                bname = _bname;
+                btype = _btype;
+            }
+            ~set_actor_block_type_event() { }
+        
+            string bname;
+            string btype;
     };
     
     class open_memory_editor_event : public event {
