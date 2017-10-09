@@ -44,19 +44,19 @@ namespace t4editor {
             }
         
             virtual void onAttach(ui_panel* toPanel) {
-                vec2 sz = m_app->getWindow()->getSize();
+                vec2 sz = m_app->getWindow()->getSize(false);
                 sz.x -= (sz.x * LEVEL_VIEW_WIDTH_FRACTION);
                 
-                setPosition(vec2(m_app->getWindow()->getSize().x * LEVEL_VIEW_WIDTH_FRACTION, 20.0f));
+                setPosition(vec2(m_app->getWindow()->getSize(false).x * LEVEL_VIEW_WIDTH_FRACTION, 20.0f));
                 setSize(sz);
             }
         
             virtual void onEvent(event* e) {
                 if(e->name == "window_resize") {
-                    vec2 sz = m_app->getWindow()->getSize();
+                    vec2 sz = m_app->getWindow()->getSize(false);
                     sz.x -= (sz.x * LEVEL_VIEW_WIDTH_FRACTION);
                     
-                    setPosition(vec2(m_app->getWindow()->getSize().x * LEVEL_VIEW_WIDTH_FRACTION, 20.0f));
+                    setPosition(vec2(m_app->getWindow()->getSize(false).x * LEVEL_VIEW_WIDTH_FRACTION, 20.0f));
                     setSize(sz);
                 } else if(e->name == "actor_selection") {
                     actor_selection_event* evt = (actor_selection_event*)e;
