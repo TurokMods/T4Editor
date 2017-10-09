@@ -28,9 +28,7 @@ namespace t4editor {
         SetCursorPos(ImVec2(p.x, p.y + 2));
         Text("(%d)", count);
         if(varsOpen) {
-            BeginChild("av_sec");
-                ImVec2 dpos = GetWindowPos();
-                SetWindowPos(ImVec2(dpos.x + 10,dpos.y));
+            Indent(10.0f);
                 if(Actor) {
                     if(Actor->actorTraits) {
                         //actor instance
@@ -38,14 +36,12 @@ namespace t4editor {
                         
                         if(vars) {
                             bool unkOpen = CollapsingHeader("Unknown Types", ImGuiTreeNodeFlags_Framed);
-                            SameLine(126);
+                            SameLine(136);
                             p = GetCursorPos();
                             SetCursorPos(ImVec2(p.x, p.y + 2));
                             Text("(%d)", unknownCount);
                             if(unkOpen) {
-                                BeginChild("av_sec_unk", ImVec2((getSize().x - 15), 400), true);
-                                    ImVec2 ukpos = GetWindowPos();
-                                    SetWindowPos(ImVec2(ukpos.x + 10,ukpos.y));
+                                Indent(10.0f);
                                     for(size_t i = 0;i < vars->GetBlockCount();i++) {
                                         Block* var = vars->GetBlock(i);
                                         
@@ -60,7 +56,7 @@ namespace t4editor {
                                             //AV has unknown type, present options
                                             if(CollapsingHeader(name.c_str())) {
                                                 float ht = 110.0f;
-                                                if(sz == 1) ht = 44.0f;
+                                                if(sz == 1) ht = 66.0f;
                                                 else if(sz == 4) ht = 88.0f;
                                                 else if(sz == 8) ht = 88.0f;
                                                 else if(sz == 12) ht = 110.0f;
@@ -69,13 +65,11 @@ namespace t4editor {
                                                 
                                                 if(sz > 64) ht = 66.0f;
                                             
-                                                BeginChild((name + "unk_inputs").c_str(), ImVec2(getSize().x - 35, ht), true, ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse);
-                                                    ImVec2 spos = GetWindowPos();
-                                                    SetWindowPos(ImVec2(spos.x + 1, spos.y));
+                                                Indent(10.0f);
                                                     if(sz <= 64) {
                                                         vector<int> validTypeIndices;
                                                         Columns(2);
-                                                            SetColumnWidth(-1,(getSize().x - 38) * 0.75f);
+                                                            SetColumnWidth(-1, (getSize().x - 30.0f) - 108.0f);
                                                             InputText("String", (char*)var->GetData()->Ptr(), sz, ImGuiInputTextFlags_ReadOnly); validTypeIndices.push_back(0);
                                                             if(sz == 1) {
                                                                 Checkbox("boolean", (bool*)ptr); validTypeIndices.push_back(1);
@@ -95,10 +89,9 @@ namespace t4editor {
                                                                 ColorEdit4("rgba", (float*)ptr); validTypeIndices.push_back(11);
                                                             }
                                                         NextColumn();
-                                                            SetColumnWidth(-1,(getSize().x - 38) * 0.25f);
                                                             for(size_t i = 0;i < validTypeIndices.size();i++) {
                                                                 const char* typeName = types[validTypeIndices[i]];
-                                                                if(Button((string("use ") + typeName).c_str(), ImVec2((getSize().x - 38) * 0.25f,22.0f))) {
+                                                                if(Button((string("use ") + typeName).c_str(), ImVec2(100.0f, 22.0f))) {
                                                                     printf("using input type %s for %s\n", typeName, name.c_str());
                                                                     set_actor_var_type_event evt(name, typeName);
                                                                     m_app->onEvent(&evt);
@@ -108,29 +101,28 @@ namespace t4editor {
                                                     } else {
                                                         Text("Value too large for input");
                                                     }
-                                                
-                                                    PushItemWidth(getSize().x - 4);
-                                                    if(Button("View data in hex editor")) {
+                                                    ImVec2 cp = GetCursorPos();
+                                                    SetCursorPos(ImVec2(cp.x, cp.y + 3));
+                                                    if(Button("View data in hex editor", ImVec2(getSize().x - 30.0f, 22.0f))) {
                                                         open_memory_editor_event evt("Data of " + Actor->actorTraits->Name + " variable: " + name, (u8*)ptr, sz);
                                                         m_app->onEvent(&evt);
                                                     }
-                                                    PopItemWidth();
-                                                EndChild();
+                                                Unindent(10.0f);
                                             }
+                                            ImVec2 cp = GetCursorPos();
+                                            SetCursorPos(ImVec2(cp.x, cp.y + 3));
                                         }
                                     }
-                                EndChild();
+                                Unindent(10.0f);
                             }
                             
                             bool knwOpen = CollapsingHeader("Known Types", ImGuiTreeNodeFlags_Framed);
-                            SameLine(116);
+                            SameLine(122);
                             p = GetCursorPos();
                             SetCursorPos(ImVec2(p.x, p.y + 2));
                             Text("(%d)", knownCount);
                             if(knwOpen) {
-                                BeginChild("av_sec_knw", ImVec2((getSize().x - 15), 400), true);
-                                    ImVec2 kpos = GetWindowPos();
-                                    SetWindowPos(ImVec2(kpos.x + 10,kpos.y));
+                                Indent(10.0f);
                                     for(size_t i = 0;i < vars->GetBlockCount();i++) {
                                         Block* var = vars->GetBlock(i);
                                         
@@ -158,7 +150,7 @@ namespace t4editor {
                                             PopItemWidth();
                                         }
                                     }
-                                EndChild();
+                                Unindent(10.0f);
                             }
                         } else {
                             Text("No Variables Set");
@@ -170,7 +162,7 @@ namespace t4editor {
                 } else {
                     Text("No actor selected");
                 }
-            EndChild();
+            Unindent(10.0f);
         }
     }
 };

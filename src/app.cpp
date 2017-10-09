@@ -21,7 +21,7 @@ namespace t4editor {
         m_level = 0;
         m_framebuffer = 0;
         m_windowPosX = 0;
-        m_windowPosY = 0;
+        m_windowPosY = 150;
     }
     
     application::~application() {

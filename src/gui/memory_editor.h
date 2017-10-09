@@ -429,7 +429,6 @@ namespace t4editor {
         public:
             memory_editor() {
                 setName("Memory Editor");
-                setSize(vec2(800, 600));
                 close();
             }
             ~memory_editor() {
@@ -437,6 +436,7 @@ namespace t4editor {
         
             virtual void onAttach(ui_panel* toPanel) {
                 setPosition(vec2(50,50));
+                setSize(vec2(800, 600));
             }
             virtual void onEvent(event* e) {
                 if(e->name == "closed") {

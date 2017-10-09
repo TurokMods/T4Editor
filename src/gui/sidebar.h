@@ -14,9 +14,8 @@ namespace t4editor {
         public:
             sidebar() {
                 setName("Tools View");
-                setCanResize(false);
-                setCanMove(false);
                 setCanClose(false);
+                setFlagsManually(ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoFocusOnAppearing);
                 
                 Level = 0;
                 Actor = 0;

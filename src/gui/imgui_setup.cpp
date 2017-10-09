@@ -392,8 +392,8 @@ bool    ImGui_ImplGlfwGL3_Init(GLFWwindow* window, bool install_callbacks, const
 	style->WindowPadding = ImVec2(2, 2);
 	style->WindowRounding = 0.0f;
 	style->FramePadding = ImVec2(2, 2);
-	style->FrameRounding = 0.2f;
-	style->ItemSpacing = ImVec2(5,0);
+	style->FrameRounding = 3.0f;
+	style->ItemSpacing = ImVec2(5,1);
 	style->ItemInnerSpacing = ImVec2(0,0);
 	style->IndentSpacing = 25.0f;
 	style->ScrollbarSize = 15.0f;
@@ -422,7 +422,7 @@ bool    ImGui_ImplGlfwGL3_Init(GLFWwindow* window, bool install_callbacks, const
 	style->Colors[ImGuiCol_ScrollbarGrabHovered] = ImVec4(0.56f, 0.56f, 0.58f, 1.00f);
 	style->Colors[ImGuiCol_ScrollbarGrabActive] = ImVec4(0.06f, 0.05f, 0.07f, 1.00f);
 	style->Colors[ImGuiCol_ComboBg] = ImVec4(0.19f, 0.18f, 0.21f, 1.00f);
-	style->Colors[ImGuiCol_CheckMark] = ImVec4(0.80f, 0.80f, 0.83f, 0.31f);
+	style->Colors[ImGuiCol_CheckMark] = ImVec4(0.60f, 0.90f, 0.63f, 0.41f);
 	style->Colors[ImGuiCol_SliderGrab] = ImVec4(0.80f, 0.80f, 0.83f, 0.31f);
 	style->Colors[ImGuiCol_SliderGrabActive] = ImVec4(0.06f, 0.05f, 0.07f, 1.00f);
 	style->Colors[ImGuiCol_Button] = ImVec4(0.20f, 0.19f, 0.22f, 1.00f);
