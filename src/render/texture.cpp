@@ -7,13 +7,19 @@ namespace t4editor {
 		if(!data) {
 			glTexImage2D(GL_TEXTURE_2D, 0, fmt, w, h, 0, fmt, comp_type, 0);
 		} else {
+			glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAX_ANISOTROPY_EXT, 2.0f);
 			glTexImage2D(GL_TEXTURE_2D, 0, fmt, w, h, 0, fmt, comp_type, data);
 		}
         
         if(rtt) {
             glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
             glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-        }
+		}
+		else {
+			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+		}
+
         
         glBindTexture(GL_TEXTURE_2D, 0);
         

@@ -17,7 +17,11 @@ layout(location = 3) out vec3 out_actor_submesh_chunk_id;
 
 void main() {
     float ndotl = max(dot(norm, lightDir), 0.0);
-    outcolor = ndotl * norm;
+	vec4 diffuse = texture(diffuse_map, tex);
+	if(diffuse.a < 0.5) discard;
+	if(ndotl < 0.5) ndotl = 0.5;
+	outcolor = ndotl * vec3(diffuse);
+	
     if(actor_selected > 0.0) {
         outcolor.r += 0.2;
         outcolor.g += 0.2;
@@ -26,7 +30,4 @@ void main() {
     out_actor_id = actor_id;
     out_actor_submesh_id = actor_submesh_id;
     out_actor_submesh_chunk_id = actor_submesh_chunk_id;
-	vec4 diffuse = texture(diffuse_map, tex);
-	if(diffuse.a < 0.5) discard;
-	outcolor = vec3(diffuse);
 }
