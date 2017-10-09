@@ -436,10 +436,11 @@ namespace t4editor {
         
             virtual void onAttach(ui_panel* toPanel) {
                 setPosition(vec2(50,50));
-                setSize(vec2(800, 600));
             }
             virtual void onEvent(event* e) {
-                if(e->name == "closed") {
+                if(e->name == "opened") {
+                    setSize(vec2(800, 600));
+                }else if(e->name == "closed") {
                     data = 0;
                     size = 0;
                 } else if(e->name == "show_memory_editor") {

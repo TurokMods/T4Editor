@@ -57,6 +57,10 @@ namespace t4editor {
             for(auto i = m_actor_var_types.begin();i != m_actor_var_types.end();i++) {
                 fprintf(fp, "av__%s %s\n", i->first.c_str(), i->second.c_str());
             }
+            fprintf(fp, "\n[ACTOR BLOCKS]\n");
+            for(auto i = m_actor_block_types.begin();i != m_actor_block_types.end();i++) {
+                fprintf(fp, "ab__%s %s\n", i->first.c_str(), i->second.c_str());
+            }
             fclose(fp);
         }
     }
@@ -104,6 +108,9 @@ namespace t4editor {
         else if(name.find("av__") != name.npos) {
             string vName = name.substr(4, name.length() - 4);
             define_actor_var_type(vName, value);
+        } else if(name.find("ab__") != name.npos) {
+            string bName = name.substr(4, name.length() - 4);
+            define_actor_block_type(bName, value);
         }
     }
 
@@ -126,13 +133,16 @@ namespace t4editor {
     void application::onEvent(event *e) {
         if(e->name == "load_level") load_level(((load_level_event*)e)->path);
         else if(e->name == "input_event") {
-            input_event* input = (input_event*)e;
+            //input_event* input = (input_event*)e;
         }
         else if(e->name == "window_resize") {
-            app_resize_event* evt = (app_resize_event*)e;
+            //app_resize_event* evt = (app_resize_event*)e;
         } else if(e->name == "define_av_type") {
             set_actor_var_type_event* evt = (set_actor_var_type_event*)e;
             define_actor_var_type(evt->vname, evt->vtype);
+        } else if(e->name == "define_ab_type") {
+            set_actor_block_type_event* evt = (set_actor_block_type_event*)e;
+            define_actor_block_type(evt->bname, evt->btype);
         }
         
         for(auto i = m_panels.begin();i != m_panels.end();i++) {
@@ -162,6 +172,12 @@ namespace t4editor {
     string application::get_actor_var_type(const string &vname) const {
         auto i = m_actor_var_types.find(vname);
         if(i == m_actor_var_types.end()) return "";
+        
+        return i->second;
+    }
+    string application::get_actor_block_type(const string &vname) const {
+        auto i = m_actor_block_types.find(vname);
+        if(i == m_actor_block_types.end()) return "";
         
         return i->second;
     }

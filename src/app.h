@@ -71,7 +71,10 @@ namespace t4editor {
             //actor variables
             void define_actor_var_type(const string& vname, const string& vtype) { m_actor_var_types[vname] = vtype; }
             string get_actor_var_type(const string& vname) const;
-            
+        
+            //actor properties
+            void define_actor_block_type(const string& bname, const string& btype) { m_actor_block_types[bname] = btype; }
+            string get_actor_block_type(const string& bname) const;
             int run();
 
         protected:
@@ -100,5 +103,6 @@ namespace t4editor {
             framebuffer* m_framebuffer;
         
             unordered_map<string, string> m_actor_var_types;
+            unordered_map<string, string> m_actor_block_types;
     };
 }

@@ -121,15 +121,7 @@ namespace t4editor {
         }
         
         if(def) {
-            ActorVec3 pos = def->Position;
-            ActorVec3 rot = def->Rotation;
-            ActorVec3 scl = def->Scale;
-            position = vec3(pos.x, pos.y, pos.z);
-            rotation = vec3(rot.x, rot.y, rot.z);
-            scale    = vec3(scl.x, scl.y, scl.z);
             actor_id = def->ID;
-        } else {
-            scale = vec3(1.0f, 1.0f, 1.0f);
         }
     }
     actor::~actor() {
@@ -139,6 +131,18 @@ namespace t4editor {
         meshes.clear();
     }
     void actor::render(t4editor::shader *s) {
+        vec3 position, rotation;
+        vec3 scale = vec3(1.0f, 1.0f, 1.0f);
+        
+        if(actorTraits) {
+            ActorVec3 pos = actorTraits->Position;
+            ActorVec3 rot = actorTraits->Rotation;
+            ActorVec3 scl = actorTraits->Scale;
+            position = vec3(pos.x, pos.y, pos.z);
+            rotation = vec3(rot.x, rot.y, rot.z);
+            scale    = vec3(scl.x, scl.y, scl.z);
+        }
+        
         mat4 T = translate(position);
         mat4 R = eulerAngleXYZ(radians(rotation.x),radians(rotation.y),radians(rotation.z));
         mat4 S = glm::scale(scale);

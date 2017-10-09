@@ -56,11 +56,6 @@ namespace t4editor {
         
             vector<actor_mesh*> meshes;
         
-            //I know we normally use matrices, but I want to keep the transform representation
-            //exactly like it is in the files until it gets sent to the GPU
-            vec3 position;
-            vec3 scale;
-            vec3 rotation;
             int actor_id;
             int editor_id;
         
