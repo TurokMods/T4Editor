@@ -220,6 +220,8 @@ namespace opent4
             m_Root->AddChildBlock(b);
         }
 
+		m_Root->GetData()->SetOffset(0);
+
         ProcessBlocks();
         return true;
     }
@@ -313,6 +315,7 @@ namespace opent4
                     break;
                 }
             }
+            Data->SetOffset(0);
         }
     }
 
@@ -544,6 +547,8 @@ namespace opent4
                     //printf("Unsupported actor block type (%s).\n",BlockTypeIDs[cBlock->GetType()].c_str());
                 }
             }
+
+			Data->SetOffset(0);
         }
 
         m_Actors.push_back(d);

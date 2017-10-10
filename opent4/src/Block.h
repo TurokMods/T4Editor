@@ -157,6 +157,8 @@ namespace opent4
             char m_Hdr[8];
             std::string m_BlockID;
             BLOCK_TYPE m_Type;
+
+			//Note: Changing m_Data has no effect on the saved file if m_Children is populated (Only leaf nodes are saved)
             ByteStream* m_Data;
             std::vector<Block*> m_Children;
     };

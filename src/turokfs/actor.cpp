@@ -94,26 +94,26 @@ namespace t4editor {
         glEnableVertexAttribArray(2);
         glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, sizeof(mesh_vert), (void*)(6 * sizeof(float)));
         
-
-		if(m_Texture && submesh_textures.size() == 0) {
-			m_Texture->bind();
-			glActiveTexture(GL_TEXTURE0);
-		}
         if(chunkIndices.size() > 0) {
 			s->uniform("debug_float", 0.0f);
             for(size_t i = 0;i < chunkIndices.size();i++) {
 				texture* tex = 0;
-				if(submesh_textures.size() > 0) tex = submesh_textures[i];
-				if(tex) {
-					tex->bind();
-					glActiveTexture(GL_TEXTURE0);
-					s->uniform1i("diffuse_map", 0);
-				}
+				if(submesh_textures.size() > i) tex = submesh_textures[i];
+				else if(m_Texture) tex = m_Texture;
+				else tex = app->getDefaultTexture();
+				tex->bind();
+				glActiveTexture(GL_TEXTURE0);
+				s->uniform1i("diffuse_map", 0);
                 s->uniform("actor_submesh_chunk_id", int_to_vec3(i));
                 glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ibos[i]);
                 glDrawElements(GL_TRIANGLE_STRIP, chunkIndices[i].size(), GL_UNSIGNED_SHORT, 0);
             }
         } else {
+			if(m_Texture) m_Texture->bind();
+			else app->getDefaultTexture()->bind();
+			glActiveTexture(GL_TEXTURE0);
+
+			s->uniform1i("diffuse_map", 0);
 			s->uniform("debug_float", 1.0f);
             s->uniform("actor_submesh_chunk", int_to_vec3(0));
             glDrawArrays(GL_LINE_STRIP, 0, vertices.size());
