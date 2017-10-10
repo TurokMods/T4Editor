@@ -9,6 +9,7 @@ uniform vec3 actor_id;
 uniform vec3 actor_submesh_id;
 uniform vec3 actor_submesh_chunk_id;
 uniform float actor_selected;
+uniform float debug_float;
 
 layout(location = 0) out vec3 outcolor;
 layout(location = 1) out vec3 out_actor_id;
@@ -27,6 +28,11 @@ void main() {
         outcolor.g += 0.2;
         outcolor.b = actor_selected;
     }
+	if(debug_float > 0.0) {
+		outcolor.r = debug_float;
+		outcolor.g += 0.2;
+		outcolor.b += 0.2;
+	}
     out_actor_id = actor_id;
     out_actor_submesh_id = actor_submesh_id;
     out_actor_submesh_chunk_id = actor_submesh_chunk_id;
