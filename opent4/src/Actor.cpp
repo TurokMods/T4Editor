@@ -26,7 +26,10 @@ namespace opent4
 
     bool ActorVariables::Save(ByteStream *Data)
     {
-        return false;
+		for(size_t i = 0;i < m_Blocks.size();i++) {
+			if(!m_Blocks[i]->Save(Data)) return false;
+		}
+        return true;
     }
 
     void ActorVariables::ProcessBlocks()

@@ -283,9 +283,146 @@ namespace opent4
         return true;
     }
 
-    bool Block::Save(ByteStream *Data)
+    bool Block::Save(ByteStream *Data, bool isRoot)
     {
-        //TODO:
-        return false;
+		Data->WriteByte(m_PreBlockFlag);
+		size_t Size = 0;
+		switch(m_PreBlockFlag)
+        {
+            case 0x41:
+            case 0x42:
+            case 0x43:
+            case 0x44:
+            case 0x45:
+            case 0x46:
+            case 0x47:
+            case 0x48:
+            case 0x4A:
+            case 0x4B:
+            case 0x4C:
+            case 0x4D:
+            case 0x4F:
+            {
+                //Hdr[0] = Unknown (when not part of 2-byte block size)
+                //Hdr[1] = Block size in bytes (starts after block ID, including the null)
+                //Hdr[2] = Block ID string length
+                Data->WriteData(3,m_Hdr);
+                Data->WriteString(m_BlockID);
+
+                //Establish block size
+                Size = (size_t)(unsigned char)m_Hdr[1];
+                break;
+            }
+            case 0x81: { }
+            case 0x82:
+            {
+                //Hdr[0] = Unknown
+                //Hdr[1] = First 8 bits of 16 bit integer representing block size
+                //Hdr[2] = Last  8 bits of 16 bit integer representing block size
+                //Hdr[3] = Block ID string length
+
+                //Read block header
+                Data->WriteData(4,m_Hdr);
+                Data->WriteString(m_BlockID);
+
+                //Establish block size
+                Size = (size_t)*((uint16_t*)&m_Hdr[1]);
+                break;
+            }
+            case 0x61:
+            case 0x6C:
+            {
+                //Hdr[0] = Unknown
+                //Hdr[1] = First 8 bits of 16 bit integer representing block size
+                //Hdr[2] = Unknown
+                //Hdr[3] = Unknown
+                //Hdr[4] = Block ID string length
+
+                //Read block header
+                Data->WriteData(5,m_Hdr);
+                Data->WriteString(m_BlockID);
+
+                //Establish block size
+                Size = (size_t)(unsigned char)m_Hdr[1];
+
+                break;
+            }
+            case 0xA1:
+            {
+                //Hdr[0] = Unknown
+                //Hdr[1] = First 8 bits of 16 bit integer representing block size
+                //Hdr[2] = Last  8 bits of 16 bit integer representing block size
+                //Hdr[3] = Unknown
+                //Hdr[4] = Unknown
+                //Hdr[5] = Block ID string length
+
+                //Read block header
+                Data->WriteData(6,m_Hdr);
+                Data->WriteString(m_BlockID);
+
+                //Establish block size
+                Size = (size_t)*((uint16_t*)&m_Hdr[1]);
+
+                break;
+            }
+            case 0xC2:
+            {
+                //Hdr[0] = Unknown
+                //Hdr[1] = First  8 bits of 32 bit integer representing block size
+                //Hdr[2] = Second 8 bits of 32 bit integer representing block size
+                //Hdr[3] = Third  8 bits of 32 bit integer representing block size
+                //Hdr[4] = Last   8 bits of 32 bit integer representing block size
+                //Hdr[5] = Block ID string length
+
+                //Read block header
+                Data->WriteData(6,m_Hdr);
+                Data->WriteString(m_BlockID);
+
+                //Establish block size
+                Size = (size_t)*((uint32_t*)&m_Hdr[1]);
+                break;
+            }
+            case 0xE1:
+            {
+                //Hdr[0] = Unknown
+                //Hdr[1] = First  8 bits of 32 bit integer representing block size
+                //Hdr[2] = Second 8 bits of 32 bit integer representing block size
+                //Hdr[3] = Third  8 bits of 32 bit integer representing block size
+                //Hdr[4] = Last   8 bits of 32 bit integer representing block size
+                //Hdr[5] = Unknown
+                //Hdr[6] = Unknown
+                //Hdr[7] = Block ID string length
+
+                //Read block header
+                Data->WriteData(8,m_Hdr);
+                Data->WriteString(m_BlockID);
+
+                //Establish block size
+                Size = (size_t)*((uint32_t*)&m_Hdr[1]);
+                break;
+            }
+            default  :
+            {
+                printf("Unknown block type 0x%2X.\n",m_PreBlockFlag);
+				return false;
+            }
+        }
+
+		if(isRoot) {
+			m_Data->SetOffset(0);
+			unsigned char PathLen = m_Data->GetByte();
+			Data->WriteByte(PathLen);
+			std::string file = m_Data->GetString(PathLen);
+			Data->WriteString(file);
+		}
+		
+		m_Data->SetOffset(0);
+		if(m_Children.size() > 0) {
+			for(int i = 0;i < m_Children.size();i++) {
+				m_Children[i]->Save(Data);
+			}
+		}
+        else if(m_Data->GetSize() > 0) return Data->WriteData(m_Data->GetSize(), m_Data->Ptr());
+		return true;
     }
 }

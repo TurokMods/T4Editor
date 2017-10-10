@@ -33,7 +33,7 @@ namespace opent4
         protected:
             void ProcessBlocks();
             void ProcessActorBlock(size_t Idx);
-            void SaveActorBlock(size_t Idx);
+            bool SaveActorBlock(size_t Idx);
             ATRFile* LoadATR(const std::string& path);
 
             char m_Hdr[4];
@@ -54,6 +54,7 @@ namespace opent4
 
             bool Load(const std::string& Filename);
             bool Save(const std::string& Filename);
+			std::string GetFileName() const { return m_RealFile; }
 
             /* For levels only */
             ATIFile* GetActors() const { if(m_ActorInstanceFiles.size() <= 0) return 0; return m_ActorInstanceFiles[0]; }
@@ -87,6 +88,7 @@ namespace opent4
             ByteStream* m_Data;
             Block* m_Root;
             std::string m_File;
+			std::string m_RealFile;
             ActorMesh* m_Mesh;
             ActorVariables* m_Variables;
 

@@ -142,7 +142,7 @@ namespace opent4
             ~Block();
 
             bool Load(ByteStream* Data);
-            bool Save(ByteStream* Data);
+            bool Save(ByteStream* Data, bool isRoot=false);
 
             void AddChildBlock(Block* b) { m_Children.push_back(b); }
             size_t GetChildCount() const { return m_Children.size(); }

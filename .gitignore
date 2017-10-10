@@ -31,7 +31,6 @@
 *.out
 *.app
 
-<<<<<<< HEAD
 # other stuff
 .DS_STORE
 *.build
@@ -41,11 +40,15 @@ CMakeFiles
 CMakeScripts
 Debug
 *.cmake
-=======
+*.vcxproj
+*.filters
+*.user
+*.sln
+.vs/
+config.txt
 
 # Mac ignores
 *.DS_Store
->>>>>>> 62ed70ab6ac2f10b5e6cc089c9dabfc2433c9295
 
 # MSVC ignores
 bin/

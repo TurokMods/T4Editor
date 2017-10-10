@@ -63,6 +63,11 @@ namespace t4editor {
             }
             fclose(fp);
         }
+
+		if(m_level) {
+			m_level->levelFile()->Save(m_dataPath + "/" + m_level->levelFile()->GetFileName());
+			delete m_level;
+		}
     }
     
     bool application::initialize() {
