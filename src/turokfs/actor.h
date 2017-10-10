@@ -32,7 +32,7 @@ namespace t4editor {
     class actor;
     class actor_mesh {
         public:
-            actor_mesh(SubMesh* mesh, texture* tex);
+            actor_mesh(SubMesh* mesh, texture* tex, vector<texture*> sm_textures);
             ~actor_mesh();
         
             void render(shader* s);
@@ -48,6 +48,7 @@ namespace t4editor {
             int submesh_id;
 
 			texture* m_Texture;
+			vector<texture*> submesh_textures;
     };
     
     class actor {

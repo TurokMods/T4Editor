@@ -59,7 +59,6 @@ namespace t4editor {
     void renderBlockData(ByteStream* data, const string& bName, const string& bPath, application* app, const string& entityName) {
         string name = bName;
         string set_type = app->get_actor_block_type(name);
-        
         void* ptr = data->Ptr();
         size_t sz = data->GetSize();
         if(set_type == "") {
