@@ -1,9 +1,13 @@
+#ifndef T_TEXTURE_H
+#define T_TEXTURE_H
+
+#include <EngineTypes.h>
 #include <GLFW/glfw3.h>
 
 namespace t4editor {
     class texture {
         public:
-            texture(int w, int h, GLenum fmt, GLenum comp_type, bool rtt = false);
+            texture(int w, int h, GLenum fmt, GLenum comp_type, bool rtt = false, unsigned char* data = 0);
             ~texture();
         
             void resize(int w, int h);
@@ -18,3 +22,6 @@ namespace t4editor {
             bool m_isRtt;
     };
 };
+
+
+#endif

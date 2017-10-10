@@ -10,6 +10,8 @@ using namespace glm;
 
 #include <GLFW/glfw3.h>
 
+#include <render/texture.h>
+
 namespace t4editor {
     class shader;
     class application;
@@ -30,7 +32,7 @@ namespace t4editor {
     class actor;
     class actor_mesh {
         public:
-            actor_mesh(SubMesh* mesh);
+            actor_mesh(SubMesh* mesh, texture* tex);
             ~actor_mesh();
         
             void render(shader* s);
@@ -44,6 +46,8 @@ namespace t4editor {
             application* app;
             actor* parent;
             int submesh_id;
+
+			texture* m_Texture;
     };
     
     class actor {

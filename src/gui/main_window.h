@@ -21,7 +21,7 @@ namespace t4editor {
                 setCanCollapse(false);
                 setFlagsManually(ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_MenuBar | ImGuiWindowFlags_NoScrollbar);
                 
-                setSize(vec2(m_app->getWindow()->getSize().x,0.0f));
+                setSize(vec2(m_app->getWindow()->getSize(false).x,0.0f));
             }
             virtual void onEvent(event* e) {
                 if(e->name == "window_resize") {

@@ -1,15 +1,25 @@
 #include <render/texture.h>
 
 namespace t4editor {
-    texture::texture(int w, int h, GLenum fmt, GLenum comp_type, bool rtt) {
+    texture::texture(int w, int h, GLenum fmt, GLenum comp_type, bool rtt, unsigned char* data) {
         glGenTextures(1, &id);
         glBindTexture(GL_TEXTURE_2D, id);
-        glTexImage2D(GL_TEXTURE_2D, 0, fmt, w, h, 0, fmt, comp_type, 0);
+		if(!data) {
+			glTexImage2D(GL_TEXTURE_2D, 0, fmt, w, h, 0, fmt, comp_type, 0);
+		} else {
+			glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAX_ANISOTROPY_EXT, 2.0f);
+			glTexImage2D(GL_TEXTURE_2D, 0, fmt, w, h, 0, fmt, comp_type, data);
+		}
         
         if(rtt) {
             glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
             glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-        }
+		}
+		else {
+			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+		}
+
         
         glBindTexture(GL_TEXTURE_2D, 0);
         
@@ -19,6 +29,7 @@ namespace t4editor {
         m_comp_type = comp_type;
         m_isRtt = rtt;
     }
+
     texture::~texture() {
         if(id) glDeleteTextures(1, &id);
     }
@@ -30,6 +41,7 @@ namespace t4editor {
         glTexImage2D(GL_TEXTURE_2D, 0, m_fmt, m_w, m_h, 0, m_fmt, m_comp_type, 0);
         glBindTexture(GL_TEXTURE_2D, 0);
     }
+
     void texture::bind() {
         glBindTexture(GL_TEXTURE_2D, id);
     }

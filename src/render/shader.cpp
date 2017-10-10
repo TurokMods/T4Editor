@@ -2,6 +2,21 @@
 #include <app.h>
 
 namespace t4editor {
+	void logShaderError(GLuint ShaderID) {
+		GLint status = 0;
+		glGetShaderiv(ShaderID, GL_COMPILE_STATUS, &status);
+		if (status == GL_FALSE) {
+			GLint maxLength = 0;
+			glGetShaderiv(ShaderID, GL_INFO_LOG_LENGTH, &maxLength);
+
+			char* errorLog = new char[maxLength];
+			glGetShaderInfoLog(ShaderID, maxLength, &maxLength, &errorLog[0]);
+			glDeleteShader(ShaderID);
+			printf("%s", errorLog);
+			delete[] errorLog;
+		}
+	}
+
     shader::shader(application* app) {
         m_shader = 0;
         m_vert = 0;
@@ -60,12 +75,12 @@ namespace t4editor {
         const char* vs = vert.c_str();
         glShaderSource(m_vert, 1, &vs, 0);
         glCompileShader(m_vert);
-        //logShaderError(m_vert);
+        logShaderError(m_vert);
         
         const char* fs = frag.c_str();
         glShaderSource(m_frag, 1, &fs, 0);
         glCompileShader(m_frag);
-        //logShaderError(m_frag);
+        logShaderError(m_frag);
         
         m_shader = glCreateProgram();
         glAttachShader(m_shader, m_vert);
@@ -102,6 +117,10 @@ namespace t4editor {
         GLint loc = getUniformLoc(name);
         glUniform1iv(loc, 1, &int32);
     }
+	void shader::uniform1i(const string&name, int int32) {
+		GLint loc = getUniformLoc(name);
+		glUniform1i(loc, int32);
+	}
     void shader::uniformui(const string& name, unsigned int uint32) {
         GLint loc = getUniformLoc(name);
         glUniform1uiv(loc, 1, &uint32);

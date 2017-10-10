@@ -24,6 +24,7 @@ namespace t4editor {
             void uniform(const string& name, const vec3& v3);
             void uniform(const string& name, const vec2& v2);
             void uniformi(const string& name, int int32);
+			void uniform1i(const string& name, int int32);
             void uniformui(const string& name, unsigned int uint32);
             void uniform(const string& name, float f);
             GLint getUniformLoc(const string& name);

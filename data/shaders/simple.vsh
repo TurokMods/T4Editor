@@ -17,5 +17,5 @@ void main() {
     gl_Position =  mvp * vec4(position, 1.0);
     norm = eyeNorm;
     tex = texc;
-    lightDir = mat3(view*model) * vec3(0, 1, 0);
+    lightDir = mat3(view*model) * vec3(0.25, 1, 0);
 }

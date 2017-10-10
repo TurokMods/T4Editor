@@ -20,11 +20,11 @@ namespace t4editor {
             
         
             virtual void onAttach(ui_panel* toPanel) {
-                vec2 sz = m_app->getWindow()->getSize();
+                vec2 sz = m_app->getWindow()->getSize(false);
                 sz.x *= LEVEL_VIEW_WIDTH_FRACTION;
                 sz.y -= (sz.y * LEVEL_VIEW_HEIGHT_FRACTION);
                 
-                setPosition(vec2(0, m_app->getWindow()->getSize().y - sz.y));
+                setPosition(vec2(0, m_app->getWindow()->getSize(false).y - sz.y));
                 setSize(sz);
             }
         
@@ -34,7 +34,7 @@ namespace t4editor {
                     sz.x *= LEVEL_VIEW_WIDTH_FRACTION;
                     sz.y -= (sz.y * LEVEL_VIEW_HEIGHT_FRACTION);
                     
-                    setPosition(vec2(0, m_app->getWindow()->getSize().y - sz.y));
+                    setPosition(vec2(0, m_app->getWindow()->getSize(false).y - sz.y));
                     setSize(sz);
                 }
             }

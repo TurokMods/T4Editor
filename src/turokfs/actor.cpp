@@ -6,6 +6,7 @@
 #include <glm/gtx/euler_angles.hpp>
 
 #include <render/shader.h>
+#include <render/texture.h>
 
 namespace t4editor {
     vec3 int_to_vec3(int i) {
@@ -15,7 +16,10 @@ namespace t4editor {
         //printf("%d -> %d, %d, %d -> %f, %f, %f\n", i, r, g, b, float(r) / 255.0f, float(g) / 255.0f, float(b) / 255.0f);
         return vec3(float(r) / 255.0f, float(g) / 255.0f, float(b) / 255.0f);
     }
-    actor_mesh::actor_mesh(SubMesh* mesh) {
+
+    actor_mesh::actor_mesh(SubMesh* mesh, texture* tex) {
+		m_Texture = tex;
+
         for(size_t i = 0;i < mesh->GetVertexCount();i++) {
             mesh_vert vert;
             memset(&vert, 0, sizeof(mesh_vert));
@@ -67,6 +71,7 @@ namespace t4editor {
         
         err = glGetError(); if(err != 0) printf("err: %d | %s\n", err, glewGetErrorString(err));
     }
+
     actor_mesh::~actor_mesh() {
         if(vao) glDeleteVertexArrays(1, &vao);
         if(vbo) glDeleteBuffers(1, &vbo);
@@ -88,8 +93,15 @@ namespace t4editor {
         glEnableVertexAttribArray(2);
         glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, sizeof(mesh_vert), (void*)(6 * sizeof(float)));
         
+		if(m_Texture) {
+			m_Texture->bind();
+			glActiveTexture(GL_TEXTURE0);
+		}
+
         if(chunkIndices.size() > 0) {
             for(size_t i = 0;i < chunkIndices.size();i++) {
+				if(m_Texture)
+					s->uniform1i("diffuse_map", 0);
                 s->uniform("actor_submesh_chunk_id", int_to_vec3(i));
                 glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ibos[i]);
                 glDrawElements(GL_TRIANGLE_STRIP, chunkIndices[i].size(), GL_UNSIGNED_SHORT, 0);
@@ -106,14 +118,26 @@ namespace t4editor {
         glDisableVertexAttribArray(2);
         err = glGetError(); if(err != 0) printf("err: %d | %s\n", err, glewGetErrorString(err));
     }
+
     actor::actor(application* app, ActorMesh* mesh, ActorDef* def) {
         m_app = app;
         actorTraits = def;
         meshTraits = mesh;
+		level* lev = app->getLevel();
         if(mesh) {
             for(size_t i = 0;i < mesh->GetSubMeshCount();i++) {
+				texture* t = 0;
+				if (i < mesh->m_MeshInfos.size()) {
+					MeshInfo minfo = mesh->m_MeshInfos[i];
+					if(minfo.TSNR_ID != -1)
+					{
+						int TexID = mesh->m_TXSTs[mesh->m_TSNRs[minfo.TSNR_ID].TXST_ID].TextureID;
+						if(TexID < mesh->m_Textures.size()) t = lev->loadTexture(mesh->m_Textures[TexID]);
+					}
+				}
+
                 SubMesh* sm = mesh->GetSubMesh(i);
-                meshes.push_back(new actor_mesh(sm));
+                meshes.push_back(new actor_mesh(sm, t));
                 meshes[i]->app = app;
                 meshes[i]->parent = this;
                 meshes[i]->submesh_id = i;
@@ -124,12 +148,14 @@ namespace t4editor {
             actor_id = def->ID;
         }
     }
+
     actor::~actor() {
         for(size_t i = 0;i < meshes.size();i++) {
             delete meshes[i];
         }
         meshes.clear();
     }
+
     void actor::render(t4editor::shader *s) {
         vec3 position, rotation;
         vec3 scale = vec3(1.0f, 1.0f, 1.0f);

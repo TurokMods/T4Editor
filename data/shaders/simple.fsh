@@ -3,6 +3,8 @@ in vec3 norm;
 in vec2 tex;
 in vec3 lightDir;
 
+uniform sampler2D diffuse_map;
+
 uniform vec3 actor_id;
 uniform vec3 actor_submesh_id;
 uniform vec3 actor_submesh_chunk_id;
@@ -15,7 +17,11 @@ layout(location = 3) out vec3 out_actor_submesh_chunk_id;
 
 void main() {
     float ndotl = max(dot(norm, lightDir), 0.0);
-    outcolor = ndotl * norm;
+	vec4 diffuse = texture(diffuse_map, tex);
+	if(diffuse.a < 0.5) discard;
+	if(ndotl < 0.5) ndotl = 0.5;
+	outcolor = ndotl * vec3(diffuse);
+	
     if(actor_selected > 0.0) {
         outcolor.r += 0.2;
         outcolor.g += 0.2;
