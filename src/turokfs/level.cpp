@@ -23,9 +23,11 @@ namespace t4editor {
 		if (found == m_textures.end()) {
 			texture* t = this->loadTexture(filename);
 			m_textures.insert(std::make_pair(filename, t));
+			printf("Loading new texture %s\n", filename.c_str());
 			return t;
 		}
 		else {
+			printf("Texture already found, returning %s\n", filename.c_str());
 			return found->second;
 		}
 	}

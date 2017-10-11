@@ -128,6 +128,9 @@ namespace t4editor {
     }
 
     actor::actor(application* app, ActorMesh* mesh, ActorDef* def) {
+		/* TODO: 
+		* This has all kinds of dynamic allocations and other weirdness going on here.
+		*/
         m_app = app;
         actorTraits = def;
         meshTraits = mesh;
@@ -153,7 +156,7 @@ namespace t4editor {
                         if(mesh->m_MTRLs[ch].Unk4 >= 0 && mesh->m_MTRLs[ch].Unk4 < mesh->m_TSNRs.size())
                         {
                             int TexID = mesh->m_TXSTs[mesh->m_TSNRs[mesh->m_MTRLs[ch].Unk4].TXST_ID].TextureID;
-                            if(TexID < mesh->m_Textures.size()) t = lev->loadTexture(mesh->m_Textures[TexID]);
+                            if(TexID < mesh->m_Textures.size()) t = lev->getTexture(mesh->m_Textures[TexID]);
                         }
                     }
 					if(t) {
