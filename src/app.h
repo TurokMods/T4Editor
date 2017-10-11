@@ -49,6 +49,7 @@ namespace t4editor {
             framebuffer* getFrame() const { return m_framebuffer; }
         
             level* getLevel() const { return m_level; }
+			texture* getDefaultTexture() const { return m_defaultTex; }
         
             void set_view(const mat4& v, const mat4& p) {
                 m_view = v;
@@ -100,6 +101,7 @@ namespace t4editor {
         
             level* m_level;
             shader* m_shader;
+			texture* m_defaultTex;
             framebuffer* m_framebuffer;
         
             unordered_map<string, string> m_actor_var_types;

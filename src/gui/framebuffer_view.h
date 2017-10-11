@@ -30,7 +30,7 @@ namespace t4editor {
         
             virtual void renderContent() {
                 framebuffer* fb = m_app->getFrame();
-                vec2 dims = m_app->getWindow()->getSize() * 0.1f;
+                vec2 dims = m_app->getWindow()->getSize(false) * 0.1f;
                 ImGui::Image((GLuint*)fb->attachments[0]->id, ImVec2(dims.x,dims.y), ImVec2(0, 1), ImVec2(1, 0));
                 ImGui::Image((GLuint*)fb->attachments[1]->id, ImVec2(dims.x,dims.y), ImVec2(0, 1), ImVec2(1, 0));
                 ImGui::Image((GLuint*)fb->attachments[2]->id, ImVec2(dims.x,dims.y), ImVec2(0, 1), ImVec2(1, 0));

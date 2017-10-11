@@ -197,6 +197,7 @@ namespace opent4
     /* ATRFile */
     bool ATRFile::Load(const std::string& Filename)
     {
+		m_RealFile = Filename;
         printf("ATR: %s\n", Filename.c_str());
         FILE* fp = std::fopen(Filename.c_str(), "rb");
         if(!fp) { printf("Unable to open file.\n"); return false; }
@@ -218,6 +219,8 @@ namespace opent4
             b->Load(m_Root->GetData());
             m_Root->AddChildBlock(b);
         }
+
+		m_Root->GetData()->SetOffset(0);
 
         ProcessBlocks();
         return true;
@@ -312,20 +315,38 @@ namespace opent4
                     break;
                 }
             }
+            Data->SetOffset(0);
         }
     }
 
     bool ATRFile::Save(const std::string& Filename)
     {
         ByteStream* Data = new ByteStream();
-        Data->WriteData(4, m_Hdr);
-        m_Root->Save(Data);
+        if(!Data->WriteData(4, m_Hdr)) {
+			delete Data;
+			return false;
+		}
+
+		m_Root->GetData()->SetOffset(0);
+        if(!m_Root->Save(Data, true)) {
+			delete Data;
+			return false;
+		}
+
+		Data->SetOffset(0);
+		FILE* fp = fopen(Filename.c_str(), "wb");
+		fwrite(Data->Ptr(), Data->GetSize(), 1, fp);
+		fclose(fp);
+		delete Data;
+
+		for(int i = 0;i < m_ActorInstanceFiles.size();i++) {
+			m_ActorInstanceFiles[i]->Save(m_ActorInstanceFiles[i]->GetFile().c_str());
+		}
         return true;
     }
 
     bool ATRFile::CheckHeader()
     {
-        char m_Hdr[4];
         if(!m_Data->GetData(4, m_Hdr))
         {
             printf("Unable to read header. (Empty file?)\n");
@@ -393,7 +414,32 @@ namespace opent4
 
     bool ATIFile::Save(const std::string& File)
     {
-        //TODO:
+        ByteStream* out = new ByteStream();
+		out->WriteData(4, m_Hdr);
+		for(size_t i = 0;i < m_Blocks.size();i++) {
+			switch(m_Blocks[i]->GetType())
+            {
+				case BT_ACTOR           : { if(!SaveActorBlock(i)) { return false; } break; }
+                case BT_PATH            : { break; }
+                case BT_NAVDATA         : { break; }
+                case BT_ACTOR_VARIABLES : { break; }
+                case BT_VERSION         : { break; }
+                default:
+                {
+                    //printf("Unsupported ATI block type (%s).\n",BlockTypeIDs[m_Blocks[i]->GetType()].c_str());
+                    break;
+                }
+            }
+			bool isRootNode = false;
+			if(m_Blocks[i]->GetTypeString() == "ACTOR") isRootNode = true;
+			m_Blocks[i]->Save(out, isRootNode);
+		}
+		
+		out->SetOffset(0);
+		FILE* fp = fopen(File.c_str(), "wb");
+		fwrite(out->Ptr(), out->GetSize(), 1, fp);
+		fclose(fp);
+		delete out;
         return false;
     }
 
@@ -501,15 +547,90 @@ namespace opent4
                     //printf("Unsupported actor block type (%s).\n",BlockTypeIDs[cBlock->GetType()].c_str());
                 }
             }
+
+			Data->SetOffset(0);
         }
 
         m_Actors.push_back(d);
         d->Actor->m_Def = d;
     }
 
-    void ATIFile::SaveActorBlock(size_t Idx)
+    bool ATIFile::SaveActorBlock(size_t Idx)
     {
-        //TODO:
+        Block* b = m_Blocks[Idx];
+		ActorDef* d = m_Actors[Idx]; // I hope this is right... I think it is;
+        b->GetData()->SetOffset(0);
+		//We don't need to re-save this value, but we need to navigate to the end of this data for the next part
+        unsigned char PathLen = b->GetData()->GetByte();
+        std::string Path = b->GetData()->GetString(PathLen);
+        b->GetData()->Offset(1);
+
+		//update block data
+        for(int i = 0;i < b->GetChildCount();i++)
+        {
+            Block* cBlock = b->GetChild(i);
+            ByteStream* Data = cBlock->GetData();
+			Data->SetOffset(0);
+
+            switch(cBlock->GetType())
+            {
+                case BT_ACTOR_POSITION:
+                {
+					if(!Data->WriteFloat(d->Position.x)) return false;
+					if(!Data->WriteFloat(d->Position.y)) return false;
+					if(!Data->WriteFloat(d->Position.z)) return false;
+                    break;
+                }
+                case BT_ACTOR_ROTATION:
+                {
+					if(!Data->WriteFloat(d->Rotation.x)) return false;
+					if(!Data->WriteFloat(d->Rotation.y)) return false;
+					if(!Data->WriteFloat(d->Rotation.z)) return false;
+                    break;
+                }
+                case BT_ACTOR_SCALE   :
+                {
+					if(!Data->WriteFloat(d->Scale.x)) return false;
+					if(!Data->WriteFloat(d->Scale.y)) return false;
+					if(!Data->WriteFloat(d->Scale.z)) return false;
+					if(d->Scale.x > 5) {
+						printf("Huhtf?\n");
+					}
+                    break;
+                }
+                case BT_ACTOR_NAME    :
+                {
+					if(!Data->WriteString(d->Name)) return false;
+                    break;
+                }
+                case BT_ACTOR_ID      :
+                {
+					if(!Data->WriteByte(d->ID)) return false;
+                    break;
+                }
+                case BT_ACTOR_PATH_ID :
+                {
+					if(!Data->WriteByte(d->PathID)) return false;
+                    break;
+                }
+                case BT_ACTOR_VARIABLES:
+                {
+                    if(!d->Actor->GetActorVariables()->Save(Data)) return false;
+                    break;
+                }
+                case BT_ACTOR_LINK:
+                {
+                    break;
+                }
+                default:
+                {
+                    //printf("Unsupported actor block type (%s).\n",BlockTypeIDs[cBlock->GetType()].c_str());
+                }
+            }
+
+			Data->SetOffset(0);
+        }
+		return true;
     }
     
     ATRFile* ATIFile::LoadATR(const std::string &path) {

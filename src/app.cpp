@@ -22,6 +22,7 @@ namespace t4editor {
         m_framebuffer = 0;
         m_windowPosX = 0;
         m_windowPosY = 150;
+		m_defaultTex = 0;
     }
     
     application::~application() {
@@ -63,6 +64,11 @@ namespace t4editor {
             }
             fclose(fp);
         }
+
+		if(m_level) {
+			m_level->levelFile()->Save(m_dataPath + "/" + m_level->levelFile()->GetFileName());
+			delete m_level;
+		}
     }
     
     bool application::initialize() {
@@ -88,6 +94,34 @@ namespace t4editor {
         m_framebuffer->attachments.push_back(new texture(dims.x, dims.y, GL_RGB, GL_UNSIGNED_BYTE, true)); //asset_id
         m_framebuffer->attachments.push_back(new texture(dims.x, dims.y, GL_RGB, GL_UNSIGNED_BYTE, true)); //asset_submesh_id
         m_framebuffer->attachments.push_back(new texture(dims.x, dims.y, GL_RGB, GL_UNSIGNED_BYTE, true)); //asset_submesh_chunk_id
+
+		u32* defaultTexData = new u32[2 * 2];
+		for(u8 x = 0;x < 2;x++) {
+			for(u8 y = 0;y < 2;y++) {
+				u8* pixel = (u8*)(&defaultTexData[x + (y * 2)]);
+				if((x + (y * 2)) % 2 == 0) {
+					pixel[0] = 100;
+					pixel[1] = 20;
+					pixel[2] = 200;
+					pixel[3] = 255;
+				} else {
+					pixel[0] = 210;
+					pixel[1] = 210;
+					pixel[2] = 210;
+					pixel[3] = 210;
+				}
+			}
+		}
+		m_defaultTex = new texture(2, 2, GL_RGBA, GL_UNSIGNED_BYTE, false, (u8*)defaultTexData);
+		delete [] defaultTexData;
+		m_defaultTex->bind();
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_R, GL_REPEAT);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+		glBindTexture(GL_TEXTURE_2D, 0);
+
         return true;
     }
     

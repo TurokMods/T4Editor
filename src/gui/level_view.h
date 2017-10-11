@@ -39,7 +39,7 @@ namespace t4editor {
         
             virtual void onAttach(ui_panel* toPanel) {
                 setPosition(vec2(0.0f, 20.0f));
-                vec2 sz = vec2(m_app->getWindow()->getSize().x * LEVEL_VIEW_WIDTH_FRACTION, m_app->getWindow()->getSize().y * LEVEL_VIEW_HEIGHT_FRACTION);
+                vec2 sz = vec2(m_app->getWindow()->getSize(false).x * LEVEL_VIEW_WIDTH_FRACTION, m_app->getWindow()->getSize(false).y * LEVEL_VIEW_HEIGHT_FRACTION);
                 setSize(sz);
                 
                 vec2 sizeOff = getSizeCorrection();
@@ -58,7 +58,7 @@ namespace t4editor {
                     m_level = 0;
                 }
                 else if(e->name == "window_resize") {
-                    vec2 sz = vec2(m_app->getWindow()->getSize().x * LEVEL_VIEW_WIDTH_FRACTION, m_app->getWindow()->getSize().y * LEVEL_VIEW_HEIGHT_FRACTION);
+                    vec2 sz = vec2(m_app->getWindow()->getSize(false).x * LEVEL_VIEW_WIDTH_FRACTION, m_app->getWindow()->getSize(false).y * LEVEL_VIEW_HEIGHT_FRACTION);
                     setSize(sz);
                     
                     vec2 sizeOff = getSizeCorrection();
