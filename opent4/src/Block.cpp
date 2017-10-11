@@ -1,4 +1,5 @@
 #include "Block.h"
+#include <algorithm>
 
 namespace opent4
 {
@@ -425,4 +426,14 @@ namespace opent4
         else if(m_Data->GetSize() > 0) return Data->WriteData(m_Data->GetSize(), m_Data->Ptr());
 		return true;
     }
+	
+	void Block::useUIBuf() {
+		if(m_Children.size() != 0) {
+			printf("You can't do that.\n");
+		} else {
+			m_useUiBuf = true;
+			memset(m_uitextbuf, 0, 1024);
+			memcpy(m_uitextbuf, m_Data->Ptr(), m_Data->GetSize() < 1024 ? m_Data->GetSize() : 1024);
+		}
+	}
 }

@@ -138,7 +138,7 @@ namespace opent4
     class Block
     {
         public:
-            Block() : m_Data(0), m_Type(BT_COUNT) { memset(m_Hdr, 0, 8); }
+            Block() : m_Data(0), m_Type(BT_COUNT) { memset(m_Hdr, 0, 8); memset(m_uitextbuf, 0, 1024); m_useUiBuf = false; }
             ~Block();
 
             bool Load(ByteStream* Data);
@@ -152,6 +152,9 @@ namespace opent4
 
             ByteStream* GetData() const { return m_Data; }
 
+			char* uiBuf() { return m_uitextbuf; }
+			void useUIBuf();
+
         protected:
             unsigned char m_PreBlockFlag;
             char m_Hdr[8];
@@ -161,6 +164,10 @@ namespace opent4
 			//Note: Changing m_Data has no effect on the saved file if m_Children is populated (Only leaf nodes are saved)
             ByteStream* m_Data;
             std::vector<Block*> m_Children;
+
+			//used by imgui to write strings...
+			char m_uitextbuf[1024]; //1024 is more than enough
+			bool m_useUiBuf;
     };
 }
 
