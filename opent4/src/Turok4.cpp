@@ -373,6 +373,8 @@ namespace opent4
 
     bool ATRFile::Save(const std::string& Filename)
     {
+		SaveBlocks();
+
 		ByteStream* Data = new ByteStream();
         if(!Data->WriteData(4, m_Hdr)) {
 			delete Data;
@@ -664,7 +666,9 @@ namespace opent4
                 }
                 case BT_ACTOR_ID      :
                 {
-					if(!Data->WriteInt32(d->ID)) return false;
+                    if(Data->GetSize() == 1) Data->WriteByte(d->ID);
+					else if(Data->GetSize() == 2) Data->WriteInt16(d->ID);
+					else if(Data->GetSize() == 4) d->ID = Data->WriteInt32(d->ID);
                     break;
                 }
                 case BT_ACTOR_PATH_ID :
