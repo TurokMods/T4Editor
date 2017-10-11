@@ -373,24 +373,23 @@ namespace opent4
 
     bool ATRFile::Save(const std::string& Filename)
     {
-		SaveBlocks();
-
-        ByteStream* out = new ByteStream();
-        if(!out->WriteData(4, m_Hdr)) {
-			delete out;
+		ByteStream* Data = new ByteStream();
+        if(!Data->WriteData(4, m_Hdr)) {
+			delete Data;
 			return false;
 		}
 
-		if(!m_Root->Save(out, true)) {
-			delete out;
+		m_Root->GetData()->SetOffset(0);
+        if(!m_Root->Save(Data, true)) {
+			delete Data;
 			return false;
 		}
 
-		out->SetOffset(0);
+		Data->SetOffset(0);
 		FILE* fp = fopen(Filename.c_str(), "wb");
-		fwrite(out->Ptr(), out->GetSize(), 1, fp);
+		fwrite(Data->Ptr(), Data->GetSize(), 1, fp);
 		fclose(fp);
-		delete out;
+		delete Data;
 
 		for(int i = 0;i < m_ActorInstanceFiles.size();i++) {
 			m_ActorInstanceFiles[i]->Save(m_ActorInstanceFiles[i]->GetFile().c_str());

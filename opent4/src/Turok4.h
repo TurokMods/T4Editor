@@ -77,7 +77,6 @@ namespace opent4
             char m_Hdr[4];
             bool CheckHeader();
             void ProcessBlocks();
-			bool SaveBlocks();
 
             float m_Version;
             ActorVec3 m_ActorMeshAxis;
