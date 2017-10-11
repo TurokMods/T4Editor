@@ -18,6 +18,18 @@ namespace t4editor {
         if(m_atr) delete m_atr;
     }
 
+	texture* level::getTexture(std::string filename) {
+		auto found = m_textures.find(filename);
+		if (found == m_textures.end()) {
+			texture* t = this->loadTexture(filename);
+			m_textures.insert(std::make_pair(filename, t));
+			return t;
+		}
+		else {
+			return found->second;
+		}
+	}
+
 	texture* level::loadTexture(std::string filename) {
 		i32 w, h, ch;
 		unsigned char* Data = SOIL_load_image(filename.c_str(), &w, &h, &ch, 4);

@@ -132,7 +132,7 @@ namespace t4editor {
 					if(minfo.TSNR_ID != -1)
 					{
 						int TexID = mesh->m_TXSTs[mesh->m_TSNRs[minfo.TSNR_ID].TXST_ID].TextureID;
-						if(TexID < mesh->m_Textures.size()) t = lev->loadTexture(mesh->m_Textures[TexID]);
+						if(TexID < mesh->m_Textures.size()) t = lev->getTexture(mesh->m_Textures[TexID]);
 					}
 				}
 
