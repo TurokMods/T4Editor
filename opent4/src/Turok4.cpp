@@ -240,10 +240,10 @@ namespace opent4
                     Data->GetByte(); //Path length (not needed)
                     m_ActorMeshFile = Data->GetString();
 
-                    m_Mesh = new ActorMesh();
-                    if(!m_Mesh->Load(TransformPseudoPathToRealPath(m_ActorMeshFile))) {
-                        delete m_Mesh;
-                    }
+                    //m_Mesh = new ActorMesh();
+                    //if(!m_Mesh->Load(TransformPseudoPathToRealPath(m_ActorMeshFile))) {
+                    //    delete m_Mesh;
+                    //}
 
                     break;
                 }
@@ -319,25 +319,78 @@ namespace opent4
         }
     }
 
+	bool ATRFile::SaveBlocks() {
+		for(std::size_t i = 0; i < m_Root->GetChildCount(); i++)
+        {
+            Block* b = m_Root->GetChild(i);
+            ByteStream* Data = b->GetData();
+            Data->SetOffset(0);
+            switch(b->GetType())
+            {
+                case BT_ACTOR_MESH: { break; } //Can't save this yet
+                case BT_ACTOR_INSTANCES: { break; } //Can't save this yet
+                case BT_VERSION: { break; } //Probably shouldn't save this...
+                case BT_ACTOR_CODE: { break; } //Not sure what this means yet, so don't save it
+                case BT_ACTOR_MESH_AXIS:
+                {
+					//Not sure what this does, but let's save it anyway
+					if(!Data->WriteData(4, &m_ActorMeshAxis.x)) return false;
+					if(!Data->WriteData(4, &m_ActorMeshAxis.y)) return false;
+					if(!Data->WriteData(4, &m_ActorMeshAxis.z)) return false;
+                    break;
+                }
+                case BT_ACTOR_PRECACHE_FILE: { break; } //Not sure what this means yet, so don't save it
+                case BT_ACTOR_VARIABLES  :
+                {
+                    if(!m_Variables->Save(Data)) return false;
+					break;
+                }
+                case BT_ACTOR_MESH_BOUNDS:
+                case BT_ACTOR_TEXTURE_SET:
+                case BT_ACTOR_PROPERTIES :
+                case BT_ACTOR_POSITION   :
+                case BT_ACTOR_ROTATION   :
+                case BT_ACTOR_SCALE      :
+                case BT_DUMMIES          :
+                case BT_GRND_Y           :
+                case BT_DEFT             :
+                case BT_COLS             :
+                case BT_MODES            :
+                case BT_LINK_LISTS       :
+                case BT_LINK             :
+                case BT_LINKS            :
+                case BT_TRNS             :
+                case BT_HOTPS            : { break; }
+                default:
+                {
+                    //printf("Unsupported ATR block type (%s).\n",BlockTypeIDs[b->GetType()].c_str());
+                    break;
+                }
+            }
+		}
+		return true;
+	}
+
     bool ATRFile::Save(const std::string& Filename)
     {
-        ByteStream* Data = new ByteStream();
-        if(!Data->WriteData(4, m_Hdr)) {
-			delete Data;
+		SaveBlocks();
+
+        ByteStream* out = new ByteStream();
+        if(!out->WriteData(4, m_Hdr)) {
+			delete out;
 			return false;
 		}
 
-		m_Root->GetData()->SetOffset(0);
-        if(!m_Root->Save(Data, true)) {
-			delete Data;
+		if(!m_Root->Save(out, true)) {
+			delete out;
 			return false;
 		}
 
-		Data->SetOffset(0);
+		out->SetOffset(0);
 		FILE* fp = fopen(Filename.c_str(), "wb");
-		fwrite(Data->Ptr(), Data->GetSize(), 1, fp);
+		fwrite(out->Ptr(), out->GetSize(), 1, fp);
 		fclose(fp);
-		delete Data;
+		delete out;
 
 		for(int i = 0;i < m_ActorInstanceFiles.size();i++) {
 			m_ActorInstanceFiles[i]->Save(m_ActorInstanceFiles[i]->GetFile().c_str());
@@ -440,7 +493,11 @@ namespace opent4
 		fwrite(out->Ptr(), out->GetSize(), 1, fp);
 		fclose(fp);
 		delete out;
-        return false;
+
+		for(size_t i = 0;i < m_LoadedAtrs.size();i++) {
+			m_LoadedAtrs[i]->Save(m_LoadedAtrPaths[i]);
+		}
+        return true;
     }
 
     void ATIFile::ProcessBlocks()
@@ -523,7 +580,10 @@ namespace opent4
                 }
                 case BT_ACTOR_ID      :
                 {
-                    d->ID = (unsigned char)Data->GetByte();
+
+                    if(Data->GetSize() == 1) d->ID = (unsigned char)Data->GetByte();
+					else if(Data->GetSize() == 2) d->ID = (unsigned short)Data->GetInt16();
+					else if(Data->GetSize() == 4) d->ID = (unsigned int)Data->GetInt32();
                     break;
                 }
                 case BT_ACTOR_PATH_ID :
@@ -605,7 +665,7 @@ namespace opent4
                 }
                 case BT_ACTOR_ID      :
                 {
-					if(!Data->WriteByte(d->ID)) return false;
+					if(!Data->WriteInt32(d->ID)) return false;
                     break;
                 }
                 case BT_ACTOR_PATH_ID :
