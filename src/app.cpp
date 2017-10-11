@@ -8,6 +8,10 @@
 #include <algorithm>
 #include <cassert>
 
+#include <util/json.hpp>
+#include <iostream>
+#include <fstream>
+
 
 namespace t4editor {
     application::application(int argc, const char* argv[]) {
@@ -31,80 +35,77 @@ namespace t4editor {
         
         if(m_shader) delete m_shader;
         if(m_fs) delete m_fs;
-        if(m_window) delete m_window;
-        if(m_framebuffer) {
-            for(size_t i = 0;i < m_framebuffer->attachments.size();i++) {
-                delete m_framebuffer->attachments[i];
-            }
-            delete m_framebuffer;
-        }
-        
-        string exePath = m_args[0];
-        exePath = exePath.substr(0, exePath.find_last_of("/"));
-        
-        FILE* fp = fopen((exePath + "/config.txt").c_str(), "w");
-        if(!fp) {
-            printf("WARNING: The application is closing but we can't open the config file to save the modified settings. Sorry...\n");
-        } else {
-            fprintf(fp, "[PATHS]\n");
-            fprintf(fp, "game_data_path '%s'\n", m_dataPath.c_str());
-            fprintf(fp, "editor_data_path '%s'\n\n", m_editorDataPath.c_str());
-            fprintf(fp, "[WINDOW]\n");
-            fprintf(fp, "res_x %d\n", (int)wSize.x);
-            fprintf(fp, "res_y %d\n\n", (int)wSize.y);
-            fprintf(fp, "pos_x %d\n", (int)wPos.x);
-            fprintf(fp, "pos_y %d\n\n", (int)wPos.y);
-            fprintf(fp, "[ACTOR VARIABLES]\n");
-            for(auto i = m_actor_var_types.begin();i != m_actor_var_types.end();i++) {
-                fprintf(fp, "av__%s %s\n", i->first.c_str(), i->second.c_str());
-            }
-            fprintf(fp, "\n[ACTOR BLOCKS]\n");
-            for(auto i = m_actor_block_types.begin();i != m_actor_block_types.end();i++) {
-                fprintf(fp, "ab__%s %s\n", i->first.c_str(), i->second.c_str());
-            }
-            fclose(fp);
-        }
+		if (m_window) delete m_window;
+		if (m_framebuffer) {
+			for (size_t i = 0; i < m_framebuffer->attachments.size(); i++) {
+				delete m_framebuffer->attachments[i];
+			}
+			delete m_framebuffer;
+		}
 
-		if(m_level) {
+		nlohmann::json j;
+		j["editor_data_path"] = m_editorDataPath;
+		j["game_data_path"] = m_dataPath;
+		j["res_x"] = (int)wSize.x;
+		j["res_y"] = (int)wSize.y;
+		j["pos_x"] = (int)wPos.x;
+		j["pos_y"] = (int)wPos.y;
+		for (auto i = m_actor_var_types.begin(); i != m_actor_var_types.end(); i++) {
+			string key = "av__" + i->first;
+			j[key.c_str()] = i->second.c_str();
+		}
+
+		for (auto i = m_actor_block_types.begin(); i != m_actor_block_types.end(); i++) {
+			string key = "ab__" + i->first;
+			j[key.c_str()] = i->second.c_str();
+		}
+
+		printf("Writing json data: %s\n", j.dump().c_str());
+		std::ofstream o("config.json");
+		o << std::setw(4) << j << std::endl;
+		o.close();
+
+		if (m_level) {
 			m_level->levelFile()->Save(m_dataPath + "/" + m_level->levelFile()->GetFileName());
 			delete m_level;
 		}
-    }
-    
-    bool application::initialize() {
-        if(!load_config()) return false;
-        m_window = new window(this, m_windowWidth, m_windowHeight);
-        if(!m_window->isOpen()) {
-            return false;
-        }
-        
-        glfwSetWindowPos(m_window->getWindow(), m_windowPosX, m_windowPosY);
-        
-        m_fs = new turokfs(m_dataPath);
-        
-        m_shader = new shader(this);
-        m_shader->attribute("position", 0);
-        m_shader->attribute("normal", 1);
-        m_shader->attribute("texc", 2);
-        m_shader->loadFromFile("shaders/simple.vsh", "shaders/simple.fsh");
-        
-        vec2 dims = m_window->getSize();
-        m_framebuffer = new framebuffer(dims.x * 0.75f, dims.y * 0.7f, true);
-        m_framebuffer->attachments.push_back(new texture(dims.x, dims.y, GL_RGB, GL_UNSIGNED_BYTE, true)); //color buffer
-        m_framebuffer->attachments.push_back(new texture(dims.x, dims.y, GL_RGB, GL_UNSIGNED_BYTE, true)); //asset_id
-        m_framebuffer->attachments.push_back(new texture(dims.x, dims.y, GL_RGB, GL_UNSIGNED_BYTE, true)); //asset_submesh_id
-        m_framebuffer->attachments.push_back(new texture(dims.x, dims.y, GL_RGB, GL_UNSIGNED_BYTE, true)); //asset_submesh_chunk_id
+	}
+
+	bool application::initialize() {
+		if (!load_config()) return false;
+		m_window = new window(this, m_windowWidth, m_windowHeight);
+		if (!m_window->isOpen()) {
+			return false;
+		}
+
+		glfwSetWindowPos(m_window->getWindow(), m_windowPosX, m_windowPosY);
+
+		m_fs = new turokfs(m_dataPath);
+
+		m_shader = new shader(this);
+		m_shader->attribute("position", 0);
+		m_shader->attribute("normal", 1);
+		m_shader->attribute("texc", 2);
+		m_shader->loadFromFile("shaders/simple.vsh", "shaders/simple.fsh");
+
+		vec2 dims = m_window->getSize();
+		m_framebuffer = new framebuffer(dims.x * 0.75f, dims.y * 0.7f, true);
+		m_framebuffer->attachments.push_back(new texture(dims.x, dims.y, GL_RGB, GL_UNSIGNED_BYTE, true)); //color buffer
+		m_framebuffer->attachments.push_back(new texture(dims.x, dims.y, GL_RGB, GL_UNSIGNED_BYTE, true)); //asset_id
+		m_framebuffer->attachments.push_back(new texture(dims.x, dims.y, GL_RGB, GL_UNSIGNED_BYTE, true)); //asset_submesh_id
+		m_framebuffer->attachments.push_back(new texture(dims.x, dims.y, GL_RGB, GL_UNSIGNED_BYTE, true)); //asset_submesh_chunk_id
 
 		u32* defaultTexData = new u32[2 * 2];
-		for(u8 x = 0;x < 2;x++) {
-			for(u8 y = 0;y < 2;y++) {
+		for (u8 x = 0; x < 2; x++) {
+			for (u8 y = 0; y < 2; y++) {
 				u8* pixel = (u8*)(&defaultTexData[x + (y * 2)]);
-				if((x + (y * 2)) % 2 == 0) {
+				if ((x + (y * 2)) % 2 == 0) {
 					pixel[0] = 100;
 					pixel[1] = 20;
 					pixel[2] = 200;
 					pixel[3] = 255;
-				} else {
+				}
+				else {
 					pixel[0] = 210;
 					pixel[1] = 210;
 					pixel[2] = 210;
@@ -113,40 +114,51 @@ namespace t4editor {
 			}
 		}
 		m_defaultTex = new texture(2, 2, GL_RGBA, GL_UNSIGNED_BYTE, false, (u8*)defaultTexData);
-		delete [] defaultTexData;
+		delete[] defaultTexData;
 		m_defaultTex->bind();
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_R, GL_REPEAT);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 		glBindTexture(GL_TEXTURE_2D, 0);
 
-        return true;
-    }
-    
-    void application::handle_config_var(const string &name, const string &value) {
-        if(name == "game_data_path") {
-            m_dataPath = value;
-            SetTurokDirectory(value);
-            printf("Using '%s' as game data directory\n", m_dataPath.c_str());
-        }
-        else if(name == "editor_data_path") {
-            m_editorDataPath = value;
-            printf("Using %s as editor data directory\n", m_editorDataPath.c_str());
-        }
-        else if(name == "res_x") m_windowWidth = atoi(value.c_str());
-        else if(name == "res_y") m_windowHeight = atoi(value.c_str());
-        else if(name == "pos_x") m_windowPosX = atoi(value.c_str());
-        else if(name == "pos_y") m_windowPosY = atoi(value.c_str());
-        else if(name.find("av__") != name.npos) {
-            string vName = name.substr(4, name.length() - 4);
-            define_actor_var_type(vName, value);
-        } else if(name.find("ab__") != name.npos) {
-            string bName = name.substr(4, name.length() - 4);
-            define_actor_block_type(bName, value);
-        }
-    }
+		return true;
+	}
+
+	bool application::load_config() {
+		nlohmann::json j;
+		std::ifstream i("config.json");
+		i >> j;
+
+		for (nlohmann::json::iterator it = j.begin(); it != j.end(); it++) {
+			std::string name = it.key();
+			if (name == "game_data_path") {
+				m_dataPath = it.value().get<string>();
+				SetTurokDirectory(m_dataPath);
+				printf("Using '%s' as game data directory\n", m_dataPath.c_str());
+			}
+			else if (name == "editor_data_path") {
+				m_editorDataPath = it.value().get<string>();
+				printf("Using '%s' as editor data directory\n", m_editorDataPath.c_str());
+			}
+			else if (name == "res_x") m_windowWidth = it.value().get<int>();
+			else if (name == "res_y") m_windowHeight = it.value().get<int>();
+			else if (name == "pos_x") m_windowPosX = it.value().get<int>();
+			else if (name == "pos_y") m_windowPosY = it.value().get<int>();
+			else if (name.find("av__") != name.npos) {
+				string vName = name.substr(4, name.length() - 4);
+				define_actor_var_type(vName, it.value());
+			}
+			else if (name.find("ab__") != name.npos) {
+				string bName = name.substr(4, name.length() - 4);
+				define_actor_block_type(bName, it.value());
+			}
+		}
+
+		i.close();
+		return true;
+	}
 
     void application::add_panel(ui_panel *panel) {
         m_panels.push_back(panel);

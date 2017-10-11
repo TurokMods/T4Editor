@@ -51,9 +51,15 @@ file(GLOB soil_src
     "src/render/SOIL/*.cpp"
 )
 
+file(GLOB util_src
+    "src/util/*.h"
+    "src/util/*.cpp"
+)
+
 source_group(src FILES ${editor_src})
 source_group(src\\turokfs FILES ${turokfs_src})
 source_group(src\\gui FILES ${gui_src})
+source_group(src\\util FILES ${util_src})
 source_group(src\\render FILES ${render_src})
 source_group(deps\\imgui FILES ${imgui_src})
 source_group(src\\render\\soil FILES ${soil_src})
@@ -63,7 +69,7 @@ file(GLOB shaders_src "data/shaders/*.*")
 source_group(data\\fonts FILES ${fonts_src})
 source_group(data\\shaders FILES ${shaders_src})
 
-add_executable(t4editor ${editor_src} ${turokfs_src} ${gui_src} ${imgui_src} ${render_src} ${fonts_src} ${shaders_src} ${soil_src})
+add_executable(t4editor ${editor_src} ${turokfs_src} ${gui_src} ${imgui_src} ${render_src} ${fonts_src} ${shaders_src} ${soil_src} ${util_src})
 
 include_directories(SYSTEM ${GLEWDIR}/include ${GLMDIR}/include ${GLFWDIR}/include)
 

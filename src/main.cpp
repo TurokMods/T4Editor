@@ -2,6 +2,7 @@
 using namespace t4editor;
 
 #include <gui/ui.h>
+#include <util/json.hpp>
 
 int main(int argc,const char* argv[]) {
     application app(argc, argv);

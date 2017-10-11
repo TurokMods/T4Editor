@@ -35,7 +35,6 @@ namespace t4editor {
             bool initialize();
 
             bool load_config();
-            void handle_config_var(const string& name, const string& value);
         
             void add_panel(ui_panel* panel);
             void remove_panel(ui_panel* panel);
