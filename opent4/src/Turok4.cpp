@@ -240,10 +240,10 @@ namespace opent4
                     Data->GetByte(); //Path length (not needed)
                     m_ActorMeshFile = Data->GetString();
 
-                    //m_Mesh = new ActorMesh();
-                    //if(!m_Mesh->Load(TransformPseudoPathToRealPath(m_ActorMeshFile))) {
-                    //    delete m_Mesh;
-                    //}
+                    m_Mesh = new ActorMesh();
+                    if(!m_Mesh->Load(TransformPseudoPathToRealPath(m_ActorMeshFile))) {
+                        delete m_Mesh;
+                    }
 
                     break;
                 }

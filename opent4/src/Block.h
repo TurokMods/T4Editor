@@ -155,7 +155,7 @@ namespace opent4
 			char* uiBuf() { return m_uitextbuf; }
 			void useUIBuf();
 
-        //protected:
+        protected:
             unsigned char m_PreBlockFlag;
             char m_Hdr[8];
             std::string m_BlockID;

@@ -73,15 +73,15 @@ namespace t4editor {
     
     bool application::initialize() {
         if(!load_config()) return false;
-        /*m_window = new window(this, m_windowWidth, m_windowHeight);
+        m_window = new window(this, m_windowWidth, m_windowHeight);
         if(!m_window->isOpen()) {
             return false;
         }
         
         glfwSetWindowPos(m_window->getWindow(), m_windowPosX, m_windowPosY);
-        */
+        
         m_fs = new turokfs(m_dataPath);
-        /*
+        
         m_shader = new shader(this);
         m_shader->attribute("position", 0);
         m_shader->attribute("normal", 1);
@@ -121,7 +121,7 @@ namespace t4editor {
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 		glBindTexture(GL_TEXTURE_2D, 0);
-		*/
+
         return true;
     }
     
