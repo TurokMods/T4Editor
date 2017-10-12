@@ -654,9 +654,6 @@ namespace opent4
 					if(!Data->WriteFloat(d->Scale.x)) return false;
 					if(!Data->WriteFloat(d->Scale.y)) return false;
 					if(!Data->WriteFloat(d->Scale.z)) return false;
-					if(d->Scale.x > 5) {
-						printf("Huhtf?\n");
-					}
                     break;
                 }
                 case BT_ACTOR_NAME    :

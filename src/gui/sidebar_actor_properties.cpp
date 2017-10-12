@@ -5,15 +5,17 @@
 #include <imgui_internal.h>
 
 namespace t4editor {
-    inline void use_btn(const string& type, const string& entityPath, const string& blockname, application* app) {
+    inline bool use_btn(const string& type, const string& entityPath, const string& blockname, application* app) {
         if(Button(("use " + type + "##" + entityPath + "_unk_av_" + blockname).c_str(), ImVec2(GetColumnWidth() - 7.0f, 20.0f))) {
             printf("using input type %s for %s\n", type.c_str(), blockname.c_str());
             set_actor_block_type_event evt(blockname, type);
             app->onEvent(&evt);
+			return true;
         }
+		return false;
     }
     void renderBlock(Block* b, const string& bPath, application* app, const string& entityName);
-    void renderBlockData(ByteStream* data, const string& bName, const string& bPath, application* app, const string& entityName);
+    void renderBlockData(Block* b, ByteStream* data, const string& bName, const string& bPath, application* app, const string& entityName);
     void sidebar::renderActorData() {
         ATRFile* relatedActor = 0;
         string entityName;
@@ -50,13 +52,13 @@ namespace t4editor {
                             for(size_t i = 0;i < b->GetChildCount();i++) {
                                 renderBlock(b->GetChild(i), bPath + "_" + b->GetChild(i)->GetTypeString(), app, entityName);
                             }
-                        } else renderBlockData(b->GetData(), b->GetTypeString(), bPath, app, entityName);
+                        } else renderBlockData(b, b->GetData(), b->GetTypeString(), bPath, app, entityName);
                     Unindent(10.0f);
                 }
             }
         Unindent(10.0f);
     }
-    void renderBlockData(ByteStream* data, const string& bName, const string& bPath, application* app, const string& entityName) {
+    void renderBlockData(Block* b, ByteStream* data, const string& bName, const string& bPath, application* app, const string& entityName) {
         string name = bName;
         string set_type = app->get_actor_block_type(name);
         void* ptr = data->Ptr();
@@ -107,7 +109,8 @@ namespace t4editor {
                         app->onEvent(&evt);
                     }
                 NextColumn();
-                    use_btn("string", bPath, name, app);
+					//If this button is clicked, ->GetData() will no longer return the correct value for this variable
+                    if(use_btn("string", bPath, name, app)) b->useUIBuf();
                     if(sz == 1) {
                         use_btn("boolean", bPath, name, app);
                     } else if(sz == 4) {
@@ -135,7 +138,10 @@ namespace t4editor {
             //this AB type has been defined
             Indent(10.0f);
                 name = "##" + bPath + "_knw_" + name;
-                if(set_type == "string") InputText(name.c_str(), (char*)ptr, sz, ImGuiInputTextFlags_ReadOnly);
+                if(set_type == "string") {
+					b->useUIBuf(); //calling this has no effect after the first time it's called on the block
+					InputText(name.c_str(), b->uiBuf(), UI_BUFFER_SIZE);
+				}
                 else if(set_type == "bool") {
                     float indent = ((GetWindowSize().x - 10.0f) / 2.0f) - 11.0f;
                     Indent(indent);

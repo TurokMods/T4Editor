@@ -60,8 +60,13 @@ namespace t4editor {
 			j[key.c_str()] = i->second.c_str();
 		}
 
+		string path = string(m_args[0]);
+		size_t lidx = path.find_last_of('\\');
+		if(lidx == path.npos) lidx = path.find_last_of('/');
+		path = path.substr(0, lidx);
+
 		printf("Writing json data: %s\n", j.dump().c_str());
-		std::ofstream o("config.json");
+		std::ofstream o(path + '/' + "config.json");
 		o << std::setw(4) << j << std::endl;
 		o.close();
 

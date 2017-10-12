@@ -6,6 +6,8 @@
 
 #include "Util.h"
 
+#define UI_BUFFER_SIZE 1024
+
 namespace opent4
 {
     enum BLOCK_TYPE
@@ -138,7 +140,7 @@ namespace opent4
     class Block
     {
         public:
-            Block() : m_Data(0), m_Type(BT_COUNT) { memset(m_Hdr, 0, 8); memset(m_uitextbuf, 0, 1024); m_useUiBuf = false; }
+            Block() : m_Data(0), m_Type(BT_COUNT) { memset(m_Hdr, 0, 8); memset(m_uitextbuf, 0, UI_BUFFER_SIZE); m_useUiBuf = false; }
             ~Block();
 
             bool Load(ByteStream* Data);
@@ -150,14 +152,16 @@ namespace opent4
             BLOCK_TYPE GetType() const { return m_Type; }
             std::string GetTypeString() const { return m_BlockID; }
 
+			//will be inaccurate if m_useUiBuf == true
             ByteStream* GetData() const { return m_Data; }
 
 			char* uiBuf() { return m_uitextbuf; }
+			bool UsesUIBuffer() const { return m_useUiBuf; }
 			void useUIBuf();
 
         protected:
             unsigned char m_PreBlockFlag;
-            char m_Hdr[8];
+            unsigned char m_Hdr[8];
             std::string m_BlockID;
             BLOCK_TYPE m_Type;
 
@@ -166,7 +170,7 @@ namespace opent4
             std::vector<Block*> m_Children;
 
 			//used by imgui to write strings...
-			char m_uitextbuf[1024]; //1024 is more than enough
+			char m_uitextbuf[UI_BUFFER_SIZE];
 			bool m_useUiBuf;
     };
 }

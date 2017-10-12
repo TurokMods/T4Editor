@@ -5,12 +5,14 @@
 #include <imgui_internal.h>
 
 namespace t4editor {
-    void use_btn(const string& type, const string& actorname, const string& varname, const string& pre, application* app) {
+    bool use_btn(const string& type, const string& actorname, const string& varname, const string& pre, application* app) {
         if(Button(("use " + type + "##" + actorname + pre + "_unk_av_" + varname).c_str(), ImVec2(GetColumnWidth() - 7.0f, 20.0f))) {
             printf("using input type %s for %s\n", type.c_str(), varname.c_str());
             set_actor_var_type_event evt(varname, type);
             app->onEvent(&evt);
+			return true;
         }
+		return false;
     }
     void sidebar::renderLocalActorVariables() {
         int count = 0;
@@ -42,7 +44,7 @@ namespace t4editor {
                         ActorVariables* vars = Actor->actorTraits->localVariables();
                         
                         if(vars) {
-                            bool unkOpen = CollapsingHeader("Unknown Types", ImGuiTreeNodeFlags_Framed);
+							bool unkOpen = CollapsingHeader("Unknown Types##_lc_av", ImGuiTreeNodeFlags_Framed);
                             SameLine(136);
                             p = GetCursorPos();
                             SetCursorPos(ImVec2(p.x, p.y + 2));
@@ -105,7 +107,9 @@ namespace t4editor {
                                                             m_app->onEvent(&evt);
                                                         }
                                                     NextColumn();
-                                                        use_btn("string", Actor->actorTraits->Name, name, "_lc", m_app);
+														//If this button is clicked, ->GetData() will no longer return the correct value for this variable
+                                                        if(use_btn("string", Actor->actorTraits->Name, name, "_lc", m_app)) var->useUIBuf();
+
                                                         if(sz == 1) {
                                                             use_btn("boolean", Actor->actorTraits->Name, "_lc", name, m_app);
                                                         } else if(sz == 4) {
@@ -135,7 +139,7 @@ namespace t4editor {
                                 Unindent(10.0f);
                             }
                             
-                            bool knwOpen = CollapsingHeader("Known Types", ImGuiTreeNodeFlags_Framed);
+							bool knwOpen = CollapsingHeader("Known Types##_lc_av", ImGuiTreeNodeFlags_Framed);
                             SameLine(122);
                             p = GetCursorPos();
                             SetCursorPos(ImVec2(p.x, p.y + 2));
@@ -157,7 +161,10 @@ namespace t4editor {
                                                 //this AV type has been defined
                                                 PushItemWidth(GetColumnWidth() - col_pad);
                                                 name = "##"+Actor->actorTraits->Name+"_lc_knw_"+name;
-                                                if(set_type == "string") InputText(name.c_str(), (char*)var->GetData()->Ptr(), sz, ImGuiInputTextFlags_ReadOnly);
+                                                if(set_type == "string") {
+													var->useUIBuf(); //calling this has no effect after the first time it's called on the block
+													InputText(name.c_str(), var->uiBuf(), UI_BUFFER_SIZE);
+												}
                                                 else if(set_type == "bool") {
                                                     float indent = ((GetColumnWidth() - col_pad) / 2.0f) - 11.0f;
                                                     Indent(indent);
@@ -244,7 +251,7 @@ namespace t4editor {
                         ActorVariables* vars = Actor->actorTraits->globalVariables();
                         
                         if(vars) {
-                            bool unkOpen = CollapsingHeader("Unknown Types", ImGuiTreeNodeFlags_Framed);
+							bool unkOpen = CollapsingHeader("Unknown Types##_gb_av", ImGuiTreeNodeFlags_Framed);
                             SameLine(136);
                             p = GetCursorPos();
                             SetCursorPos(ImVec2(p.x, p.y + 2));
@@ -307,7 +314,9 @@ namespace t4editor {
                                                             m_app->onEvent(&evt);
                                                         }
                                                     NextColumn();
-                                                        use_btn("string", Actor->actorTraits->Name, name, "_lc", m_app);
+														//If this button is clicked, ->GetData() will no longer return the correct value for this variable
+                                                        if(use_btn("string", Actor->actorTraits->Name, name, "_lc", m_app)) var->useUIBuf();
+
                                                         if(sz == 1) {
                                                             use_btn("boolean", Actor->actorTraits->Name, name, "_lc", m_app);
                                                         } else if(sz == 4) {
@@ -359,7 +368,7 @@ namespace t4editor {
                                                 //this AV type has been defined
                                                 PushItemWidth(GetColumnWidth() - col_pad);
                                                 name = "##"+Actor->actorTraits->Name+"_gb_knw_"+name;
-                                                if(set_type == "string") InputText(name.c_str(), (char*)var->GetData()->Ptr(), sz, ImGuiInputTextFlags_ReadOnly);
+                                                if(set_type == "string") InputText(name.c_str(), var->uiBuf(), UI_BUFFER_SIZE, ImGuiInputTextFlags_ReadOnly);
                                                 else if(set_type == "bool") {
                                                     float indent = ((GetColumnWidth() - col_pad) / 2.0f) - 11.0f;
                                                     Indent(indent);
