@@ -162,6 +162,38 @@ namespace opent4
         }
         return BT_COUNT;
     }
+	Block::Block(const Block& b) {
+		m_PreBlockFlag = b.m_PreBlockFlag;
+		memcpy(m_Hdr, b.m_Hdr, 8);
+		m_BlockID = b.GetTypeString();
+		m_Type = b.GetType();
+		m_useUiBuf = b.m_useUiBuf;
+		memcpy(m_uitextbuf, b.m_uitextbuf, UI_BUFFER_SIZE);
+
+		ByteStream* data = b.GetData();
+		if(data) {
+			m_Data = new ByteStream();
+			size_t off = data->GetOffset();
+			data->SetOffset(0);
+			if(!m_Data->WriteData(data->GetSize(), data->Ptr())) {
+				printf("Failed to copy block %s\n", b.m_BlockID.c_str());
+				delete m_Data;
+				m_Data = 0;
+				m_PreBlockFlag = 0;
+				memset(m_Hdr, 0, 8);
+				m_BlockID = "";
+				m_Type = BT_COUNT;
+				data->SetOffset(off);
+				return;
+			}
+			m_Data->SetOffset(0);
+			data->SetOffset(off);
+		}
+
+		for(int i = 0;i < b.GetChildCount();i++) {
+			m_Children.push_back(new Block(*b.GetChild(i)));
+		}
+	}
     Block::~Block() {
         if(m_Data) delete m_Data;
         for(size_t i = 0;i < m_Children.size();i++) {

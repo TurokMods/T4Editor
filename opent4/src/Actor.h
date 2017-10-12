@@ -46,14 +46,17 @@ namespace opent4
     class ActorVariables
     {
         public:
-            ActorVariables() {}
-            ~ActorVariables() {}
+            ActorVariables() { }
+            ~ActorVariables() {
+				for(int i = 0;i < m_Blocks.size();i++) delete m_Blocks[i];
+			}
 
             bool Load(ByteStream* Data);
             bool Save(ByteStream* Data);
 
             size_t GetBlockCount()   const { return m_Blocks.size(); }
             Block* GetBlock(int Idx) const { return m_Blocks[Idx];   }
+			void AddBlock(Block* b);
 
             ActorVec3 Spin;
 

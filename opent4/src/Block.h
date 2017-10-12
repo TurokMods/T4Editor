@@ -141,6 +141,7 @@ namespace opent4
     {
         public:
             Block() : m_Data(0), m_Type(BT_COUNT) { memset(m_Hdr, 0, 8); memset(m_uitextbuf, 0, UI_BUFFER_SIZE); m_useUiBuf = false; }
+			Block(const Block& o);
             ~Block();
 
             bool Load(ByteStream* Data);

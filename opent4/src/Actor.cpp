@@ -31,6 +31,9 @@ namespace opent4
 		}
         return true;
     }
+	void ActorVariables::AddBlock(Block* b) {
+		m_Blocks.push_back(new Block(*b));
+	}
 
     void ActorVariables::ProcessBlocks()
     {

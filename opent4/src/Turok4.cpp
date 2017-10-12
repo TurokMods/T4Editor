@@ -486,7 +486,9 @@ namespace opent4
             }
 			bool isRootNode = false;
 			if(m_Blocks[i]->GetTypeString() == "ACTOR") isRootNode = true;
-			m_Blocks[i]->Save(out, isRootNode);
+			if(!m_Blocks[i]->Save(out, isRootNode)) {
+				printf("Failed to save block %d\n", i);
+			}
 		}
 		
 		out->SetOffset(0);

@@ -237,7 +237,6 @@ namespace t4editor {
                 else knownCount++;
             }
         }
-        
         bool varsOpen = CollapsingHeader("Actor Variables (global)", ImGuiTreeNodeFlags_Framed);
         SameLine(174);
         ImVec2 p = GetCursorPos();
@@ -251,7 +250,7 @@ namespace t4editor {
                         ActorVariables* vars = Actor->actorTraits->globalVariables();
                         
                         if(vars) {
-							bool unkOpen = CollapsingHeader("Unknown Types##_gb_av", ImGuiTreeNodeFlags_Framed);
+							bool unkOpen = CollapsingHeader("Unknown Types##_gb_unk_av", ImGuiTreeNodeFlags_Framed);
                             SameLine(136);
                             p = GetCursorPos();
                             SetCursorPos(ImVec2(p.x, p.y + 2));
@@ -283,7 +282,7 @@ namespace t4editor {
                                                 string input_prefix = "##" + Actor->actorTraits->Name + "_gb_unk_av_";
                                             
                                                 Indent(10.0f);
-                                                    Columns(2, (Actor->actorTraits->Name + "_gb_unk_av").c_str());
+                                                    Columns(3, (Actor->actorTraits->Name + "_gb_unk_av").c_str());
                                                         if(sz <= 64) {
                                                             PushItemWidth(GetColumnWidth() - 10.0f);
                                                             InputText((input_prefix + name + "_String").c_str(), (char*)var->GetData()->Ptr(), sz, ImGuiInputTextFlags_ReadOnly);
@@ -336,6 +335,22 @@ namespace t4editor {
                                                             use_btn("rgba", Actor->actorTraits->Name, name, "_lc", m_app);
                                                         }
                                                         use_btn("data", Actor->actorTraits->Name, name, "_lc", m_app);
+													NextColumn();
+														SetColumnWidth(-1,35.0f);
+                                                        PushItemWidth(GetColumnWidth() - 10.0f);
+															ActorVariables* local = Actor->actorTraits->localVariables();
+															//Make sure the variable doesn't already exist locally
+															bool found = false;
+															for(int i = 0;i < local->GetBlockCount();i++) {
+																if(local->GetBlock(i)->GetTypeString() == name) {
+																	found = true;
+																	break;
+																}
+															}
+															if(!found) {
+																if(Button(("Add##_add_gb_unk_av_" + name).c_str())) local->AddBlock(var);
+															}
+														PopItemWidth();
                                                     EndColumns();
                                                 Unindent(10.0f);
                                             }
@@ -346,14 +361,14 @@ namespace t4editor {
                                 Unindent(10.0f);
                             }
                             
-                            bool knwOpen = CollapsingHeader("Known Types", ImGuiTreeNodeFlags_Framed);
+							bool knwOpen = CollapsingHeader("Known Types##_gb_knw_av", ImGuiTreeNodeFlags_Framed);
                             SameLine(122);
                             p = GetCursorPos();
                             SetCursorPos(ImVec2(p.x, p.y + 2));
                             Text("(%d)", knownCount);
                             if(knwOpen) {
                                 Indent(10.0f);
-                                    Columns(2, (Actor->actorTraits->Name + "_gb_knw_av").c_str());
+                                    Columns(3, (Actor->actorTraits->Name + "_gb_knw_av").c_str());
                                         float col_pad = 10.0f;
                                         for(size_t i = 0;i < vars->GetBlockCount();i++) {
                                             Block* var = vars->GetBlock(i);
@@ -409,6 +424,34 @@ namespace t4editor {
                                                 SetCursorPos(ImVec2(cp.x, cp.y + 2.0f));
                                             }
                                         }
+									NextColumn();
+										SetColumnWidth(-1,35.0f);
+										PushItemWidth(GetColumnWidth() - 10.0f);
+                                        for(size_t i = 0;i < vars->GetBlockCount();i++) {
+                                            Block* var = vars->GetBlock(i);
+                                            
+                                            string name = var->GetTypeString();
+                                            string set_type = m_app->get_actor_var_type(name);
+                                            
+                                            if(set_type != "") {
+												ActorVariables* local = Actor->actorTraits->localVariables();
+												//Make sure the variable doesn't already exist locally
+												bool found = false;
+												for(int i = 0;i < local->GetBlockCount();i++) {
+													if(local->GetBlock(i)->GetTypeString() == name) {
+														found = true;
+														break;
+													}
+												}
+												if(!found) {
+													if(Button(("Add##_add_gb_knw_av_" + name).c_str())) local->AddBlock(var);
+												} else {
+													ImVec2 cp = GetCursorPos();
+													SetCursorPos(ImVec2(cp.x, cp.y + 20.0f));
+												}
+                                            }
+                                        }
+										PopItemWidth();
                                     EndColumns();
                                 Unindent(10.0f);
                             }
