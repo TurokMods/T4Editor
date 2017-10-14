@@ -3,6 +3,7 @@
 #include <assert.h>
 #include <string>
 #include <cctype>
+#include <logger.h>
 
 #if !defined(_WIN32)
 #include <stdlib.h>
@@ -502,6 +503,84 @@ namespace opent4
 		}
         return true;
     }
+	void ATIFile::DuplicateActor(ActorDef* newActor) {
+		//Find corresponding actor block
+		Block* b = 0;
+		for(size_t i = 0;i < m_Blocks.size();i++) {
+			if(m_Blocks[i]->GetTypeString() == "ACTOR") {
+				//The first child block always seems to be the ID, this is just to be safe
+				for(size_t cb = 0;cb < m_Blocks[i]->GetChildCount();cb++) {
+					if(m_Blocks[i]->GetChild(cb)->GetTypeString() == "ID") {
+						unsigned int actor_id = 0;
+						ByteStream* data = m_Blocks[i]->GetChild(cb)->GetData();
+						size_t offset = data->GetOffset();
+						data->SetOffset(0);
+						if(data->GetSize() == 1) actor_id = (unsigned char)data->GetByte();
+						else if(data->GetSize() == 2) actor_id = (unsigned short)data->GetInt16();
+						else if(data->GetSize() == 4) actor_id = (unsigned int)data->GetInt32();
+						data->SetOffset(0);
+
+						if(actor_id == newActor->ID) {
+							b = m_Blocks[i];
+							break;
+						}
+					}
+				}
+				if(b) break;
+			}
+		}
+		
+		if(!b) {
+			printf("Actor to duplicate not found?\n");
+			return;
+		}
+
+		Block* clone = new Block(*b);
+
+		//Get next actor ID, insert index in the block list
+		unsigned short id = 0;
+		auto process_idx = GetLastActorBlock();
+		for(size_t cb = 0;cb < (*process_idx)->GetChildCount();cb++) {
+			if((*process_idx)->GetChild(cb)->GetTypeString() == "ID") {
+				ByteStream* data = (*process_idx)->GetChild(cb)->GetData();
+				size_t offset = data->GetOffset();
+				data->SetOffset(0);
+				if(data->GetSize() == 1) id = (unsigned char)data->GetByte();
+				else if(data->GetSize() == 2) id = (unsigned short)data->GetInt16();
+				data->SetOffset(0);
+
+				id++;
+			}
+		}
+		process_idx++;
+		
+		//Set the actor ID
+		for(size_t cb = 0;cb < clone->GetChildCount();cb++) {
+			if(clone->GetChild(cb)->GetTypeString() == "ID") {
+				Block* idblock = clone->GetChild(cb);
+				ByteStream* data = idblock->GetData();
+				size_t original_size = data->GetSize();
+				size_t offset = data->GetOffset();
+				data->SetOffset(0);
+				if(id <= UINT8_MAX && original_size != 2) data->WriteByte(id);
+				else data->WriteInt16(id);
+				data->SetOffset(0);
+
+				//eeek, only do this if the original block header definitely didn't support 16bit integer ids
+				if(id > UINT8_MAX && original_size != 2) idblock->setFlag(0x46);
+			}
+		}
+
+		process_idx = m_Blocks.insert(process_idx, clone);
+		ProcessActorBlock(std::distance(m_Blocks.begin(), process_idx));
+	}
+	std::vector<Block*>::iterator ATIFile::GetLastActorBlock() {
+		for(auto i = m_Blocks.begin();i != m_Blocks.end();i++) {
+			auto next = i; next++;
+			if((*next)->GetTypeString() != "ACTOR") return i;
+		}
+		return m_Blocks.end();
+	}
 
     void ATIFile::ProcessBlocks()
     {

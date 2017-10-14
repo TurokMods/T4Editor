@@ -10,7 +10,7 @@ namespace t4editor {
         public:
             framebuffer_window() {
                 setName("Framebuffers");
-                setSize(vec2(130, 458));
+                setSize(vec2(200, 800));
                 setCanResize(false);
                 close();
             }
@@ -25,12 +25,12 @@ namespace t4editor {
                     app_resize_event* resize = (app_resize_event*)e;
                 } else if(e->name == "prompt_framebuffer_view") {
                     open();
-                }
+				}
             }
         
             virtual void renderContent() {
                 framebuffer* fb = m_app->getFrame();
-                vec2 dims = m_app->getWindow()->getSize(false) * 0.1f;
+                vec2 dims = vec2(200, 300);
                 ImGui::Image((GLuint*)fb->attachments[0]->id, ImVec2(dims.x,dims.y), ImVec2(0, 1), ImVec2(1, 0));
                 ImGui::Image((GLuint*)fb->attachments[1]->id, ImVec2(dims.x,dims.y), ImVec2(0, 1), ImVec2(1, 0));
                 ImGui::Image((GLuint*)fb->attachments[2]->id, ImVec2(dims.x,dims.y), ImVec2(0, 1), ImVec2(1, 0));

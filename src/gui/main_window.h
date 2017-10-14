@@ -36,6 +36,12 @@ namespace t4editor {
                         if(MenuItem("Load Level")) {
                             m_app->dispatchNamedEvent("prompt_load_level");
                         }
+						if(MenuItem("Save Level")) {
+							m_app->dispatchNamedEvent("save_level");
+						}
+						if(MenuItem("Update Actor Cache")) {
+							m_app->dispatchNamedEvent("update_actor_cache");
+						}
                         if(MenuItem("Exit")) {
                             m_app->dispatchNamedEvent("shutdown");
                         }
@@ -68,7 +74,16 @@ namespace t4editor {
                         EndMenu();
                     }
                     
-                    ImGui::Text("Average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
+                    Text("Average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
+
+					if(m_app->is_updating_cache()) {
+						char buf[256];
+						memset(buf,0,256);
+						ImVec2 cp = GetCursorPos();
+						ProgressBar(m_app->get_cache_update_progress(), ImVec2(-1.0f, 0), "");
+						SetCursorPos(ImVec2(cp.x + 5, cp.y));
+						Text("(%d\%%) %s",(int)(m_app->get_cache_update_progress() * 100.0f), m_app->get_last_file_cached().c_str());
+					}
                     
                     EndMainMenuBar();
                 }

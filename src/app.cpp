@@ -7,7 +7,9 @@
 #include <glm/gtx/euler_angles.hpp>
 #include <algorithm>
 #include <cassert>
+#include <logger.h>
 
+#include <render/SOIL/SOIL.h>
 #include <util/json.hpp>
 #include <iostream>
 #include <fstream>
@@ -27,6 +29,8 @@ namespace t4editor {
         m_windowPosX = 0;
         m_windowPosY = 150;
 		m_defaultTex = 0;
+		m_updatingCache = false;
+		m_viewChanged = true;
     }
     
     application::~application() {
@@ -70,10 +74,7 @@ namespace t4editor {
 		o << std::setw(4) << j << std::endl;
 		o.close();
 
-		if (m_level) {
-			m_level->levelFile()->Save(m_dataPath + "/" + m_level->levelFile()->GetFileName());
-			delete m_level;
-		}
+		if (m_level) delete m_level;
 	}
 
 	bool application::initialize() {
@@ -194,7 +195,18 @@ namespace t4editor {
         } else if(e->name == "define_ab_type") {
             set_actor_block_type_event* evt = (set_actor_block_type_event*)e;
             define_actor_block_type(evt->bname, evt->btype);
-        }
+        } else if(e->name == "actor_added") {
+			m_level->actor_added();
+		} else if(e->name == "save_level") {
+			if(m_level) m_level->levelFile()->Save(m_dataPath + "/" + m_level->levelFile()->GetFileName());
+			else printf("No level loaded\n");
+		} else if(e->name == "update_actor_cache") {
+			update_actor_cache();
+			m_updatingCache = true;
+			m_cacheProgress = 0.0f;
+		} else if(e->name == "actor_selection") {
+			trigger_repaint();
+		}
         
         for(auto i = m_panels.begin();i != m_panels.end();i++) {
             (*i)->onEvent(e);
@@ -216,7 +228,7 @@ namespace t4editor {
             m_level = 0;
         }
         dispatchNamedEvent("level_loaded");
-        
+        m_viewChanged = true;
         return;
     }
     
@@ -232,26 +244,65 @@ namespace t4editor {
         
         return i->second;
     }
+
+	texture* application::getTexture(std::string filename) {
+		auto found = m_textures.find(filename);
+		if (found == m_textures.end()) {
+			texture* t = this->loadTexture(filename);
+			m_textures.insert(std::make_pair(filename, t));
+			printf("Loading new texture %s\n", filename.c_str());
+			return t;
+		}
+		else {
+			printf("Texture already found, returning %s\n", filename.c_str());
+			return found->second;
+		}
+	}
+
+	texture* application::loadTexture(std::string filename) {
+		i32 w, h, ch;
+		unsigned char* Data = SOIL_load_image(filename.c_str(), &w, &h, &ch, 4);
+		if (Data)
+		{
+			texture* t = new texture(w, h, GL_RGBA, GL_UNSIGNED_BYTE, false, Data);
+			SOIL_free_image_data(Data);
+			return t;
+		}
+		return 0;
+	}
     
     int application::run() {
         glEnable(GL_DEPTH_TEST);
-        glEnable(GL_CULL_FACE);
+        //glEnable(GL_CULL_FACE);
         glDepthFunc(GL_LESS);
         glCullFace(GL_CW);
         while(m_window->isOpen()) {
+			if(m_updatingCache) {
+				m_cacheProgress = m_fs->get_cache_progress(m_updatingCache, &m_cacheLastFile);
+				m_updatingCache = !m_updatingCache;
+				if(!m_updatingCache) {
+					m_cacheLastFile = "";
+					dispatchNamedEvent("actor_caching_completed");
+				}
+			}
+
             m_window->poll();
             m_window->beginFrame();
             
-            m_framebuffer->bind();
-            m_framebuffer->clear(vec4(0.5f, 0.5f, 0.5f, 1.0f), 1.0f);
-            m_shader->bind();
+			if(m_viewChanged) {
+				m_framebuffer->bind();
+				m_framebuffer->clear(vec4(0.5f, 0.5f, 0.5f, 1.0f), 1.0f);
+				m_shader->bind();
             
-            if(m_level) {
-                vector<actor*> actors = m_level->actors();
-                for(int i = 0;i < actors.size();i++) {
-                    actors[i]->render(m_shader);
-                }
-            }
+				if(m_level) {
+					vector<actor*> actors = m_level->actors();
+					for(int i = 0;i < actors.size();i++) {
+						actors[i]->render(m_shader, m_view, m_vp);
+					}
+				}
+
+				m_viewChanged = false;
+			}
             
             glBindFramebuffer(GL_FRAMEBUFFER, 0);
             glClearColor(0.5f, 0.5f, 0.5f, 1.0f);

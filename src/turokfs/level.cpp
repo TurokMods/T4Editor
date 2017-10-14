@@ -3,7 +3,6 @@
 
 #include <EngineTypes.h>
 
-#include <render/SOIL/SOIL.h>
 
 namespace t4editor {
     level::level(application* app) {
@@ -18,32 +17,6 @@ namespace t4editor {
         if(m_atr) delete m_atr;
     }
 
-	texture* level::getTexture(std::string filename) {
-		auto found = m_textures.find(filename);
-		if (found == m_textures.end()) {
-			texture* t = this->loadTexture(filename);
-			m_textures.insert(std::make_pair(filename, t));
-			printf("Loading new texture %s\n", filename.c_str());
-			return t;
-		}
-		else {
-			printf("Texture already found, returning %s\n", filename.c_str());
-			return found->second;
-		}
-	}
-
-	texture* level::loadTexture(std::string filename) {
-		i32 w, h, ch;
-		unsigned char* Data = SOIL_load_image(filename.c_str(), &w, &h, &ch, 4);
-		if (Data)
-		{
-			texture* t = new texture(w, h, GL_RGBA, GL_UNSIGNED_BYTE, false, Data);
-			SOIL_free_image_data(Data);
-			return t;
-		}
-		return 0;
-	}
-    
     bool level::load(const string &file) {
         m_atr = new ATRFile();
         if(!m_atr->Load(file)) {
@@ -62,4 +35,9 @@ namespace t4editor {
         
         return true;
     }
+	void level::actor_added() {
+		ActorDef* def = m_atr->GetActors()->GetActorDef(m_atr->GetActors()->GetActorCount() - 1);
+		m_actors.push_back(new actor(m_app, def->Actor->GetATR()->GetMesh(), def));
+		m_actors[m_actors.size() - 1]->editor_id = m_actors.size() - 1;
+	}
 }

@@ -35,7 +35,7 @@ namespace t4editor {
             actor_mesh(SubMesh* mesh, texture* tex, vector<texture*> sm_textures);
             ~actor_mesh();
         
-            void render(shader* s);
+            void render(shader* s, bool preview = false);
         
             GLuint vao;
             GLuint vbo;
@@ -49,6 +49,13 @@ namespace t4editor {
 
 			texture* m_Texture;
 			vector<texture*> submesh_textures;
+
+			vec3 getMinBound() const { return m_min; }
+			vec3 getMaxBound() const { return m_max; }
+
+		protected:
+			vec3 m_min;
+			vec3 m_max;
     };
     
     class actor {
@@ -57,7 +64,7 @@ namespace t4editor {
             ~actor();
         
             //Expects shader to already be bound
-            void render(shader* s);
+            void render(shader* s, const mat4& view, const mat4& viewproj, bool preview = false);
         
             vector<actor_mesh*> meshes;
         
@@ -66,8 +73,13 @@ namespace t4editor {
         
             ActorDef* actorTraits;
             ActorMesh* meshTraits;
+
+			vec3 getMinBound() const { return m_min; }
+			vec3 getMaxBound() const { return m_max; }
             
         protected:
             application* m_app;
+			vec3 m_min;
+			vec3 m_max;
     };
 }

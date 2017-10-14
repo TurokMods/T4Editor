@@ -1,5 +1,6 @@
 #include <render/shader.h>
 #include <app.h>
+#include <logger.h>
 
 namespace t4editor {
 	void logShaderError(GLuint ShaderID) {

@@ -7,6 +7,8 @@
 #include <iostream>
 #include <algorithm>
 
+#include <logger.h>
+
 #include "Turok4.h"
 
 namespace opent4

@@ -160,6 +160,8 @@ namespace opent4
 			bool UsesUIBuffer() const { return m_useUiBuf; }
 			void useUIBuf();
 
+			void setFlag(unsigned char flag) { m_PreBlockFlag = flag; }
+
         protected:
             unsigned char m_PreBlockFlag;
             unsigned char m_Hdr[8];

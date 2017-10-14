@@ -1,6 +1,8 @@
 #include "Block.h"
 #include <algorithm>
 
+#include <logger.h>
+
 namespace opent4
 {
     static std::string BlockTypeIDs[BT_COUNT] =
@@ -398,9 +400,16 @@ namespace opent4
 		*/
 		if(!Data->WriteByte(m_PreBlockFlag)) return false;
 		if(!CheckSizeForHeaderType(m_Data->GetSize(), m_PreBlockFlag)) {
-			printf("Block size too large for header format!\n");
-			printf("size: %lu bytes - header type: 0x%2X (%d) - block id: %s - children: %d\n", m_Data->GetSize(), m_PreBlockFlag, m_PreBlockFlag, GetTypeString().c_str(), m_Children.size());
-			return false;
+			if(m_Type == BT_ACTOR) {
+				m_PreBlockFlag = 0x82;
+			} else if(m_Type == BT_ACTOR_VARIABLES) {
+				m_PreBlockFlag = 0xA1;
+				m_Hdr[5] = 15;
+			}else {
+				printf("Block size too large for header format and I don't know how to resize it!\n");
+				printf("size: %lu bytes - header type: 0x%2X (%d) - block id: %s - children: %d\n", m_Data->GetSize(), m_PreBlockFlag, m_PreBlockFlag, GetTypeString().c_str(), m_Children.size());
+				return false;
+			}
 		}
 
 		switch(m_PreBlockFlag)

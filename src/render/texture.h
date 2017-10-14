@@ -12,6 +12,9 @@ namespace t4editor {
         
             void resize(int w, int h);
             void bind();
+
+			int getWidth() const { return m_w; }
+			int getHeight() const { return m_h; }
         
             GLuint id;
         protected:

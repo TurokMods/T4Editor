@@ -15,6 +15,7 @@
 #include <stdarg.h>
 #include <ctype.h>
 #include <cstdlib>
+#include <logger.h>
 
 namespace Bearclaw
 {

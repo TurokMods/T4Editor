@@ -4,6 +4,7 @@
 #include <gui/imgui_setup.h>
 #include <gui/panel.h>
 #include <app.h>
+#include <logger.h>
 
 namespace t4editor {
     void window_size_callback(GLFWwindow* window, int width, int height) {

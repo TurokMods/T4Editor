@@ -51,10 +51,14 @@ namespace t4editor {
 			texture* getDefaultTexture() const { return m_defaultTex; }
         
             void set_view(const mat4& v, const mat4& p) {
-                m_view = v;
-                m_proj = p;
-                m_vp = p * v;
+				if(v != m_view || p != m_proj) {
+					m_viewChanged = true;
+					m_view = v;
+					m_proj = p;
+					m_vp = p * v;
+				}
             }
+			void trigger_repaint() { m_viewChanged = true; }
             mat4 view() const { return m_view; }
             mat4 proj() const { return m_proj; }
             mat4 viewproj() const { return m_vp; }
@@ -67,6 +71,9 @@ namespace t4editor {
             }
 
             void load_level(const string& path);
+
+			//threaded processes
+			void update_actor_cache();
         
             //actor variables
             void define_actor_var_type(const string& vname, const string& vtype) { m_actor_var_types[vname] = vtype; }
@@ -76,8 +83,17 @@ namespace t4editor {
             void define_actor_block_type(const string& bname, const string& btype) { m_actor_block_types[bname] = btype; }
             string get_actor_block_type(const string& bname) const;
             int run();
+        
+			texture* getTexture(std::string file_path);
+
+			float get_cache_update_progress() const { return m_cacheProgress; }
+			bool is_updating_cache() const { return m_updatingCache; }
+			string get_last_file_cached() const { return m_cacheLastFile; }
 
         protected:
+			texture* loadTexture(std::string file_path);
+			std::unordered_map<std::string, texture*> m_textures;
+
             window* m_window;
             turokfs* m_fs;
         
@@ -95,6 +111,7 @@ namespace t4editor {
             mat4 m_view;
             mat4 m_proj;
             mat4 m_vp;
+			bool m_viewChanged;
             
             vector<ui_panel*> m_panels;
         
@@ -102,6 +119,10 @@ namespace t4editor {
             shader* m_shader;
 			texture* m_defaultTex;
             framebuffer* m_framebuffer;
+
+			bool m_updatingCache;
+			string m_cacheLastFile;
+			float m_cacheProgress;
         
             unordered_map<string, string> m_actor_var_types;
             unordered_map<string, string> m_actor_block_types;

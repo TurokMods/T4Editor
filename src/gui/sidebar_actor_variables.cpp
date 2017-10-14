@@ -3,6 +3,7 @@
 #include <gui/main_window.h>
 #include <gui/sidebar.h>
 #include <imgui_internal.h>
+#include <logger.h>
 
 namespace t4editor {
     bool use_btn(const string& type, const string& actorname, const string& varname, const string& pre, application* app) {

@@ -1,5 +1,6 @@
 #include <render/framebuffer.h>
 #include <render/texture.h>
+#include <logger.h>
 
 namespace t4editor {
     framebuffer::framebuffer(int _w, int _h, bool depth) {
@@ -37,6 +38,7 @@ namespace t4editor {
         // tell opengl where to render
         vector<GLenum> buffers;
         for(size_t i = 0;i < attachments.size();i++) {
+			if(attachments[i]->getWidth() != w || attachments[i]->getHeight() != h) attachments[i]->resize(w, h);
             buffers.push_back(GL_COLOR_ATTACHMENT0 + i);
             glFramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0 + i, attachments[i]->id, 0);
         }
@@ -84,10 +86,10 @@ namespace t4editor {
         m_lastClearDepth = depth;
     }
     
-    void framebuffer::blit(GLenum attachmentId) {
+    void framebuffer::blit(GLenum attachmentId, int dx, int dy) {
         glBindFramebuffer(GL_READ_FRAMEBUFFER, fbo);
         glReadBuffer(attachmentId);
         glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
-        glBlitFramebuffer(0 ,0 ,w ,h, 0, 0, w, h, GL_COLOR_BUFFER_BIT, GL_NEAREST);
+        glBlitFramebuffer(0 ,0 ,w ,h, dx, dy, w, h, GL_COLOR_BUFFER_BIT, GL_NEAREST);
     }
 }

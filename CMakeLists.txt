@@ -53,6 +53,7 @@ file(GLOB soil_src
 
 file(GLOB util_src
     "src/util/*.h"
+    "src/util/*.hpp"
     "src/util/*.cpp"
 )
 

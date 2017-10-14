@@ -3,6 +3,7 @@
 #include <gui/main_window.h>
 #include <gui/sidebar.h>
 #include <imgui_internal.h>
+#include <logger.h>
 
 namespace t4editor {
     inline bool use_btn(const string& type, const string& entityPath, const string& blockname, application* app) {
@@ -31,7 +32,7 @@ namespace t4editor {
             }
         }
         
-        if(CollapsingHeader("Actor Properties")) {
+        if(CollapsingHeader("Actor Data")) {
             if(!relatedActor) {
                 Text("No actor selected");
                 return;

@@ -29,6 +29,19 @@ namespace t4editor {
             mesh->GetVertex(i,&vert.position.x);
             vertices.push_back(vert);
         }
+
+		if(vertices.size() > 0) {
+			m_min = m_max = vec3(vertices[0].position.x, vertices[0].position.y, vertices[0].position.z);
+			for(int i = 0;i < vertices.size();i++) {
+				vec3 pos = vec3(vertices[i].position.x, vertices[i].position.y, vertices[i].position.z);
+				if(pos.x < m_min.x) m_min.x = pos.x;
+				if(pos.x > m_max.x) m_max.x = pos.x;
+				if(pos.y < m_min.y) m_min.y = pos.y;
+				if(pos.y > m_max.y) m_max.y = pos.y;
+				if(pos.z < m_min.z) m_min.z = pos.z;
+				if(pos.z > m_max.z) m_max.z = pos.z;
+			}
+		}
         
         vector<unsigned short> firstChunkIndices;
         for(size_t i = 0;i < mesh->GetIndexCount();i++) {
@@ -82,7 +95,7 @@ namespace t4editor {
         }
     }
     
-    void actor_mesh::render(shader* s) {
+    void actor_mesh::render(shader* s, bool preview) {
         if(vertices.size() == 0) return;
         int err = 0;
         err = glGetError(); if(err != 0) printf("err: %d | %s\n", err, glewGetErrorString(err));
@@ -95,7 +108,7 @@ namespace t4editor {
         glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, sizeof(mesh_vert), (void*)(6 * sizeof(float)));
         
         if(chunkIndices.size() > 0) {
-			s->uniform("debug_float", 0.0f);
+			if(!preview) s->uniform("debug_float", 0.0f);
             for(size_t i = 0;i < chunkIndices.size();i++) {
 				texture* tex = 0;
 				if(submesh_textures.size() > i) tex = submesh_textures[i];
@@ -104,7 +117,7 @@ namespace t4editor {
 				tex->bind();
 				glActiveTexture(GL_TEXTURE0);
 				s->uniform1i("diffuse_map", 0);
-                s->uniform("actor_submesh_chunk_id", int_to_vec3(i));
+                if(!preview) s->uniform("actor_submesh_chunk_id", int_to_vec3(i));
                 glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ibos[i]);
                 glDrawElements(GL_TRIANGLE_STRIP, chunkIndices[i].size(), GL_UNSIGNED_SHORT, 0);
             }
@@ -114,8 +127,8 @@ namespace t4editor {
 			glActiveTexture(GL_TEXTURE0);
 
 			s->uniform1i("diffuse_map", 0);
-			s->uniform("debug_float", 1.0f);
-            s->uniform("actor_submesh_chunk", int_to_vec3(0));
+			if(!preview) s->uniform("debug_float", 1.0f);
+            if(!preview) s->uniform("actor_submesh_chunk", int_to_vec3(0));
             glDrawArrays(GL_LINE_STRIP, 0, vertices.size());
         }
         
@@ -143,7 +156,7 @@ namespace t4editor {
 					if(minfo.TSNR_ID != -1)
 					{
 						int TexID = mesh->m_TXSTs[mesh->m_TSNRs[minfo.TSNR_ID].TXST_ID].TextureID;
-						if(TexID < mesh->m_Textures.size()) t = lev->getTexture(mesh->m_Textures[TexID]);
+						if(TexID < mesh->m_Textures.size()) t = app->getTexture(mesh->m_Textures[TexID]);
 					}
 				}
 
@@ -156,7 +169,7 @@ namespace t4editor {
                         if(mesh->m_MTRLs[ch].Unk4 >= 0 && mesh->m_MTRLs[ch].Unk4 < mesh->m_TSNRs.size())
                         {
                             int TexID = mesh->m_TXSTs[mesh->m_TSNRs[mesh->m_MTRLs[ch].Unk4].TXST_ID].TextureID;
-                            if(TexID < mesh->m_Textures.size()) t = lev->getTexture(mesh->m_Textures[TexID]);
+                            if(TexID < mesh->m_Textures.size()) t = app->getTexture(mesh->m_Textures[TexID]);
                         }
                     }
 					if(t) {
@@ -170,7 +183,29 @@ namespace t4editor {
                 meshes[i]->app = app;
                 meshes[i]->parent = this;
                 meshes[i]->submesh_id = i;
-            }
+			}
+
+			if(meshes.size() > 0) {
+				m_min = meshes[0]->getMinBound();
+				m_max = meshes[0]->getMaxBound();
+				for(size_t i = 0;i < meshes.size();i++) {
+					vec3 pos = meshes[i]->getMinBound();
+					if(pos.x < m_min.x) m_min.x = pos.x;
+					if(pos.x > m_max.x) m_max.x = pos.x;
+					if(pos.y < m_min.y) m_min.y = pos.y;
+					if(pos.y > m_max.y) m_max.y = pos.y;
+					if(pos.z < m_min.z) m_min.z = pos.z;
+					if(pos.z > m_max.z) m_max.z = pos.z;
+					
+					pos = meshes[i]->getMaxBound();
+					if(pos.x < m_min.x) m_min.x = pos.x;
+					if(pos.x > m_max.x) m_max.x = pos.x;
+					if(pos.y < m_min.y) m_min.y = pos.y;
+					if(pos.y > m_max.y) m_max.y = pos.y;
+					if(pos.z < m_min.z) m_min.z = pos.z;
+					if(pos.z > m_max.z) m_max.z = pos.z;
+				}
+			}
         }
         
         if(def) {
@@ -185,7 +220,7 @@ namespace t4editor {
         meshes.clear();
     }
 
-    void actor::render(t4editor::shader *s) {
+    void actor::render(t4editor::shader *s, const mat4& view, const mat4& viewproj, bool preview) {
         vec3 position, rotation;
         vec3 scale = vec3(1.0f, 1.0f, 1.0f);
         
@@ -203,9 +238,9 @@ namespace t4editor {
         mat4 S = glm::scale(scale);
         mat4 model = T * R * S;
         s->uniform("model", model);
-        s->uniform("view", m_app->view());
-        s->uniform("mvp", m_app->viewproj() * model);
-        s->uniform("actor_id", int_to_vec3(editor_id));
+        s->uniform("view", view);
+        s->uniform("mvp", viewproj * model);
+        if(!preview) s->uniform("actor_id", int_to_vec3(editor_id));
         
         if(m_app->getSelectedActor().actorId == editor_id) {
             s->uniform("actor_selected", 1.0f);

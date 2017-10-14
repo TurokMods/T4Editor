@@ -30,6 +30,9 @@ namespace opent4
             ActorDef* GetActorDef(size_t Idx) const { return m_Actors[Idx]; }
             std::string GetFile() const { return m_File; }
 
+			void DuplicateActor(ActorDef* def);
+			std::vector<Block*>::iterator GetLastActorBlock();
+
         protected:
             void ProcessBlocks();
             void ProcessActorBlock(size_t Idx);
@@ -55,6 +58,7 @@ namespace opent4
             bool Load(const std::string& Filename);
             bool Save(const std::string& Filename);
 			std::string GetFileName() const { return m_RealFile; }
+			std::string GetTurokFileName() const { return m_File; }
 
             /* For levels only */
             ATIFile* GetActors() const { if(m_ActorInstanceFiles.size() <= 0) return 0; return m_ActorInstanceFiles[0]; }
