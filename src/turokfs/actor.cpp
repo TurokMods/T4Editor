@@ -117,7 +117,7 @@ namespace t4editor {
 				tex->bind();
 				glActiveTexture(GL_TEXTURE0);
 				s->uniform1i("diffuse_map", 0);
-                if(!preview) s->uniform("actor_submesh_chunk_id", int_to_vec3(i));
+                //if(!preview) s->uniform("actor_submesh_chunk_id", int_to_vec3(i));
                 glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ibos[i]);
                 glDrawElements(GL_TRIANGLE_STRIP, chunkIndices[i].size(), GL_UNSIGNED_SHORT, 0);
             }
@@ -128,7 +128,7 @@ namespace t4editor {
 
 			s->uniform1i("diffuse_map", 0);
 			if(!preview) s->uniform("debug_float", 1.0f);
-            if(!preview) s->uniform("actor_submesh_chunk", int_to_vec3(0));
+            //if(!preview) s->uniform("actor_submesh_chunk", int_to_vec3(0));
             glDrawArrays(GL_LINE_STRIP, 0, vertices.size());
         }
         
@@ -140,13 +140,14 @@ namespace t4editor {
         err = glGetError(); if(err != 0) printf("err: %d | %s\n", err, glewGetErrorString(err));
     }
 
-    actor::actor(application* app, ActorMesh* mesh, ActorDef* def) {
+    actor::actor(application* app, ActorMesh* mesh, ActorDef* def, ATRFile* atr) {
 		/* TODO: 
 		* This has all kinds of dynamic allocations and other weirdness going on here.
 		*/
         m_app = app;
         actorTraits = def;
         meshTraits = mesh;
+		actorFile = atr;
 		level* lev = app->getLevel();
         if(mesh) {
             for(size_t i = 0;i < mesh->GetSubMeshCount();i++) {
@@ -220,7 +221,7 @@ namespace t4editor {
         meshes.clear();
     }
 
-    void actor::render(t4editor::shader *s, const mat4& view, const mat4& viewproj, bool preview) {
+    void actor::render(t4editor::shader *s, const mat4& view, const mat4& viewproj, bool preview, mat4* modelOverride) {
         vec3 position, rotation;
         vec3 scale = vec3(1.0f, 1.0f, 1.0f);
         
@@ -232,11 +233,16 @@ namespace t4editor {
             rotation = vec3(rot.x, rot.y, rot.z);
             scale    = vec3(scl.x, scl.y, scl.z);
         }
-        
-        mat4 T = translate(position);
-        mat4 R = eulerAngleXYZ(radians(rotation.x),radians(rotation.y),radians(rotation.z));
-        mat4 S = glm::scale(scale);
-        mat4 model = T * R * S;
+
+		mat4 model = mat4(1);
+		if(modelOverride) model = *modelOverride;
+		else {
+			mat4 T = translate(position);
+			mat4 R = eulerAngleXYZ(radians(rotation.x),radians(rotation.y),radians(rotation.z));
+			mat4 S = glm::scale(scale);
+			model = T * R * S;
+		}
+
         s->uniform("model", model);
         s->uniform("view", view);
         s->uniform("mvp", viewproj * model);
@@ -247,7 +253,7 @@ namespace t4editor {
         } else s->uniform("actor_selected", 0.0f);
         
         for(size_t i = 0;i < meshes.size();i++) {
-            s->uniform("actor_submesh_id", int_to_vec3(i));
+            //s->uniform("actor_submesh_id", int_to_vec3(i));
             meshes[i]->render(s);
         }
     }

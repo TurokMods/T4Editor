@@ -164,6 +164,92 @@ namespace opent4
         }
         return BT_COUNT;
     }
+
+	Block::Block(BLOCK_TYPE type) {
+		m_useUiBuf = false;
+		switch(type) {
+			case BT_ACTOR: {
+				m_PreBlockFlag = 0x82;
+				m_Type = BT_ACTOR;
+				m_BlockID = "ACTOR";
+				memset(&m_Hdr[0], 0, 8);
+				m_Hdr[3] = 5; //length of "ACTOR"
+
+				break;
+			}
+			case BT_ACTOR_ID: {
+				m_PreBlockFlag = 0x45;
+				m_Type = BT_ACTOR_ID;
+				m_BlockID = "ID";
+				memset(&m_Hdr[0], 0, 8);
+				m_Hdr[0] = 1; //always 1
+				m_Hdr[1] = 2; //unsigned short ID value (hope this works for all new actors...)
+				m_Hdr[2] = 2; //length of "ID"
+
+				break;
+			}
+			case BT_ACTOR_NAME: {
+				m_PreBlockFlag = 0x4B;
+				m_Type = BT_ACTOR_NAME;
+				m_BlockID = "NAME";
+				memset(&m_Hdr[0], 0, 8);
+				m_Hdr[0] = 1; //always 1
+				m_Hdr[1] = 0; //reserved for name length
+				m_Hdr[2] = 4; //length of "NAME"
+
+				break;
+			}
+			case BT_ACTOR_POSITION: {
+				m_PreBlockFlag = 0x4A;
+				m_Type = BT_ACTOR_POSITION;
+				m_BlockID = "POS";
+				memset(&m_Hdr[0], 0, 8);
+				m_Hdr[0] = 1; //always 1
+				m_Hdr[1] = 12; //sizeof vec3
+				m_Hdr[2] = 3; //length of "POS"
+
+				break;
+			}
+			case BT_ACTOR_ROTATION: {
+				m_PreBlockFlag = 0x4A;
+				m_Type = BT_ACTOR_ROTATION;
+				m_BlockID = "ROT";
+				memset(&m_Hdr[0], 0, 8);
+				m_Hdr[0] = 1; //always 1
+				m_Hdr[1] = 12; //sizeof vec3
+				m_Hdr[2] = 3; //length of "POS"
+
+				break;
+			}
+			case BT_ACTOR_SCALE: {
+				m_PreBlockFlag = 0x4A;
+				m_Type = BT_ACTOR_SCALE;
+				m_BlockID = "SCALE";
+				memset(&m_Hdr[0], 0, 8);
+				m_Hdr[0] = 1; //always 1
+				m_Hdr[1] = 12; //sizeof vec3
+				m_Hdr[2] = 3; //length of "SCALE"
+
+				break;
+			}
+			case BT_ACTOR_VARIABLES: {
+				m_PreBlockFlag = 0xA1;
+				m_Type = BT_ACTOR_VARIABLES;
+				m_BlockID = "ACTOR_VARIABLES";
+				memset(&m_Hdr[0], 0, 8);
+				m_Hdr[1] = 1;
+				//m_Hdr[2] - m_Hdr[4] = reserved for unsigned int length of variable data
+				m_Hdr[5] = 15; //length of "ACTOR_VARIABLES"
+
+				break;
+			}
+			default: {
+				printf("Can't create blocks of this type yet\n");
+				return;
+			}
+		}
+		m_Data = new ByteStream();
+	}
 	Block::Block(const Block& b) {
 		m_PreBlockFlag = b.m_PreBlockFlag;
 		memcpy(m_Hdr, b.m_Hdr, 8);
@@ -359,14 +445,14 @@ namespace opent4
 			header The size might change depending on what happens in
 			the editor, so it must be serialized now
 		*/
-
+		
+		m_Data->SetOffset(0);
 		if(m_Children.size() > 0) {
 			unsigned char PathLen = 0;
 			std::string path;
 			
 			if(isRoot) {
 				//Save these before deleting the data
-				m_Data->SetOffset(0);
 				PathLen = m_Data->GetByte();
 				path = m_Data->GetString(PathLen);
 			}
@@ -385,20 +471,18 @@ namespace opent4
 				}
 			}
 		} else {
-			m_Data->SetOffset(0);
 			if(m_useUiBuf) {
 				size_t len = strlen(m_uitextbuf);
 				m_Data->WriteString(std::string(m_uitextbuf,len));
-				m_Data->SetOffset(0);
 			}
 		}
+		m_Data->SetOffset(0);
 
 		/*
 			Can't change the pre-block-flag, it's not fully understood,
 			if it's incorrect for the block it can cause the game to
 			crash or hang.
 		*/
-		if(!Data->WriteByte(m_PreBlockFlag)) return false;
 		if(!CheckSizeForHeaderType(m_Data->GetSize(), m_PreBlockFlag)) {
 			if(m_Type == BT_ACTOR) {
 				m_PreBlockFlag = 0x82;
@@ -412,6 +496,10 @@ namespace opent4
 			}
 		}
 
+		//Data == nullptr -> Just solidify the block data
+		if(!Data) return true;
+
+		if(!Data->WriteByte(m_PreBlockFlag)) return false;
 		switch(m_PreBlockFlag)
         {
             case 0x41:
@@ -484,6 +572,13 @@ namespace opent4
 		}
 		return true;
     }
+
+	void Block::DeleteChildren() {
+        for(size_t i = 0;i < m_Children.size();i++) {
+            delete m_Children[i];
+        }
+		m_Children.clear();
+	}
 	
 	void Block::useUIBuf() {
 		if(m_Children.size() != 0) {

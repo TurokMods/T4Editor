@@ -6,9 +6,7 @@ using namespace std;
 #include <FileSystem.h>
 using namespace Bearclaw;
 
-namespace opent4 {
-	class ATRFile;
-}
+#include <Turok4.h>
 using namespace opent4;
 
 namespace t4editor {
@@ -27,7 +25,9 @@ namespace t4editor {
 
 			void update_actor_cache(const string& file);
 			float get_cache_progress(bool& is_complete, string* last_file = 0);
-            ATRFile* LoadATR(const string& path);
+            ATRFile* LoadATR(const string& path) { return m_atrStorage->LoadATR(path); }
+
+			ATRStorageInterface* getAtrStorage() const { return m_atrStorage; }
         
         protected:
             void recursiveParseLevels(const string& dir);
@@ -41,5 +41,7 @@ namespace t4editor {
 			string m_cacheLastFileProcessed;
 			bool m_isUpdatingCache;
 			mutex m_cacheMutex;
+
+			ATRStorageInterface* m_atrStorage;
     };
 }

@@ -20,10 +20,13 @@ namespace t4editor {
         if(m_levels.size() > 0) printf("Found %lu levels\n", m_levels.size());
         recursiveParseActors("data/actors");
         if(m_actors.size() > 0) printf("Found %lu actors\n", m_actors.size());
+
+		m_atrStorage = new ATRStorageInterface();
     }
     
     turokfs::~turokfs() {
         delete m_fsys;
+		delete m_atrStorage;
     }
 
 	void turokfs::update_actor_cache(const string& file) {
@@ -102,16 +105,6 @@ namespace t4editor {
 		} else is_complete = false;
 
 		return m_lastUsedCacheProgress;
-	}
-	ATRFile* turokfs::LoadATR(const string& path) {
-		ATRFile* file = new ATRFile();
-		if(!file->Load(path)) {
-			printf("Failed to load an ATR file referenced by the level\n");
-			printf("The file was %s\n", path.c_str());
-			delete file;
-			return 0;
-		}
-		return file;
 	}
     
     void turokfs::recursiveParseLevels(const string &dir) {

@@ -141,6 +141,7 @@ namespace opent4
     {
         public:
             Block() : m_Data(0), m_Type(BT_COUNT) { memset(m_Hdr, 0, 8); memset(m_uitextbuf, 0, UI_BUFFER_SIZE); m_useUiBuf = false; }
+			Block(BLOCK_TYPE type);
 			Block(const Block& o);
             ~Block();
 
@@ -150,6 +151,7 @@ namespace opent4
             void AddChildBlock(Block* b) { m_Children.push_back(b); }
             size_t GetChildCount() const { return m_Children.size(); }
             Block* GetChild(size_t Idx) const { return m_Children[Idx]; }
+			void DeleteChildren();
             BLOCK_TYPE GetType() const { return m_Type; }
             std::string GetTypeString() const { return m_BlockID; }
 

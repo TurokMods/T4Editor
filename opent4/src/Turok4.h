@@ -15,12 +15,25 @@ namespace opent4
     std::string GetTurokDirectory();
     std::string TransformPseudoPathToRealPath(const std::string& PseudoPath);
     std::string TransformRealPathToPseudoPath(const std::string& RealPath  );
+
+	class ATRStorageInterface {
+		public:
+			ATRStorageInterface() { }
+			~ATRStorageInterface();
+
+			ATRFile* LoadATR(const std::string& path);
+
+		protected:
+            std::vector<ATRFile*> m_LoadedAtrs;
+            std::vector<std::string> m_LoadedAtrPaths;
+            std::vector<uint32_t> m_LoadedAttrRefs;
+	};
     
     class ATRFile;
     class ATIFile
     {
         public:
-            ATIFile() {}
+            ATIFile(ATRStorageInterface* atrStorage) { m_atrStorage = atrStorage; }
             ~ATIFile();
 
             bool Load(const std::string& File);
@@ -30,12 +43,15 @@ namespace opent4
             ActorDef* GetActorDef(size_t Idx) const { return m_Actors[Idx]; }
             std::string GetFile() const { return m_File; }
 
-			void DuplicateActor(ActorDef* def);
+			ActorDef* DuplicateActor(ActorDef* def);
+			ActorDef* InstantiateActor(ATRFile* atr);
 			std::vector<Block*>::iterator GetLastActorBlock();
+			unsigned short GetNextActorID();
 
         protected:
             void ProcessBlocks();
-            void ProcessActorBlock(size_t Idx);
+			ActorDef* InsertActorBlock(Block* b, ATRFile* file);
+            ActorDef* ProcessActorBlock(size_t Idx);
             bool SaveActorBlock(size_t Idx);
             ATRFile* LoadATR(const std::string& path);
 
@@ -44,7 +60,7 @@ namespace opent4
             std::vector<ActorDef*> m_Actors;
             std::vector<ATRFile*> m_LoadedAtrs;
             std::vector<std::string> m_LoadedAtrPaths;
-            std::vector<uint32_t> m_LoadedAttrRefs;
+			ATRStorageInterface* m_atrStorage;
 
             std::string m_File;
     };
@@ -53,9 +69,8 @@ namespace opent4
     {
         public:
             ATRFile() : m_Mesh(0), m_Data(0), m_Root(0), m_Variables(0) {}
-            ~ATRFile();
 
-            bool Load(const std::string& Filename);
+            bool Load(const std::string& Filename, ATRStorageInterface* atrStorage);
             bool Save(const std::string& Filename);
 			std::string GetFileName() const { return m_RealFile; }
 			std::string GetTurokFileName() const { return m_File; }
@@ -77,10 +92,12 @@ namespace opent4
 
 
         protected:
+			friend class ATRStorageInterface;
             friend class Actor;
+            ~ATRFile();
             char m_Hdr[4];
             bool CheckHeader();
-            void ProcessBlocks();
+            void ProcessBlocks(ATRStorageInterface* atrStorage);
 			bool SaveBlocks();
 
             float m_Version;

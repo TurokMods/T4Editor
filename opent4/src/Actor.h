@@ -40,7 +40,7 @@ namespace opent4
         ActorVec3 Position;
         ActorVec3 Rotation;
         ActorVec3 Scale;
-        std::string Name;
+		char Name[255];
     };
 
     class ActorVariables

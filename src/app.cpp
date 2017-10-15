@@ -31,6 +31,7 @@ namespace t4editor {
 		m_defaultTex = 0;
 		m_updatingCache = false;
 		m_viewChanged = true;
+		m_actorToImport = nullptr;
     }
     
     application::~application() {
@@ -98,8 +99,8 @@ namespace t4editor {
 		m_framebuffer = new framebuffer(dims.x * 0.75f, dims.y * 0.7f, true);
 		m_framebuffer->attachments.push_back(new texture(dims.x, dims.y, GL_RGB, GL_UNSIGNED_BYTE, true)); //color buffer
 		m_framebuffer->attachments.push_back(new texture(dims.x, dims.y, GL_RGB, GL_UNSIGNED_BYTE, true)); //asset_id
-		m_framebuffer->attachments.push_back(new texture(dims.x, dims.y, GL_RGB, GL_UNSIGNED_BYTE, true)); //asset_submesh_id
-		m_framebuffer->attachments.push_back(new texture(dims.x, dims.y, GL_RGB, GL_UNSIGNED_BYTE, true)); //asset_submesh_chunk_id
+		//m_framebuffer->attachments.push_back(new texture(dims.x, dims.y, GL_RGB, GL_UNSIGNED_BYTE, true)); //asset_submesh_id
+		//m_framebuffer->attachments.push_back(new texture(dims.x, dims.y, GL_RGB, GL_UNSIGNED_BYTE, true)); //asset_submesh_chunk_id
 
 		u32* defaultTexData = new u32[2 * 2];
 		for (u8 x = 0; x < 2; x++) {
@@ -185,7 +186,24 @@ namespace t4editor {
     void application::onEvent(event *e) {
         if(e->name == "load_level") load_level(((load_level_event*)e)->path);
         else if(e->name == "input_event") {
-            //input_event* input = (input_event*)e;
+            input_event* input = (input_event*)e;
+            switch(input->type) {
+                case input_event::ET_MOUSE_MOVE:
+                    break;
+                case input_event::ET_MOUSE_LEFT_DOWN:
+                    break;
+                case input_event::ET_MOUSE_LEFT_UP: {
+					if(m_actorToImport) {
+						ActorDef* def = m_level->levelFile()->GetActors()->InstantiateActor(m_actorToImport->actorFile);
+						def->Position.x = m_actorImportPos.x;
+						def->Position.y = m_actorImportPos.y;
+						def->Position.z = m_actorImportPos.z;
+						m_level->actor_added();
+					}
+					m_actorToImport = nullptr;
+                    break;
+                }
+			}
         }
         else if(e->name == "window_resize") {
             //app_resize_event* evt = (app_resize_event*)e;
@@ -206,6 +224,9 @@ namespace t4editor {
 			m_cacheProgress = 0.0f;
 		} else if(e->name == "actor_selection") {
 			trigger_repaint();
+		} else if(e->name == "begin_actor_import") {
+			import_actor_begin_event* evt = (import_actor_begin_event*)e;
+			m_actorToImport = evt->actorToImport;
 		}
         
         for(auto i = m_panels.begin();i != m_panels.end();i++) {
@@ -250,11 +271,11 @@ namespace t4editor {
 		if (found == m_textures.end()) {
 			texture* t = this->loadTexture(filename);
 			m_textures.insert(std::make_pair(filename, t));
-			printf("Loading new texture %s\n", filename.c_str());
+			//printf("Loading new texture %s\n", filename.c_str());
 			return t;
 		}
 		else {
-			printf("Texture already found, returning %s\n", filename.c_str());
+			//printf("Texture already found, returning %s\n", filename.c_str());
 			return found->second;
 		}
 	}
@@ -288,6 +309,8 @@ namespace t4editor {
 
             m_window->poll();
             m_window->beginFrame();
+
+			if(m_actorToImport) m_viewChanged = true;
             
 			if(m_viewChanged) {
 				m_framebuffer->bind();
@@ -299,6 +322,15 @@ namespace t4editor {
 					for(int i = 0;i < actors.size();i++) {
 						actors[i]->render(m_shader, m_view, m_vp);
 					}
+				}
+
+				if(m_actorToImport) {
+					float dpth = m_framebuffer->getDepth(levelViewCursorPos.x, levelViewCursorPos.y, false);
+
+					m_actorImportPos = unProject(vec3(levelViewCursorPos.x, levelViewCursorPos.y, dpth), m_view, m_proj, vec4(0, 0, levelViewSize.x, levelViewSize.y));
+					mat4 model = translate(m_actorImportPos);
+
+					m_actorToImport->render(m_shader, m_view, m_vp, false, &model);
 				}
 
 				m_viewChanged = false;

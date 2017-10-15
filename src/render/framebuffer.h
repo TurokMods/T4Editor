@@ -18,6 +18,7 @@ namespace t4editor {
             void clear(const vec4& color = vec4(0.5f, 0.5f, 0.5f, 1.0f), float depth = 1.0f);
         
             void blit(GLenum attachmentId = GL_COLOR_ATTACHMENT0, int dx = 0, int dy = 0);
+			float getDepth(int x, int y, bool doBind = true);
         
             vector<texture*> attachments;
             GLuint fbo;

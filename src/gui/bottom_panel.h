@@ -29,6 +29,7 @@ namespace t4editor {
                 setCanClose(false);
                 setFlagsManually(ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoFocusOnAppearing | ImGuiWindowFlags_ShowBorders);
 				m_lastLogCount = 0;
+				m_draggedActor = nullptr;
 			}
         
             ~bottom_panel() {
@@ -48,7 +49,6 @@ namespace t4editor {
 				if(m_shader) delete m_shader;
             }
             
-        
             virtual void onAttach(ui_panel* toPanel) {
                 vec2 sz = m_app->getWindow()->getSize(false);
                 sz.x *= LEVEL_VIEW_WIDTH_FRACTION;
@@ -74,6 +74,18 @@ namespace t4editor {
                     setSize(sz);
                 } else if(e->name == "actor_caching_completed") {
 					load_actor_cache();
+				} else if(e->name == "input_event") {
+                    input_event* input = (input_event*)e;
+                    switch(input->type) {
+                        case input_event::ET_MOUSE_MOVE:
+                            break;
+                        case input_event::ET_MOUSE_LEFT_DOWN:
+                            break;
+                        case input_event::ET_MOUSE_LEFT_UP: {
+							m_draggedActor = nullptr;
+                            break;
+                        }
+					}
 				}
             }
         
@@ -160,7 +172,7 @@ namespace t4editor {
 								//the turokfs class will take care of deallocating it, having it in memory will speed up the load time of other levels too
 								ATRFile* file = m_app->getTurokData()->LoadATR(entry->path);
 								if(file) {
-									entry->loadedActor = new actor(m_app, file->GetMesh(), nullptr);
+									entry->loadedActor = new actor(m_app, file->GetMesh(), nullptr, file);
 								}
 							}
 						}
@@ -170,6 +182,9 @@ namespace t4editor {
 
 			void render_actor_view() {
 				prepare_actors();
+				if(m_draggedActor) {
+					SetMouseCursor(ImGuiMouseCursor_Move);
+				}
 
 				//headers
 				BeginChild("##categories_hdr", ImVec2(320, 20), true, ImGuiWindowFlags_NoMove);
@@ -237,17 +252,25 @@ namespace t4editor {
 
 									entry->loadedActor->render(m_shader, view, proj * view, true);
 
-									Image((GLuint*)tex->id, img_size, ImVec2(0, 1), ImVec2(1, 0));
+									if(ImageButton((GLuint*)tex->id, img_size, ImVec2(0, 1), ImVec2(1, 0))) {
+										m_draggedActor = entry->loadedActor;
+										import_actor_begin_event evt(m_draggedActor);
+										m_app->onEvent(&evt);
+									}
+									
 								} else {
 									if(entry->renderable) {
 										if(entry->failedToLoad) {
-											SetCursorPos(ImVec2(((img_size.x + 5) * a) + (img_size.x / 2) - 30.0f, (img_size.y / 2) - 10.0f));
+											SetCursorPos(ImVec2(((img_size.x + 5) * a) + (img_size.x / 2) - 45.0f, (img_size.y / 2) - 10.0f));
 											Text("Actor failed to load");
 										}
 										else {
 											SetCursorPos(ImVec2(((img_size.x + 5) * a) + (img_size.x / 2) - 20.0f, (img_size.y / 2) - 10.0f));
 											Text("Loading...");
 										}
+									} else {
+										SetCursorPos(ImVec2(((img_size.x + 5) * a) + (img_size.x / 2) - 45.0f, (img_size.y / 2) - 10.0f));
+										Text("Actor not renderable");
 									}
 								}
 								
@@ -255,6 +278,7 @@ namespace t4editor {
 								Text("%s", entry->path.substr(entry->path.find_last_of('/')).c_str());
 								SetCursorPos(ImVec2((img_size.x + 5) * (a + 1),cp.y));
 							}
+
 							
 							glBindFramebuffer(GL_FRAMEBUFFER, 0);
 						} else {
@@ -269,6 +293,7 @@ namespace t4editor {
 		protected:
 			framebuffer* m_actorFrame;
 			shader* m_shader;
+			actor* m_draggedActor;
 			string m_currentCategory;
 			size_t m_lastLogCount;
 			unordered_map<string, vector<actor_cache_entry*> > m_actors;

@@ -90,6 +90,9 @@ namespace t4editor {
 			bool is_updating_cache() const { return m_updatingCache; }
 			string get_last_file_cached() const { return m_cacheLastFile; }
 
+			vec2 levelViewCursorPos;
+			vec2 levelViewSize;
+
         protected:
 			texture* loadTexture(std::string file_path);
 			std::unordered_map<std::string, texture*> m_textures;
@@ -126,5 +129,8 @@ namespace t4editor {
         
             unordered_map<string, string> m_actor_var_types;
             unordered_map<string, string> m_actor_block_types;
+
+			actor* m_actorToImport;
+			vec3 m_actorImportPos;
     };
 }
