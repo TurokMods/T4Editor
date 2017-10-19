@@ -16,6 +16,9 @@ namespace opent4
         BT_ACTOR,
         BT_PATH,
         BT_NAVDATA,
+		BT_NAVNODE,
+		BT_NODES,
+		BT_NODE,
 
         //Actor properties
         BT_ACTOR_ID,
@@ -146,7 +149,7 @@ namespace opent4
             ~Block();
 
             bool Load(ByteStream* Data);
-            bool Save(ByteStream* Data, bool isRoot=false);
+            bool Save(ByteStream* Data);
 
             void AddChildBlock(Block* b) { m_Children.push_back(b); }
             size_t GetChildCount() const { return m_Children.size(); }
@@ -163,12 +166,17 @@ namespace opent4
 			void useUIBuf();
 
 			void setFlag(unsigned char flag) { m_PreBlockFlag = flag; }
+			void setPostHdrString(const std::string& str) { m_PostHdrString = str; }
+			std::string getPostHdrString() const { return m_PostHdrString; }
 
         protected:
             unsigned char m_PreBlockFlag;
             unsigned char m_Hdr[8];
             std::string m_BlockID;
             BLOCK_TYPE m_Type;
+			std::string m_PostHdrString;
+
+			unsigned char m_experimental_childCount;
 
 			//Note: Changing m_Data has no effect on the saved file if m_Children is populated (Only leaf nodes are saved)
             ByteStream* m_Data;

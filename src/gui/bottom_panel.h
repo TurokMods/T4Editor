@@ -43,9 +43,11 @@ namespace t4editor {
 				if(m_actorFrame) {
 					delete m_actorFrame;
 				}
+
 				for(size_t i = 0;i < m_dispTextures.size();i++) {
 					delete m_dispTextures[i];
 				}
+
 				if(m_shader) delete m_shader;
             }
             

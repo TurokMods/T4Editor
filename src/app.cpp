@@ -40,8 +40,8 @@ namespace t4editor {
         
         if(m_shader) delete m_shader;
         if(m_fs) delete m_fs;
-		if (m_window) delete m_window;
-		if (m_framebuffer) {
+		if(m_window) delete m_window;
+		if(m_framebuffer) {
 			for (size_t i = 0; i < m_framebuffer->attachments.size(); i++) {
 				delete m_framebuffer->attachments[i];
 			}
@@ -70,7 +70,7 @@ namespace t4editor {
 		if(lidx == path.npos) lidx = path.find_last_of('/');
 		path = path.substr(0, lidx);
 
-		printf("Writing json data: %s\n", j.dump().c_str());
+		printf("Saving configuration\n");
 		std::ofstream o(path + '/' + "config.json");
 		o << std::setw(4) << j << std::endl;
 		o.close();

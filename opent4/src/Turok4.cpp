@@ -191,8 +191,12 @@ namespace opent4
     ATRFile::~ATRFile() {
         if(m_Data) delete m_Data;
         if(m_Root) delete m_Root;
-        if(m_Mesh) delete m_Mesh;
+        //if(m_Mesh) delete m_Mesh; apparently something else deletes this
         if(m_Variables) delete m_Variables;
+
+		for(size_t i = 0;i < m_ActorInstanceFiles.size();i++) {
+			delete m_ActorInstanceFiles[i];
+		}
     }
 
     /* ATRFile */
@@ -209,17 +213,7 @@ namespace opent4
         if(!CheckHeader()) return false;
         m_Root = new Block();
         m_Root->Load(m_Data);
-
-        unsigned char PathLen = m_Root->GetData()->GetByte();
-        m_File = m_Root->GetData()->GetString(PathLen);
-        m_Root->GetData()->Offset(1);
-
-        while(!m_Root->GetData()->AtEnd(1))
-        {
-            Block* b = new Block();
-            b->Load(m_Root->GetData());
-            m_Root->AddChildBlock(b);
-        }
+		m_File = m_Root->getPostHdrString();
 
 		m_Root->GetData()->SetOffset(0);
 
@@ -383,7 +377,7 @@ namespace opent4
 		}
 
 		m_Root->GetData()->SetOffset(0);
-        if(!m_Root->Save(Data, true)) {
+        if(!m_Root->Save(Data)) {
 			delete Data;
 			return false;
 		}
@@ -511,9 +505,8 @@ namespace opent4
                     break;
                 }
             }
-			bool isRootNode = false;
-			if(m_Blocks[i]->GetTypeString() == "ACTOR") isRootNode = true;
-			if(!m_Blocks[i]->Save(out, isRootNode)) {
+
+			if(!m_Blocks[i]->Save(out)) {
 				printf("Failed to save block %d\n", i);
 			}
 		}
@@ -531,6 +524,7 @@ namespace opent4
     }
 
 	ActorDef* ATIFile::DuplicateActor(ActorDef* newActor) {
+		if(!newActor) return 0;
 		printf("Finding actor instance block for actor with ID %d...\n", newActor->ID);
 		//Find corresponding actor block
 		Block* b = 0;
@@ -572,7 +566,7 @@ namespace opent4
 		//Get next actor ID, insert index in the block list
 		unsigned short id = GetNextActorID();
 		auto process_idx = GetLastActorBlock();
-		process_idx++;
+		if(process_idx != m_Blocks.end()) process_idx++;
 		printf("New actor ID: %d\n", id);
 
 		//Set the actor ID
@@ -583,22 +577,16 @@ namespace opent4
 				size_t original_size = data->GetSize();
 				size_t offset = data->GetOffset();
 				data->SetOffset(0);
-				//if(id <= UINT8_MAX && original_size != 2) data->WriteByte(id);
-				//else data->WriteInt16(id);
+				if(id <= UINT8_MAX && original_size != 2) data->WriteByte(id);
+				else data->WriteInt16(id);
 				data->SetOffset(0);
-
-				//eeek, only do this if the original block header definitely didn't support 16bit integer ids
-				//if(id > UINT8_MAX && original_size != 2) idblock->setFlag(0x46);
 				break;
 			}
 		}
 
 
 		printf("Serializing actor instance block data...\n");
-		clone->Save(0, true);
-
-		//This needs to happen, ProcessActorBlock will add them back after reading the root block's data
-		clone->DeleteChildren();
+		clone->Save(0);
 
 		printf("Inserting cloned actor instance block at the end of the instance block list\n");
 		process_idx = m_Blocks.insert(process_idx, clone);
@@ -613,21 +601,20 @@ namespace opent4
 
 		//write actor path
 		printf("Writing path to .atr file\n");
-		atiBlock->GetData()->WriteByte(atr->GetTurokFileName().length());
-		atiBlock->GetData()->WriteString(atr->GetTurokFileName());
-		atiBlock->GetData()->SetOffset(0);
+		atiBlock->setPostHdrString(atr->GetTurokFileName());
 
 		//Get next actor ID, insert index in the block list
 		unsigned short id = GetNextActorID();
 		auto process_idx = GetLastActorBlock();
-		process_idx++;
+		if(process_idx != m_Blocks.end()) process_idx++;
 		
 		//Set actor ID
 		printf("Creating actor instance ID block with ID: %d\n", id);
 		Block* actorId = new Block(BT_ACTOR_ID);
 		ByteStream* data = actorId->GetData();
 		data->SetOffset(0);
-		data->WriteInt16(id);
+		if(id < UINT8_MAX) data->WriteByte((unsigned char)id);
+		else data->WriteInt16(id);
 		data->SetOffset(0);
 		atiBlock->AddChildBlock(actorId);
 
@@ -677,22 +664,18 @@ namespace opent4
 		atiBlock->AddChildBlock(actorVariables);
 
 		printf("Serializing actor instance block data...\n");
-		atiBlock->Save(0, true);
-
-		//This needs to happen, ProcessActorBlock will add them back after reading the root block's data
-		atiBlock->DeleteChildren();
+		atiBlock->Save(0);
 		
 		printf("Inserting actor instance block at the end of the instance block list\n");
 		process_idx = m_Blocks.insert(process_idx, atiBlock);
 
-		printf("Processing cloned actor instance block...\n");
+		printf("Processing new actor instance block...\n");
 		return ProcessActorBlock(std::distance(m_Blocks.begin(), process_idx));
 	}
 
 	std::vector<Block*>::iterator ATIFile::GetLastActorBlock() {
-		for(auto i = m_Blocks.begin();i != m_Blocks.end();i++) {
-			auto next = i; next++;
-			if((*next)->GetTypeString() != "ACTOR") return i;
+		for(size_t i = 0;i < m_Blocks.size();i++) {
+			if(m_Blocks[i]->GetType() != BT_ACTOR) return m_Blocks.begin() + (i - 1);
 		}
 		return m_Blocks.end();
 	}
@@ -730,10 +713,10 @@ namespace opent4
             switch(m_Blocks[i]->GetType())
             {
                 case BT_ACTOR           : { ProcessActorBlock(i); break; }
-                case BT_PATH            : { break; }
-                case BT_NAVDATA         : { break; }
-                case BT_ACTOR_VARIABLES : { break; }
-                case BT_VERSION         : { break; }
+                //case BT_PATH            : { break; }
+                //case BT_NAVDATA         : { break; }
+                //case BT_ACTOR_VARIABLES : { break; }
+                //case BT_VERSION         : { break; }
                 default:
                 {
                     //printf("Unsupported ATI block type (%s).\n",BlockTypeIDs[m_Blocks[i]->GetType()].c_str());
@@ -744,25 +727,13 @@ namespace opent4
     }
 
     ActorDef* ATIFile::ProcessActorBlock(size_t Idx)
-    {
+    {        
         Block* b = m_Blocks[Idx];
-        b->GetData()->SetOffset(0);
-        unsigned char PathLen = b->GetData()->GetByte();
-        std::string Path = b->GetData()->GetString(PathLen);
-        b->GetData()->Offset(1);
-
-        while(!b->GetData()->AtEnd(1))
-        {
-            Block* aBlock = new Block();
-            aBlock->Load(b->GetData());
-            b->AddChildBlock(aBlock);
-        }
-        
-        ATRFile* atr = LoadATR(TransformPseudoPathToRealPath(Path));
+        ATRFile* atr = LoadATR(TransformPseudoPathToRealPath(b->getPostHdrString()));
         if(!atr) return nullptr;
 
         ActorDef* d = new ActorDef();
-        d->ActorFile = Path;
+        d->ActorFile = b->getPostHdrString();
         d->BlockIdx  = Idx ;
         d->Parent    = this;
         d->PathID = d->ID = -1;
@@ -842,12 +813,11 @@ namespace opent4
     bool ATIFile::SaveActorBlock(size_t Idx)
     {
         Block* b = m_Blocks[Idx];
-		ActorDef* d = m_Actors[Idx]; // I hope this is right... I think it is;
-        b->GetData()->SetOffset(0);
+		ActorDef* d = m_Actors[Idx];
+
 		//We don't need to re-save this value, but we need to navigate to the end of this data for the next part
-        unsigned char PathLen = b->GetData()->GetByte();
-        std::string Path = b->GetData()->GetString(PathLen);
-        b->GetData()->Offset(1);
+        b->GetData()->SetOffset(1);
+        b->GetData()->GetString();
 
 		//update block data
         for(int i = 0;i < b->GetChildCount();i++)
@@ -912,6 +882,8 @@ namespace opent4
 
 			Data->SetOffset(0);
         }
+
+		b->GetData()->SetOffset(0);
 		return true;
     }
     

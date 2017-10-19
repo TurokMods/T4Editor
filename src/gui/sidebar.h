@@ -62,7 +62,10 @@ namespace t4editor {
                     actor_selection_event* evt = (actor_selection_event*)e;
                     if(evt->deselected) disconnect();
                     else connect(evt);
-                }
+                } else if(e->name == "level_unloaded") {
+					Level = nullptr;
+					Actor = nullptr;
+				}
             }
         
             virtual void renderContent() {
@@ -71,7 +74,6 @@ namespace t4editor {
 						Columns(2);
 							Indent(10.0f);
 								InputText("##name", Actor->actorTraits->Name, 254);
-								//InputInt("##aid", &Actor->actorTraits->ID, 1, 100, ImGuiInputTextFlags_ReadOnly);
 								DragInt("##aid", &Actor->actorTraits->ID, 1, 0, 2048);
 							Unindent(10.0f);
 						NextColumn();
