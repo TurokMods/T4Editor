@@ -3,11 +3,14 @@
 
 namespace opent4
 {
+    ActorVariables::~ActorVariables()  {
+        for(int i = 0;i < m_Blocks.size();i++) delete m_Blocks[i];
+    }
     ActorVariables* ActorDef::localVariables() {
-        return Actor->GetActorVariables();
+        return Instance->GetActorVariables();
     }
     ActorVariables* ActorDef::globalVariables() {
-        return Actor->GetATR()->GetActorVariables();
+        return Instance->GetATR()->GetActorVariables();
     }
     /* Actor Variables */
     bool ActorVariables::Load(ByteStream *Data)

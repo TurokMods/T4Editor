@@ -27,10 +27,10 @@ namespace opent4
     struct ActorDef
     {
         std::string ActorFile;
-        Actor* Actor;
+        Actor* Instance;
         int BlockIdx;
         ATIFile* Parent;
-        
+
         ActorVariables* localVariables();
         ActorVariables* globalVariables();
 
@@ -47,9 +47,7 @@ namespace opent4
     {
         public:
             ActorVariables() { }
-            ~ActorVariables() {
-				for(int i = 0;i < m_Blocks.size();i++) delete m_Blocks[i];
-			}
+            ~ActorVariables();
 
             bool Load(ByteStream* Data);
             bool Save(ByteStream* Data);

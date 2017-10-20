@@ -143,7 +143,7 @@ namespace opent4
         if(PseudoPath[0] == 'Y' && PseudoPath[1] == ':') RealPath = PseudoPath.substr(2, PseudoPath.length() - 1);
         else if(PseudoPath[0] == '/' && PseudoPath[1] == '\\') RealPath = PseudoPath.substr(1, PseudoPath.length() - 1);
         else RealPath = PseudoPath;
-        
+
         RealPath = GetTurokDirectory() + RealPath;
 
         for(int s = 0; s < RealPath.length(); s++) {
@@ -187,7 +187,7 @@ namespace opent4
     {
         return "Not needed yet.";
     }
-    
+
     ATRFile::~ATRFile() {
         if(m_Data) delete m_Data;
         if(m_Root) delete m_Root;
@@ -425,10 +425,10 @@ namespace opent4
         for(size_t i = 0; i < m_Blocks.size(); i++) delete m_Blocks[i];
         for(size_t i = 0; i < m_Actors.size(); i++)
         {
-            if(m_Actors[i]->Actor->GetActorVariables()) delete m_Actors[i]->Actor->GetActorVariables();
+            if(m_Actors[i]->Instance->GetActorVariables()) delete m_Actors[i]->Instance->GetActorVariables();
             delete m_Actors[i];
         }
-        
+
         for(size_t i = 0;i < m_LoadedAtrs.size();i++) {
             delete m_LoadedAtrs[i];
         }
@@ -491,7 +491,7 @@ namespace opent4
 				printf("Failed to save block %d\n", i);
 			}
 		}
-		
+
 		out->SetOffset(0);
 		FILE* fp = fopen(File.c_str(), "wb");
 		fwrite(out->Ptr(), out->GetSize(), 1, fp);
@@ -529,7 +529,7 @@ namespace opent4
 				if(b) break;
 			}
 		}
-		
+
 		if(!b) {
 			printf("Actor to duplicate not found?\n");
 			return;
@@ -553,7 +553,7 @@ namespace opent4
 			}
 		}
 		process_idx++;
-		
+
 		//Set the actor ID
 		for(size_t cb = 0;cb < clone->GetChildCount();cb++) {
 			if(clone->GetChild(cb)->GetTypeString() == "ID") {
@@ -616,7 +616,7 @@ namespace opent4
             aBlock->Load(b->GetData());
             b->AddChildBlock(aBlock);
         }
-        
+
         ATRFile* atr = LoadATR(TransformPseudoPathToRealPath(Path));
         if(!atr) return;
 
@@ -625,7 +625,7 @@ namespace opent4
         d->BlockIdx  = Idx ;
         d->Parent    = this;
         d->PathID = d->ID = -1;
-        d->Actor = new Actor(atr);
+        d->Instance = new Actor(atr);
 
         for(int i = 0;i < b->GetChildCount();i++)
         {
@@ -677,7 +677,7 @@ namespace opent4
                 {
                     ActorVariables* v = new ActorVariables();
                     if(!v->Load(Data)) { printf("Unable to load actor variables.\n"); }
-                    d->Actor->SetActorVariables(v);
+                    d->Instance->SetActorVariables(v);
                     break;
                 }
                 case BT_ACTOR_LINK:
@@ -694,7 +694,7 @@ namespace opent4
         }
 
         m_Actors.push_back(d);
-        d->Actor->m_Def = d;
+        d->Instance->m_Def = d;
     }
 
     bool ATIFile::SaveActorBlock(size_t Idx)
@@ -756,7 +756,7 @@ namespace opent4
                 }
                 case BT_ACTOR_VARIABLES:
                 {
-                    if(!d->Actor->GetActorVariables()->Save(Data)) return false;
+                    if(!d->Instance->GetActorVariables()->Save(Data)) return false;
                     break;
                 }
                 case BT_ACTOR_LINK:
@@ -773,7 +773,7 @@ namespace opent4
         }
 		return true;
     }
-    
+
     ATRFile* ATIFile::LoadATR(const std::string &path) {
         //see if the file was loaded already
         for(size_t i = 0;i < m_LoadedAtrs.size();i++) {
@@ -782,7 +782,7 @@ namespace opent4
                 return m_LoadedAtrs[i];
             }
         }
-        
+
         //nope
         ATRFile* file = new ATRFile();
         if(!file->Load(path)) {
@@ -791,7 +791,7 @@ namespace opent4
             delete file;
             return 0;
         }
-        
+
         m_LoadedAtrs.push_back(file);
         m_LoadedAtrPaths.push_back(path);
         m_LoadedAttrRefs.push_back(1);

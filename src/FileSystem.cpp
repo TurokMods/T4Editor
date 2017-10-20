@@ -10,6 +10,7 @@
 #include <dirent.h>
 #include <unistd.h>
 #include <sys/stat.h>
+#include <memory.h>
 #endif
 
 #include <stdarg.h>
@@ -24,7 +25,7 @@ namespace Bearclaw
     {
         if(m_Entries) { delete [] m_Entries; m_Entries = 0; }
         m_EntryCount = 0;
-        
+
         DIR *dp = opendir(Dir.c_str());
         if(dp != NULL)
         {
@@ -40,7 +41,11 @@ namespace Bearclaw
             ep = readdir(dp);
             while(ep)
             {
+                #ifdef _WIN32
                 string n = string(ep->d_name,ep->d_namlen);
+                #else
+                string n = string(ep->d_name);
+                #endif
                 if(n.size() != 0 && n != ".DS_Store")
                 {
                     m_Entries[i].Name = n;
@@ -119,7 +124,7 @@ namespace Bearclaw
                 return true;
             }
         }
-        
+
         for(u64 i = 0;i < Size;i++)
         {
             m_Data.insert(m_Data.begin() + m_Offset,((u8*)Data)[i]);
@@ -131,7 +136,7 @@ namespace Bearclaw
 
     bool DataContainer::ReadUByte(u8& Data) { return Read(Data); }
     bool DataContainer::ReadByte (s8& Data) { return Read(Data); }
-    
+
     bool IsWhitespace(char c)
     {
         return c == '\t' || c == ' ';
@@ -140,7 +145,7 @@ namespace Bearclaw
     {
         return isdigit(c);
     }
-    
+
     #define ParseInteger(Type,Min,Max,MinFmt,MaxFmt) \
     char c = 0; \
     if(!Read(c)) { ERROR("Failed to parse integer from data container (%s)\n",m_Name.c_str()); return false; } \
@@ -164,7 +169,7 @@ namespace Bearclaw
     } \
     if(IsNeg) Data = -i; \
     else Data = i;
-    
+
     bool DataContainer::ReadUInt16(u16& Data)
     {
         if(m_Mode == DM_BINARY) return Read(Data);
@@ -226,17 +231,17 @@ namespace Bearclaw
         {
             char c = 0;
             if(!Read(c)) { ERROR("Failed to parse float32 from data container (%s)\n",m_Name.c_str()); return false; }
-            
+
             //Skip whitespace
             while(IsWhitespace(c)) { if(!Read(c)) { ERROR("Failed to parse float32 from data container (%s)\n",m_Name.c_str()); return false; } }
-            
+
             //Skip '-' if negative
             bool IsNeg = c == '-';
             if(IsNeg)
             {
                 if(!Read(c)) { ERROR("Failed to parse float32 from data container (%s)\n",m_Name.c_str()); return false; }
             }
-            
+
             //Parse value
             bool DecimalEncountered = false;
             string s;
@@ -246,7 +251,7 @@ namespace Bearclaw
                 s += c;
                 if(!Read(c)) { ERROR("Failed to parse float32 from data container (%s)\n",m_Name.c_str()); return false; }
             }
-            
+
             f64 f = atof(s.c_str());
             if(f > FLT_MAX)
             {
@@ -260,7 +265,7 @@ namespace Bearclaw
                 WARNING("Parsing real number from data container (%s) into data type (f32) that may lose precision (more than 7 digits)\n",m_Name.c_str());
                 LOG("Info: Actual value: %s | float value: %f\n",s.c_str(),(f32)f);
             }
-            
+
             if(IsNeg) Data = -f;
             else Data = f;
         }
@@ -273,17 +278,17 @@ namespace Bearclaw
         {
             char c = 0;
             if(!Read(c)) { ERROR("Failed to parse float64 from data container (%s)\n",m_Name.c_str()); return false; }
-            
+
             //Skip whitespace
             while(IsWhitespace(c)) { if(!Read(c)) { ERROR("Failed to parse float64 from data container (%s)\n",m_Name.c_str()); return false; } }
-            
+
             //Skip '-' if negative
             bool IsNeg = c == '-';
             if(IsNeg)
             {
                 if(!Read(c)) { ERROR("Failed to parse float64 from data container (%s)\n",m_Name.c_str()); return false; }
             }
-            
+
             //Parse value
             bool DecimalEncountered = false;
             string s;
@@ -293,7 +298,7 @@ namespace Bearclaw
                 s += c;
                 if(!Read(c)) { ERROR("Failed to parse float64 from data container (%s)\n",m_Name.c_str()); return false; }
             }
-            
+
             f64 f = atof(s.c_str());
             if(f > DBL_MAX)
             {
@@ -307,13 +312,13 @@ namespace Bearclaw
                 WARNING("Parsing real number from data container (%s) into data type (f64) that may lose precision (more than 16 digits)\n",m_Name.c_str());
                 LOG("Info: Actual value: %s | float64 value: %f\n",s.c_str(),(f64)f);
             }
-            
+
             if(IsNeg) Data = -f;
             else Data = f;
         }
         return true;
     }
-    
+
     bool DataContainer::WriteUByte(const u8& Data) { return Write(Data); }
     bool DataContainer::WriteByte (const s8& Data) { return Write(Data); }
 
@@ -330,7 +335,7 @@ namespace Bearclaw
 		va_end(Args);
 		return r;
 	}
-    
+
     #define WriteInteger(Type,MaxStrLen,fmt) \
     char Out[MaxStrLen]; \
     i32 r = _snprintf(Out,MaxStrLen,#fmt,Data); \
@@ -340,7 +345,7 @@ namespace Bearclaw
         return false; \
     } \
     else return WriteData(Out,r);
-    
+
     bool DataContainer::WriteUInt16(const u16& Data)
     {
         if(m_Mode == DM_BINARY) return Write(Data);
@@ -440,7 +445,7 @@ namespace Bearclaw
             ERROR("Call to Seek(%u) with data container (%s) failed: Resulting data position less than 0\n",Offset,m_Name.c_str());
             return;
         }
-        
+
         if(m_Handle)
         {
             i32 r = fseek(m_Handle,Offset,SEEK_CUR);
@@ -458,7 +463,7 @@ namespace Bearclaw
             ERROR("Call to SetPosition(%u) with data container (%s) failed: New position exceeds end of data\n",Offset,m_Name.c_str());
             return;
         }
-        
+
         if(m_Handle)
         {
             i32 r = fseek(m_Handle,Offset,SEEK_SET);
@@ -470,7 +475,7 @@ namespace Bearclaw
         }
         else m_Offset = Offset;
     }
-    
+
     DataContainer* FileSystem::Create(DATA_MODE Mode,const string& Name)
     {
         DataContainer* c = new DataContainer(this,0,Name,Mode);
@@ -495,12 +500,12 @@ namespace Bearclaw
             ERROR("Failed to open file (%s)\n",File.c_str());
             return 0;
         }
-        
+
         DataContainer* c = new DataContainer(this,fp,Name.length() == 0 ? File : Name,Mode);
         fseek(fp,0,SEEK_END);
         c->m_Size = ftell(fp);
         fseek(fp,0,SEEK_SET);
-        
+
         c->m_Iterator = m_Containers.insert(m_Containers.end(),c);
         return c;
     }
@@ -515,16 +520,16 @@ namespace Bearclaw
             ERROR("Failed to open file (%s)\n",File.c_str());
             return 0;
         }
-        
+
         fseek(fp,0,SEEK_END);
         u32 Sz = ftell(fp);
         fseek(fp,0,SEEK_SET);
-        
+
         if(Sz == 0)
         {
             fclose(fp);
             WARNING("Loading empty file (%s) into data container (%s)\n",File.c_str(),Name.length() == 0 ? File.c_str() : Name.c_str());
-            
+
             DataContainer* c = new DataContainer(this,0,Name.length() == 0 ? File : Name,Mode);
             c->m_Iterator = m_Containers.insert(m_Containers.end(),c);
             return c;
@@ -538,13 +543,13 @@ namespace Bearclaw
                 fclose(fp);
                 return 0;
             }
-            
+
             DataContainer* c = new DataContainer(this,0,Name.length() == 0 ? File : Name,Mode);
             c->m_Size = Sz;
             for(u32 i = 0;i < c->m_Size;i++) c->m_Data.push_back(Data[i]);
             delete [] Data;
             fclose(fp);
-            
+
             c->m_Iterator = m_Containers.insert(m_Containers.end(),c);
             return c;
         }
@@ -560,14 +565,14 @@ namespace Bearclaw
             ERROR("Failed to open file (%s)\n",File.c_str());
             return false;
         }
-        
+
         if(fwrite(&Data->m_Data[0],Data->m_Size,1,fp) != 1)
         {
             ERROR("Failed to write %u bytes from data container (%s) to file (%s)\n",Data->m_Size,Data->m_Name.c_str(),File.c_str());
             fclose(fp);
             return false;
         }
-        
+
         fclose(fp);
         return true;
     }
@@ -590,7 +595,7 @@ namespace Bearclaw
             ERROR("Unable to set current working directory (%s): Directory does not exist\n",Dir.c_str());
             return;
         }
-        
+
 		chdir(Dir.c_str());
     }
     DirectoryInfo* FileSystem::ParseDirectory(const string& Dir)
@@ -600,7 +605,7 @@ namespace Bearclaw
             ERROR("Unable to parse directory (%s): Directory does not exist\n",Dir.c_str());
             return 0;
         }
-        
+
         DirectoryInfo* Info = new DirectoryInfo();
         Info->Populate(Dir);
         return Info;
@@ -610,13 +615,13 @@ namespace Bearclaw
         struct stat buf;
         return (stat(Item.c_str(),&buf) == 0);
     }
-    
+
     void FileSystem::Shutdown()
     {
         if(m_Containers.size() != 0)
         {
             WARNING("FileSystem has %lu unreleased data containers at shutdown time\n",m_Containers.size());
-        
+
             for(DataContainer::ContainerID c = m_Containers.begin();c != m_Containers.end();c++)
             {
                 LOG("Destroying unreleased container: %s\n",(*c)->m_Name.c_str());
@@ -624,7 +629,7 @@ namespace Bearclaw
             }
         }
     }
-    
+
     void FileSystem::Destroy(DataContainer *Container)
     {
         if(Container->m_FileSys == 0) return;

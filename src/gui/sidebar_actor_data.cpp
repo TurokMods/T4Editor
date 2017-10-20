@@ -1,9 +1,5 @@
-#include <app.h>
 #include <gui/ui.h>
-#include <gui/main_window.h>
 #include <gui/sidebar.h>
-#include <imgui_internal.h>
-#include <logger.h>
 
 namespace t4editor {
     inline bool use_btn(const string& type, const string& entityPath, const string& blockname, application* app) {
@@ -23,7 +19,7 @@ namespace t4editor {
         if(Actor || Level) {
             if(Actor->actorTraits) {
                 entityName = Actor->actorTraits->Name;
-                relatedActor = Actor->actorTraits->Actor->GetATR();
+                relatedActor = Actor->actorTraits->Instance->GetATR();
             } else {
                 string file = TransformPseudoPathToRealPath(Level->levelFile()->GetActorMeshFile());
                 int last_slash = file.find_last_of("/");
@@ -31,17 +27,17 @@ namespace t4editor {
                 relatedActor = Level->levelFile();
             }
         }
-        
+
         if(CollapsingHeader("Actor Data")) {
             if(!relatedActor) {
                 Text("No actor selected");
                 return;
             }
-            
+
             renderBlock(relatedActor->GetRootBlock(), entityName + "_" + relatedActor->GetRootBlock()->GetTypeString(), m_app, entityName);
         }
     }
-    
+
     //aaah, recursion... my old friend
     void renderBlock(Block* b, const string& bPath, application* app, const string& entityName) {
         Indent(10.0f);
@@ -73,11 +69,11 @@ namespace t4editor {
             else if(sz == 12) ht = 110.0f;
             else if(sz == 16)  ht = 110.0f;
             else ht = 44.0f;
-            
+
             if(sz > 64) ht = 66.0f;
-            
+
             string input_prefix = "##" + bPath;
-        
+
             Indent(10.0f);
                 Columns(2, (bPath + "_unk_ap").c_str());
                     if(sz <= 64) {
@@ -117,7 +113,7 @@ namespace t4editor {
                     } else if(sz == 4) {
                         use_btn("int", bPath, name, app);
                         use_btn("float", bPath, name, app);
-                        
+
                     } else if(sz == 8) {
                         use_btn("vec2", bPath, name, app);
                         use_btn("ivec2", bPath, name, app);

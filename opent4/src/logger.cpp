@@ -1,4 +1,5 @@
 #include <logger.h>
+#include <memory.h>
 
 global_logger* global_logger::m_instance = 0;
 

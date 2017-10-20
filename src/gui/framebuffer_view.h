@@ -1,10 +1,4 @@
 #pragma once
-#include <gui/panel.h>
-#include <event.h>
-
-#include <imgui.h>
-using namespace ImGui;
-
 namespace t4editor {
     class framebuffer_window : public ui_panel {
         public:
@@ -16,7 +10,7 @@ namespace t4editor {
             }
             ~framebuffer_window() {
             }
-        
+
             virtual void onAttach(ui_panel* toPanel) {
                 setPosition(vec2(50,50));
             }
@@ -27,7 +21,7 @@ namespace t4editor {
                     open();
 				}
             }
-        
+
             virtual void renderContent() {
                 framebuffer* fb = m_app->getFrame();
                 vec2 dims = vec2(200, 300);

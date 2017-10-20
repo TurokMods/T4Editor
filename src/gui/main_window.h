@@ -1,10 +1,4 @@
 #pragma once
-#include <gui/panel.h>
-#include <event.h>
-
-#include <imgui.h>
-using namespace ImGui;
-
 namespace t4editor {
     class main_window : public ui_panel {
         public:
@@ -13,14 +7,14 @@ namespace t4editor {
             }
             ~main_window() {
             }
-        
+
             virtual void onAttach(ui_panel* toPanel) {
                 setPosition(vec2(0,0));
                 setHasTitleBar(false);
                 setCanClose(false);
                 setCanCollapse(false);
                 setFlagsManually(ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_MenuBar | ImGuiWindowFlags_NoScrollbar);
-                
+
                 setSize(vec2(m_app->getWindow()->getSize(false).x,0.0f));
             }
             virtual void onEvent(event* e) {
@@ -29,7 +23,7 @@ namespace t4editor {
                     setSize(vec2(resize->new_width,0.0f));
                 }
             }
-        
+
             virtual void renderContent() {
                 if(BeginMainMenuBar()) {
                     if(BeginMenu("File")) {
@@ -73,7 +67,7 @@ namespace t4editor {
                         }
                         EndMenu();
                     }
-                    
+
                     Text("Average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
 
 					if(m_app->is_updating_cache()) {
@@ -84,7 +78,7 @@ namespace t4editor {
 						SetCursorPos(ImVec2(cp.x + 5, cp.y));
 						Text("(%d\%%) %s",(int)(m_app->get_cache_update_progress() * 100.0f), m_app->get_last_file_cached().c_str());
 					}
-                    
+
                     EndMainMenuBar();
                 }
             }

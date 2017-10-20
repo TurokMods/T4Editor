@@ -1,14 +1,12 @@
 #pragma once
-#include <gui/panel.h>
-#include <event.h>
-
-#include <imgui.h>
-using namespace ImGui;
 
 #include <glm/glm.hpp>
 #include <glm/gtx/transform.hpp>
 #include <glm/gtx/euler_angles.hpp>
 #include <logger.h>
+#include <gui/panel.h>
+#include <event.h>
+
 
 #include <algorithm>
 
@@ -37,19 +35,19 @@ namespace t4editor {
             }
             ~level_view() {
             }
-        
+
             virtual void onAttach(ui_panel* toPanel) {
                 setPosition(vec2(0.0f, 20.0f));
                 vec2 sz = vec2(m_app->getWindow()->getSize(false).x * LEVEL_VIEW_WIDTH_FRACTION, m_app->getWindow()->getSize(false).y * LEVEL_VIEW_HEIGHT_FRACTION);
                 setSize(sz);
-                
+
                 vec2 sizeOff = getSizeCorrection();
                 vec2 fbSize = sz - sizeOff;
                 m_app->getFrame()->resize(fbSize.x, fbSize.y);
-                    
+
                 m_proj = perspective(radians(m_fov), fbSize.x / fbSize.y, 1.0f, 1000.0f);
                 m_app->set_view(m_view, m_proj);
-                
+
                 double cx, cy;
                 glfwGetCursorPos(m_app->getWindow()->getWindow(), &cx, &cy); //heh, getWindow()->getWindow()...
                 m_curCursor = vec2(cx, cy);
@@ -61,7 +59,7 @@ namespace t4editor {
                 else if(e->name == "window_resize") {
                     vec2 sz = vec2(m_app->getWindow()->getSize(false).x * LEVEL_VIEW_WIDTH_FRACTION, m_app->getWindow()->getSize(false).y * LEVEL_VIEW_HEIGHT_FRACTION);
                     setSize(sz);
-                    
+
                     vec2 sizeOff = getSizeCorrection();
                     vec2 fbSz = sz - sizeOff;
                     m_app->getFrame()->resize(fbSz.x, fbSz.y);
@@ -92,7 +90,7 @@ namespace t4editor {
 									if(m_camAngles.y >  85.0f) m_camAngles.y =  85.0f;
 									if(m_camAngles.x > 360.0f) m_camAngles.x -= 360.0f;
 									if(m_camAngles.x < -360.0f) m_camAngles.x += 360.0f;
-                                
+
 									m_view = eulerAngleXYZ(m_camAngles.y, m_camAngles.x, 0.0f) * translate(m_camPos);
 									m_app->set_view(m_view, m_proj);
 								}
@@ -134,7 +132,7 @@ namespace t4editor {
                                 actor_mesh* m = m_level->actors()[m_selectedActor.actorId]->meshes[m_selectedActor.actorSubmeshId];
                                 actor_selection_event e(m_level, a, m, m_selectedActor.actorId, m_selectedActor.actorSubmeshId, m_selectedActor.actorSubmeshChunkId, true);
                                 m_app->onEvent(&e);
-                                
+
                                 m_selectedActor.actorId = -1;
                                 m_selectedActor.actorSubmeshId = -1;
                                 m_selectedActor.actorSubmeshChunkId = -1;
@@ -159,7 +157,7 @@ namespace t4editor {
                     }
                 }
             }
-        
+
             virtual void renderContent() {
                 min_bound = ImGui::GetWindowContentRegionMin();
                 max_bound = ImGui::GetWindowContentRegionMax();
@@ -168,7 +166,7 @@ namespace t4editor {
                 min_bound.y += wPos.y;
                 max_bound.x += wPos.x;
                 max_bound.y += wPos.y;
-				
+
 				//ImGuiWindow* win = FindHoveredWindow(GetCursorScreenPos(), true);
 
                 if(m_level) {
@@ -179,21 +177,21 @@ namespace t4editor {
                         if(m_keyDown[GLFW_KEY_S] > 0.0f) moveDir.z = -1;
                         if(m_keyDown[GLFW_KEY_A] > 0.0f) moveDir.x =  1;
                         if(m_keyDown[GLFW_KEY_D] > 0.0f) moveDir.x = -1;
-                        
+
                         if(!(moveDir.x == 0 && moveDir.y == 0 && moveDir.z == 0)) {
                             moveDir = normalize(moveDir) * moveSpeed;
                             vec4 nPos = vec4(moveDir, 1.0f) * eulerAngleXYZ(m_camAngles.y, m_camAngles.x, 0.0f);
                             m_camPos.x += nPos.x;
                             m_camPos.y += nPos.y;
                             m_camPos.z += nPos.z;
-                            
+
                             m_view = eulerAngleXYZ(m_camAngles.y, m_camAngles.x, 0.0f) * translate(m_camPos);
                             m_app->set_view(m_view, m_proj);
                         }
-                        
+
                         picking();
                     }
-                    
+
                     framebuffer* fb = m_app->getFrame();
                     vec2 dims = getActualSize();
                     ImGui::Image((GLuint*)fb->attachments[0]->id, ImVec2(dims.x,dims.y), ImVec2(0, 1), ImVec2(1, 0));
@@ -204,16 +202,16 @@ namespace t4editor {
                     SetWindowFontScale(1.0f);
                 }
             }
-        
+
             bool cursorOverView() const {
                 vec2 cPos = getCursorPos();
                 return cPos.x > min_bound.x && cPos.x < max_bound.x && cPos.y > min_bound.y && cPos.y < max_bound.y;
             }
-        
+
             vec2 getCursorPos() const {
                 return m_curCursor - vec2(min_bound.x, min_bound.y - 20.0f);
             }
-        
+
             vec2 getActualSize() const {
                 return (vec2(max_bound.x, max_bound.y) - vec2(min_bound.x, min_bound.y)) - getSizeCorrection();
             }
@@ -233,21 +231,21 @@ namespace t4editor {
 				} else {
 					if(m_selectedActor.actorId != -1) sendDeselected = true;
 				}
-                                    
+
 				if(sendDeselected) {
 					actor* a = m_level->actors()[m_selectedActor.actorId];
 					actor_mesh* m = m_level->actors()[m_selectedActor.actorId]->meshes[m_selectedActor.actorSubmeshId];
 					actor_selection_event e(m_level, a, m, m_selectedActor.actorId, m_selectedActor.actorSubmeshId, m_selectedActor.actorSubmeshChunkId, true);
 					m_app->onEvent(&e);
 				}
-                                    
+
 				if(sendSelected) {
 					actor* a = m_level->actors()[m_actorUnderCursor.actorId];
 					actor_mesh* m = a->meshes[m_actorUnderCursor.actorSubmeshId];
 					actor_selection_event e(m_level, a, m, m_actorUnderCursor.actorId, m_actorUnderCursor.actorSubmeshId, m_actorUnderCursor.actorSubmeshChunkId, false);
 					m_app->onEvent(&e);
 				}
-                                    
+
 				if(sendSelected) m_selectedActor = m_actorUnderCursor;
 				else if(sendDeselected) {
 					m_selectedActor.actorId = -1;
@@ -263,12 +261,12 @@ namespace t4editor {
                     unsigned char asset_id[3];
                     unsigned char asset_submesh_id[3];
                     unsigned char asset_submesh_chunk_id[3];
-                    
+
                     vec2 cPos = getCursorPos();
                     int x = cPos.x;
                     int y = ((max_bound.y - min_bound.y) - 1 - cPos.y);
                     //printf("%d, %d\n", x, y);
-                    
+
                     glBindFramebuffer(GL_READ_FRAMEBUFFER, m_app->getFrame()->fbo);
                     glReadBuffer(GL_COLOR_ATTACHMENT1);
                     glReadPixels(x, y, 1, 1, GL_RGB, GL_UNSIGNED_BYTE, &asset_id);
@@ -303,13 +301,13 @@ namespace t4editor {
                     m_actorUnderCursor.actorSubmeshId = -1;
                     m_actorUnderCursor.actorSubmeshChunkId = -1;
                 }
-                
+
                 m_app->set_picked_actor_info(m_actorUnderCursor, m_selectedActor);
             }
-        
+
             ImVec2 min_bound;
             ImVec2 max_bound;
-        
+
         protected:
             actorUnderCursor m_actorUnderCursor;
             actorUnderCursor m_selectedActor;
