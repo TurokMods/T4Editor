@@ -15,7 +15,7 @@ namespace t4editor {
             sidebar() {
                 setName("Tools View");
                 setCanClose(false);
-                setFlagsManually(ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoFocusOnAppearing | ImGuiWindowFlags_ShowBorders | ImGuiWindowFlags_NoCollapse);
+                setFlagsManually(ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoFocusOnAppearing | ImGuiWindowFlags_NoCollapse);
                 
                 Level = 0;
                 Actor = 0;
@@ -104,7 +104,7 @@ namespace t4editor {
                                 Text("Scale");
                                 cp = GetCursorPos();
                                 SetCursorPos(ImVec2(cp.x, cp.y + 2.0f));
-                            EndColumns();
+                            //EndColumns();
                         }
                     } else {
                         string file = TransformPseudoPathToRealPath(Level->levelFile()->GetActorMeshFile());

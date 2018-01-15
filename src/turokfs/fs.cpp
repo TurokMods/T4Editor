@@ -128,7 +128,7 @@ namespace t4editor {
             switch(d->GetEntryType(i)) {
                 case DET_FILE: {
                     string ext = d->GetEntryExtension(i);
-                    transform(ext.begin(), ext.end(), ext.begin(), tolower);
+                    //transform(ext.begin(), ext.end(), ext.begin(), tolower);
                     if(ext == "atr") {
                         m_levels.push_back(new level_entry(this, name.substr(0, name.length() - 4), dir + "/" + name));
                     }
@@ -158,7 +158,7 @@ namespace t4editor {
             switch(d->GetEntryType(i)) {
                 case DET_FILE: {
                     string ext = d->GetEntryExtension(i);
-                    transform(ext.begin(), ext.end(), ext.begin(), tolower);
+                    //transform(ext.begin(), ext.end(), ext.begin(), tolower);
                     if(ext == "atr") {
                         m_actors.push_back(new actor_entry(this, name.substr(0, name.length() - 4), dir + "/" + name));
                     }

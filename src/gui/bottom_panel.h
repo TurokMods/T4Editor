@@ -27,7 +27,7 @@ namespace t4editor {
             bottom_panel() {
                 setName("LowerPanel");
                 setCanClose(false);
-                setFlagsManually(ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoFocusOnAppearing | ImGuiWindowFlags_ShowBorders);
+                setFlagsManually(ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoFocusOnAppearing);
 				m_lastLogCount = 0;
 			}
         
@@ -78,29 +78,7 @@ namespace t4editor {
             }
         
             virtual void renderContent() {
-				BeginTabBar("", ImVec2(500, 26));
-                    if(AddTab("Import Actors")) {
-						BeginChild("##actor_view");
-							render_actor_view();
-						EndChild();
-                    }
-                    if(AddTab("Logs")) {
-						BeginChild("#log_frame");
-							global_logger::get()->log_mutex.lock();
-							size_t log_count = global_logger::get()->logs.size();
-							bool scrollToBottom = false;
-							if(log_count > m_lastLogCount) {
-								m_lastLogCount = log_count;
-								scrollToBottom = true;
-							}
-							for(size_t i = 0;i < log_count;i++) {
-								Text("%s", global_logger::get()->logs[i].c_str());
-							}
-							global_logger::get()->log_mutex.unlock();
-							if(scrollToBottom) SetScrollHere();
-						EndChild();
-                    }
-                EndTabBar();
+                render_actor_view();
             }
 
 			void load_actor_cache() {
