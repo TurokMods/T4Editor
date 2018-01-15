@@ -1,6 +1,5 @@
 #pragma once
 #include <gui/panel.h>
-#include <gui/imgui_tabs.h>
 #include <render/SOIL/SOIL.h>
 #include <event.h>
 
