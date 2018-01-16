@@ -50,6 +50,10 @@ namespace t4editor {
             
             texture* m_Texture;
             vector<texture*> submesh_textures;
+
+            void SetPosition(glm::vec3 pos);
+            void SetScale(glm::vec3 scale);
+            void SetRotation(glm::vec3 rot);
             
             vec3 getMinBound() const { return m_min; }
             vec3 getMaxBound() const { return m_max; }
@@ -81,6 +85,12 @@ namespace t4editor {
             
         protected:
             application* m_app;
+
+            glm::vec3 m_lastFramePos;
+            glm::vec3 m_lastFrameScale;
+            glm::vec3 m_lastFrameRot;
+
+            glm::mat4 m_transform;
             vec3 m_min;
             vec3 m_max;
             AABB m_AABB;

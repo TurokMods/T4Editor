@@ -231,27 +231,32 @@ namespace t4editor {
     void actor::render(t4editor::shader *s, const mat4& view, const mat4& viewproj, bool preview) {
         vec3 position, rotation;
         vec3 scale = vec3(1.0f, 1.0f, 1.0f);
-        
-        if(actorTraits) {
+
+        if (actorTraits) {
             ActorVec3 pos = actorTraits->Position;
             ActorVec3 rot = actorTraits->Rotation;
             ActorVec3 scl = actorTraits->Scale;
             position = vec3(pos.x, pos.y, pos.z);
-            
-            m_AABB.max = position + m_max;
-            m_AABB.min = position + m_min;
 
             rotation = vec3(rot.x, rot.y, rot.z);
-            scale    = vec3(scl.x, scl.y, scl.z);
+            scale = vec3(scl.x, scl.y, scl.z);
         }
-        
-        mat4 T = translate(position);
-        mat4 R = eulerAngleXYZ(radians(rotation.x),radians(rotation.y),radians(rotation.z));
-        mat4 S = glm::scale(scale);
-        mat4 model = T * R * S;
-        s->uniform("model", model);
+
+        if (position != m_lastFramePos || scale != m_lastFrameScale || rotation != m_lastFrameRot) {
+            mat4 T = translate(position);
+            mat4 R = eulerAngleXYZ(radians(rotation.x), radians(rotation.y), radians(rotation.z));
+            mat4 S = glm::scale(scale);
+
+            m_transform = T * R * S;
+            m_AABB.transform(m_transform, m_min, m_max);
+            m_lastFramePos = position;
+            m_lastFrameScale = scale;
+            m_lastFrameRot = rotation;
+        }
+
+        s->uniform("model", m_transform);
         s->uniform("view", view);
-        s->uniform("mvp", viewproj * model);
+        s->uniform("mvp", viewproj * m_transform);
         if(!preview) s->uniform("actor_id", int_to_vec3(editor_id));
         
         if(m_app->getSelectedActor().actorId == editor_id) {

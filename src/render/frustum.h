@@ -9,9 +9,32 @@ namespace t4editor {
     struct AABB
     {
         glm::vec3 min, max;
-    };
 
-    float innerProduct(glm::vec3 first, glm::vec3 second);
+        void transform(glm::mat4 trans, glm::vec3 mn, glm::vec3 mx)
+        {
+            glm::vec4 verts[8];
+            verts[0] = glm::vec4(mn, 1);
+            verts[1] = glm::vec4(mx, 1);
+            verts[2] = glm::vec4(mn.x, mn.y, mx.z, 1);
+            verts[3] = glm::vec4(mn.x, mx.y, mn.z, 1);
+            verts[4] = glm::vec4(mx.x, mn.y, mn.z, 1);
+            verts[5] = glm::vec4(mn.x, mx.y, mn.z, 1);
+            verts[6] = glm::vec4(mn.x, mx.y, mx.z, 1);
+            verts[7] = glm::vec4(mx.x, mx.y, mn.z, 1);
+
+            min = max = glm::vec3(trans * verts[0]);
+            for (int i = 1; i < 8; i++) {
+                glm::vec4 vert = trans * verts[i];
+                if (vert.x > max.x) max.x = vert.x;
+                if (vert.y > max.y) max.y = vert.y;
+                if (vert.z > max.z) max.z = vert.z;
+
+                if (vert.x < min.x) min.x = vert.x;
+                if (vert.y < min.y) min.y = vert.y;
+                if (vert.z < min.z) min.z = vert.z;
+            }
+        }
+    };
 
     struct Plane {
         void set(glm::vec3 v1, glm::vec3 v2, glm::vec3 v3)
@@ -20,7 +43,7 @@ namespace t4editor {
             d = glm::dot(normal, v1);
         }
 
-        glm::vec3 normal, point;
+        glm::vec3 normal;
         float d;
     };
 

@@ -110,7 +110,7 @@ namespace t4editor {
                         app->onEvent(&evt);
                     }
                 NextColumn();
-					//If this button is clicked, ->GetData() will no longer return the correct value for this variable
+                    //If this button is clicked, ->GetData() will no longer return the correct value for this variable
                     if(use_btn("string", bPath, name, app)) b->useUIBuf();
                     if(sz == 1) {
                         use_btn("boolean", bPath, name, app);
@@ -140,9 +140,9 @@ namespace t4editor {
             Indent(10.0f);
                 name = "##" + bPath + "_knw_" + name;
                 if(set_type == "string") {
-					b->useUIBuf(); //calling this has no effect after the first time it's called on the block
-					InputText(name.c_str(), b->uiBuf(), UI_BUFFER_SIZE);
-				}
+                    b->useUIBuf(); //calling this has no effect after the first time it's called on the block
+                    InputText(name.c_str(), b->uiBuf(), UI_BUFFER_SIZE);
+                }
                 else if(set_type == "bool") {
                     float indent = ((GetWindowSize().x - 10.0f) / 2.0f) - 11.0f;
                     Indent(indent);

@@ -67,7 +67,6 @@ namespace t4editor {
         glm::vec3 d = glm::normalize(glm::vec3(glm::vec4(0, 0, 1, 1) * CamTransform));
         glm::vec3 up = glm::normalize(glm::vec3(glm::vec4(0, 1, 0, 1) * CamTransform));
         glm::vec3 right = glm::normalize(glm::vec3(glm::vec4(1, 0, 0, 1) * CamTransform));
-        printf("Camera direction %f, %f, %f\n", d.x, d.y, d.z);
 
         glm::vec3 fc = p + d * m_Far;
         glm::vec3 nc = p + d * m_Near;
