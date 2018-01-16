@@ -63,9 +63,10 @@ namespace t4editor {
         float Wfar = Hfar * m_AspectRatio;
 
         glm::vec3 p = m_Position;
-        glm::vec3 d = glm::normalize(glm::vec3(glm::vec4(0, 0, 1, 1) * glm::eulerAngleXYZ(m_Angles.y, m_Angles.x, 0.0f)));
-        glm::vec3 up = glm::vec3(0, 1, 0);
-        glm::vec3 right = glm::normalize(glm::vec3(glm::vec4(1, 0, 0, 1) * glm::eulerAngleXYZ(m_Angles.y, m_Angles.x, 0.0f)));
+        glm::mat4 CamTransform = glm::eulerAngleXYZ(m_Angles.y, m_Angles.x, 0.0f);
+        glm::vec3 d = glm::normalize(glm::vec3(glm::vec4(0, 0, 1, 1) * CamTransform));
+        glm::vec3 up = glm::normalize(glm::vec3(glm::vec4(0, 1, 0, 1) * CamTransform));
+        glm::vec3 right = glm::normalize(glm::vec3(glm::vec4(1, 0, 0, 1) * CamTransform));
         printf("Camera direction %f, %f, %f\n", d.x, d.y, d.z);
 
         glm::vec3 fc = p + d * m_Far;
