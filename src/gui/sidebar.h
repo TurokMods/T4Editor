@@ -74,18 +74,18 @@ namespace t4editor {
                             Columns(2);
                                 Indent(10.0f);
                                     PushItemWidth(GetColumnWidth() - 16.0f);
-										ActorVec3 lastPos = Actor->actorTraits->Position;
-										ActorVec3 lastRot = Actor->actorTraits->Rotation;
-										ActorVec3 lastScl = Actor->actorTraits->Scale;
+                                        ActorVec3 lastPos = Actor->actorTraits->Position;
+                                        ActorVec3 lastRot = Actor->actorTraits->Rotation;
+                                        ActorVec3 lastScl = Actor->actorTraits->Scale;
                                         DragFloat3("##pos", &Actor->actorTraits->Position.x, 0.1f);
                                         DragFloat3("##rot", &Actor->actorTraits->Rotation.x, 0.1f);
                                         DragFloat3("##sca", &Actor->actorTraits->Scale.x, 0.1f);
-										ActorVec3 curPos = Actor->actorTraits->Position;
-										ActorVec3 curRot = Actor->actorTraits->Rotation;
-										ActorVec3 curScl = Actor->actorTraits->Scale;
-										if(lastPos.x != curPos.x || lastPos.y != curPos.y || lastPos.z != curPos.z) m_app->trigger_repaint();
-										if(lastRot.x != curRot.x || lastRot.y != curRot.y || lastRot.z != curRot.z) m_app->trigger_repaint();
-										if(lastScl.x != curScl.x || lastScl.y != curPos.y || lastScl.z != curScl.z) m_app->trigger_repaint();
+                                        ActorVec3 curPos = Actor->actorTraits->Position;
+                                        ActorVec3 curRot = Actor->actorTraits->Rotation;
+                                        ActorVec3 curScl = Actor->actorTraits->Scale;
+                                        //if(lastPos.x != curPos.x || lastPos.y != curPos.y || lastPos.z != curPos.z) m_app->trigger_repaint();
+                                        //if(lastRot.x != curRot.x || lastRot.y != curRot.y || lastRot.z != curRot.z) m_app->trigger_repaint();
+                                        //if(lastScl.x != curScl.x || lastScl.y != curPos.y || lastScl.z != curScl.z) m_app->trigger_repaint();
                                     PopItemWidth();
                                 Unindent(10.0f);
                             NextColumn();
@@ -118,13 +118,13 @@ namespace t4editor {
                 renderLocalActorVariables();
                 renderGlobalActorVariables();
                 renderActorData();
-				renderInstanceOptions();
+                renderInstanceOptions();
             }
         
             void renderLocalActorVariables(); //Stored in the ATI file
             void renderGlobalActorVariables(); //Stored in the actor's ATR file
             void renderActorData();
-			void renderInstanceOptions();
+            void renderInstanceOptions();
      
         protected:
             level* Level;

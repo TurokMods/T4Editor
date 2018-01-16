@@ -18,8 +18,8 @@ namespace t4editor {
     }
 
     actor_mesh::actor_mesh(SubMesh* mesh, texture* tex, vector<texture*>sm_textures) {
-		submesh_textures = sm_textures;
-		m_Texture = tex;
+        submesh_textures = sm_textures;
+        m_Texture = tex;
 
         for(size_t i = 0;i < mesh->GetVertexCount();i++) {
             mesh_vert vert;
@@ -30,18 +30,18 @@ namespace t4editor {
             vertices.push_back(vert);
         }
 
-		if(vertices.size() > 0) {
-			m_min = m_max = vec3(vertices[0].position.x, vertices[0].position.y, vertices[0].position.z);
-			for(int i = 0;i < vertices.size();i++) {
-				vec3 pos = vec3(vertices[i].position.x, vertices[i].position.y, vertices[i].position.z);
-				if(pos.x < m_min.x) m_min.x = pos.x;
-				if(pos.x > m_max.x) m_max.x = pos.x;
-				if(pos.y < m_min.y) m_min.y = pos.y;
-				if(pos.y > m_max.y) m_max.y = pos.y;
-				if(pos.z < m_min.z) m_min.z = pos.z;
-				if(pos.z > m_max.z) m_max.z = pos.z;
-			}
-		}
+        if(vertices.size() > 0) {
+            m_min = m_max = vec3(vertices[0].position.x, vertices[0].position.y, vertices[0].position.z);
+            for(int i = 0;i < vertices.size();i++) {
+                vec3 pos = vec3(vertices[i].position.x, vertices[i].position.y, vertices[i].position.z);
+                if(pos.x < m_min.x) m_min.x = pos.x;
+                if(pos.x > m_max.x) m_max.x = pos.x;
+                if(pos.y < m_min.y) m_min.y = pos.y;
+                if(pos.y > m_max.y) m_max.y = pos.y;
+                if(pos.z < m_min.z) m_min.z = pos.z;
+                if(pos.z > m_max.z) m_max.z = pos.z;
+            }
+        }
         
         vector<unsigned short> firstChunkIndices;
         for(size_t i = 0;i < mesh->GetIndexCount();i++) {
@@ -91,7 +91,6 @@ namespace t4editor {
         if(vbo) glDeleteBuffers(1, &vbo);
         if(ibos) {
             glDeleteBuffers(chunkIndices.size(), ibos);
-            delete [] ibos;
         }
     }
     
@@ -108,26 +107,26 @@ namespace t4editor {
         glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, sizeof(mesh_vert), (void*)(6 * sizeof(float)));
         
         if(chunkIndices.size() > 0) {
-			if(!preview) s->uniform("debug_float", 0.0f);
+            if(!preview) s->uniform("debug_float", 0.0f);
             for(size_t i = 0;i < chunkIndices.size();i++) {
-				texture* tex = 0;
-				if(submesh_textures.size() > i) tex = submesh_textures[i];
-				else if(m_Texture) tex = m_Texture;
-				else tex = app->getDefaultTexture();
-				tex->bind();
-				glActiveTexture(GL_TEXTURE0);
-				s->uniform1i("diffuse_map", 0);
+                texture* tex = 0;
+                if(submesh_textures.size() > i) tex = submesh_textures[i];
+                else if(m_Texture) tex = m_Texture;
+                else tex = app->getDefaultTexture();
+                tex->bind();
+                glActiveTexture(GL_TEXTURE0);
+                s->uniform1i("diffuse_map", 0);
                 if(!preview) s->uniform("actor_submesh_chunk_id", int_to_vec3(i));
                 glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ibos[i]);
                 glDrawElements(GL_TRIANGLE_STRIP, chunkIndices[i].size(), GL_UNSIGNED_SHORT, 0);
             }
         } else {
-			if(m_Texture) m_Texture->bind();
-			else app->getDefaultTexture()->bind();
-			glActiveTexture(GL_TEXTURE0);
+            if(m_Texture) m_Texture->bind();
+            else app->getDefaultTexture()->bind();
+            glActiveTexture(GL_TEXTURE0);
 
-			s->uniform1i("diffuse_map", 0);
-			if(!preview) s->uniform("debug_float", 1.0f);
+            s->uniform1i("diffuse_map", 0);
+            if(!preview) s->uniform("debug_float", 1.0f);
             if(!preview) s->uniform("actor_submesh_chunk", int_to_vec3(0));
             glDrawArrays(GL_LINE_STRIP, 0, vertices.size());
         }
@@ -141,30 +140,30 @@ namespace t4editor {
     }
 
     actor::actor(application* app, ActorMesh* mesh, ActorDef* def) {
-		/* TODO: 
-		* This has all kinds of dynamic allocations and other weirdness going on here.
-		*/
+        /* TODO: 
+        * This has all kinds of dynamic allocations and other weirdness going on here.
+        */
         m_app = app;
         actorTraits = def;
         meshTraits = mesh;
-		level* lev = app->getLevel();
+        level* lev = app->getLevel();
         if(mesh) {
             for(size_t i = 0;i < mesh->GetSubMeshCount();i++) {
-				texture* t = 0;
-				if (i < mesh->m_MeshInfos.size()) {
-					MeshInfo minfo = mesh->m_MeshInfos[i];
-					if(minfo.TSNR_ID != -1)
-					{
-						int TexID = mesh->m_TXSTs[mesh->m_TSNRs[minfo.TSNR_ID].TXST_ID].TextureID;
-						if(TexID < mesh->m_Textures.size()) t = app->getTexture(mesh->m_Textures[TexID]);
-					}
-				}
+                texture* t = 0;
+                if (i < mesh->m_MeshInfos.size()) {
+                    MeshInfo minfo = mesh->m_MeshInfos[i];
+                    if(minfo.TSNR_ID != -1)
+                    {
+                        int TexID = mesh->m_TXSTs[mesh->m_TSNRs[minfo.TSNR_ID].TXST_ID].TextureID;
+                        if(TexID < mesh->m_Textures.size()) t = app->getTexture(mesh->m_Textures[TexID]);
+                    }
+                }
 
                 SubMesh* sm = mesh->GetSubMesh(i);
-				vector<texture*> sm_textures;
-				for(size_t ch = 0;ch < sm->GetChunkCount();ch++) {
-					texture* t = 0;
-					if(ch < mesh->m_MTRLs.size())
+                vector<texture*> sm_textures;
+                for(size_t ch = 0;ch < sm->GetChunkCount();ch++) {
+                    texture* t = 0;
+                    if(ch < mesh->m_MTRLs.size())
                     {
                         if(mesh->m_MTRLs[ch].Unk4 >= 0 && mesh->m_MTRLs[ch].Unk4 < mesh->m_TSNRs.size())
                         {
@@ -172,40 +171,49 @@ namespace t4editor {
                             if(TexID < mesh->m_Textures.size()) t = app->getTexture(mesh->m_Textures[TexID]);
                         }
                     }
-					if(t) {
-						sm_textures.push_back(t);
-					} else {
-						//to do: some kind of default texture?
-					}
-				}
+                    if(t) {
+                        sm_textures.push_back(t);
+                    } else {
+                        //to do: some kind of default texture?
+                    }
+                }
 
                 meshes.push_back(new actor_mesh(sm, t, sm_textures));
                 meshes[i]->app = app;
                 meshes[i]->parent = this;
                 meshes[i]->submesh_id = i;
-			}
+            }
 
-			if(meshes.size() > 0) {
-				m_min = meshes[0]->getMinBound();
-				m_max = meshes[0]->getMaxBound();
-				for(size_t i = 0;i < meshes.size();i++) {
-					vec3 pos = meshes[i]->getMinBound();
-					if(pos.x < m_min.x) m_min.x = pos.x;
-					if(pos.x > m_max.x) m_max.x = pos.x;
-					if(pos.y < m_min.y) m_min.y = pos.y;
-					if(pos.y > m_max.y) m_max.y = pos.y;
-					if(pos.z < m_min.z) m_min.z = pos.z;
-					if(pos.z > m_max.z) m_max.z = pos.z;
-					
-					pos = meshes[i]->getMaxBound();
-					if(pos.x < m_min.x) m_min.x = pos.x;
-					if(pos.x > m_max.x) m_max.x = pos.x;
-					if(pos.y < m_min.y) m_min.y = pos.y;
-					if(pos.y > m_max.y) m_max.y = pos.y;
-					if(pos.z < m_min.z) m_min.z = pos.z;
-					if(pos.z > m_max.z) m_max.z = pos.z;
-				}
-			}
+            if(meshes.size() > 0) {
+                m_min = meshes[0]->getMinBound();
+                m_max = meshes[0]->getMaxBound();
+                for(size_t i = 1; i < meshes.size();i++) {
+                    vec3 pos = meshes[i]->getMinBound();
+                    if(pos.x < m_min.x) m_min.x = pos.x;
+                    if(pos.x > m_max.x) m_max.x = pos.x;
+                    if(pos.y < m_min.y) m_min.y = pos.y;
+                    if(pos.y > m_max.y) m_max.y = pos.y;
+                    if(pos.z < m_min.z) m_min.z = pos.z;
+                    if(pos.z > m_max.z) m_max.z = pos.z;
+
+                    pos = meshes[i]->getMaxBound();
+                    if(pos.x < m_min.x) m_min.x = pos.x;
+                    if(pos.x > m_max.x) m_max.x = pos.x;
+                    if(pos.y < m_min.y) m_min.y = pos.y;
+                    if(pos.y > m_max.y) m_max.y = pos.y;
+                    if(pos.z < m_min.z) m_min.z = pos.z;
+                    if(pos.z > m_max.z) m_max.z = pos.z;
+                }
+            }
+
+            glm::vec3 position;
+            if (actorTraits)
+            {
+                ActorVec3 pos = actorTraits->Position;
+                position = glm::vec3(pos.x, pos.y, pos.z);
+            }
+            m_AABB.min = position + m_min;
+            m_AABB.max = position + m_max;
         }
         
         if(def) {
@@ -229,6 +237,10 @@ namespace t4editor {
             ActorVec3 rot = actorTraits->Rotation;
             ActorVec3 scl = actorTraits->Scale;
             position = vec3(pos.x, pos.y, pos.z);
+            
+            m_AABB.max = position + m_max;
+            m_AABB.min = position + m_min;
+
             rotation = vec3(rot.x, rot.y, rot.z);
             scale    = vec3(scl.x, scl.y, scl.z);
         }

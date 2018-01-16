@@ -7,6 +7,7 @@ using namespace std;
 
 #include <window.h>
 #include <gui/panel.h>
+#include <render/camera.h>
 
 #include <turokfs/fs.h>
 #include <turokfs/entry.h>
@@ -48,20 +49,9 @@ namespace t4editor {
             framebuffer* getFrame() const { return m_framebuffer; }
         
             level* getLevel() const { return m_level; }
-			texture* getDefaultTexture() const { return m_defaultTex; }
-        
-            void set_view(const mat4& v, const mat4& p) {
-				if(v != m_view || p != m_proj) {
-					m_viewChanged = true;
-					m_view = v;
-					m_proj = p;
-					m_vp = p * v;
-				}
-            }
-			void trigger_repaint() { m_viewChanged = true; }
-            mat4 view() const { return m_view; }
-            mat4 proj() const { return m_proj; }
-            mat4 viewproj() const { return m_vp; }
+            texture* getDefaultTexture() const { return m_defaultTex; }
+            
+            Camera* GetCamera() const { return m_Camera; }
         
             actorUnderCursor getActorUnderCursor() const { return m_actorUnderCursor; }
             actorUnderCursor getSelectedActor() const { return m_selectedActor; }
@@ -72,8 +62,8 @@ namespace t4editor {
 
             void load_level(const string& path);
 
-			//threaded processes
-			void update_actor_cache();
+            //threaded processes
+            void update_actor_cache();
         
             //actor variables
             void define_actor_var_type(const string& vname, const string& vtype) { m_actor_var_types[vname] = vtype; }
@@ -84,15 +74,15 @@ namespace t4editor {
             string get_actor_block_type(const string& bname) const;
             int run();
         
-			texture* getTexture(std::string file_path);
+            texture* getTexture(std::string file_path);
 
-			float get_cache_update_progress() const { return m_cacheProgress; }
-			bool is_updating_cache() const { return m_updatingCache; }
-			string get_last_file_cached() const { return m_cacheLastFile; }
+            float get_cache_update_progress() const { return m_cacheProgress; }
+            bool is_updating_cache() const { return m_updatingCache; }
+            string get_last_file_cached() const { return m_cacheLastFile; }
 
         protected:
-			texture* loadTexture(std::string file_path);
-			std::unordered_map<std::string, texture*> m_textures;
+            texture* loadTexture(std::string file_path);
+            std::unordered_map<std::string, texture*> m_textures;
 
             window* m_window;
             turokfs* m_fs;
@@ -104,26 +94,24 @@ namespace t4editor {
             int m_windowHeight;
             int m_windowPosX;
             int m_windowPosY;
+            int m_numDrawCalls;
 
             actorUnderCursor m_actorUnderCursor;
             actorUnderCursor m_selectedActor;
             
-            mat4 m_view;
-            mat4 m_proj;
-            mat4 m_vp;
-			bool m_viewChanged;
+            Camera* m_Camera;
             
             vector<ui_panel*> m_panels;
         
             level* m_level;
             shader* m_shader;
-			texture* m_defaultTex;
+            texture* m_defaultTex;
             framebuffer* m_framebuffer;
 
-			bool m_updatingCache;
-			string m_cacheLastFile;
-			float m_cacheProgress;
-        
+            bool m_updatingCache;
+            string m_cacheLastFile;
+            float m_cacheProgress;
+
             unordered_map<string, string> m_actor_var_types;
             unordered_map<string, string> m_actor_block_types;
     };

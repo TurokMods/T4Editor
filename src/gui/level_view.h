@@ -46,9 +46,12 @@ namespace t4editor {
                 vec2 sizeOff = getSizeCorrection();
                 vec2 fbSize = sz - sizeOff;
                 m_app->getFrame()->resize(fbSize.x, fbSize.y);
-                    
+                Camera* cam = m_app->GetCamera();
                 m_proj = perspective(radians(m_fov), fbSize.x / fbSize.y, 1.0f, 1000.0f);
-                m_app->set_view(m_view, m_proj);
+                cam->SetFOV(radians(m_fov));
+                cam->SetAspectRatio(fbSize.x / fbSize.y);
+                cam->SetNear(1.0f);
+                cam->SetFar(1000.0f);
                 
                 double cx, cy;
                 glfwGetCursorPos(m_app->getWindow()->getWindow(), &cx, &cy); //heh, getWindow()->getWindow()...
@@ -65,8 +68,8 @@ namespace t4editor {
                     vec2 sizeOff = getSizeCorrection();
                     vec2 fbSz = sz - sizeOff;
                     m_app->getFrame()->resize(fbSz.x, fbSz.y);
-                    m_proj = perspective(radians(m_fov), fbSz.x / fbSz.y, 1.0f, 1000.0f);
-                    m_app->set_view(m_view, m_proj);
+                    Camera* cam = m_app->GetCamera();
+                    cam->SetAspectRatio(fbSz.x / fbSz.y);
                 }
                 else if(e->name == "show_level_view") {
                     open();
@@ -82,26 +85,29 @@ namespace t4editor {
                     //printf("input: %d\n", input->type);
                     switch(input->type) {
                         case input_event::ET_MOUSE_MOVE:
-							if(!m_clickedOutside) {
-								if(m_mouseBtnDown[0] != 0.0f && glfwGetTime() - m_mouseBtnDown[0] > MOUSE_BTN_DRAG_VIEW_HOLD_TIME && cursorOverView()) { //left mouse
-									vec2 delta = input->cursorPosition - m_curCursor;
-									float fac = std::max((m_fov - 10.0f) / (170.0f - 10.0f), 0.03f);
-									m_camAngles.x -= delta.x * 0.005f * fac;
-									m_camAngles.y -= delta.y * 0.005f * fac;
-									if(m_camAngles.y < -85.0f) m_camAngles.y = -85.0f;
-									if(m_camAngles.y >  85.0f) m_camAngles.y =  85.0f;
-									if(m_camAngles.x > 360.0f) m_camAngles.x -= 360.0f;
-									if(m_camAngles.x < -360.0f) m_camAngles.x += 360.0f;
+                            if(!m_clickedOutside) {
+                                if(m_mouseBtnDown[0] != 0.0f && glfwGetTime() - m_mouseBtnDown[0] > MOUSE_BTN_DRAG_VIEW_HOLD_TIME && cursorOverView()) { //left mouse
+                                    vec2 delta = input->cursorPosition - m_curCursor;
+                                    float fac = std::max((m_fov - 10.0f) / (170.0f - 10.0f), 0.03f);
+                                    m_camAngles.x -= delta.x * 0.005f * fac;
+                                    m_camAngles.y -= delta.y * 0.005f * fac;
+                                    if(m_camAngles.y < -85.0f) m_camAngles.y = -85.0f;
+                                    if(m_camAngles.y >  85.0f) m_camAngles.y =  85.0f;
+                                    if(m_camAngles.x > 360.0f) m_camAngles.x -= 360.0f;
+                                    if(m_camAngles.x < -360.0f) m_camAngles.x += 360.0f;
                                 
-									m_view = eulerAngleXYZ(m_camAngles.y, m_camAngles.x, 0.0f) * translate(m_camPos);
-									m_app->set_view(m_view, m_proj);
-								}
-								m_curCursor = input->cursorPosition;
-							}
+                                    //m_view = eulerAngleXYZ(m_camAngles.y, m_camAngles.x, 0.0f) * translate(m_camPos);
+                                    Camera* cam = m_app->GetCamera();
+                                    cam->SetAngles(glm::vec2(m_camAngles.x, m_camAngles.y));
+                                    cam->SetPosition(m_camPos);
+
+                                }
+                                m_curCursor = input->cursorPosition;
+                            }
                             break;
                         case input_event::ET_MOUSE_LEFT_DOWN:
                             m_mouseBtnDown[0] = glfwGetTime();
-							if(!cursorOverView()) m_clickedOutside = true;
+                            if(!cursorOverView()) m_clickedOutside = true;
                             break;
                         case input_event::ET_MOUSE_LEFT_UP: {
                             float delta = glfwGetTime() - m_mouseBtnDown[0];
@@ -140,6 +146,11 @@ namespace t4editor {
                                 m_selectedActor.actorSubmeshChunkId = -1;
                                 m_app->set_picked_actor_info(m_actorUnderCursor, m_selectedActor);
                             }
+                            if (input->key == GLFW_KEY_P) {
+                                Camera* cam = m_app->GetCamera();
+                                cam->ToggleUpdateFrustum();
+                                printf("Toggling frustum updating");
+                            }
                             break;
                         case input_event::ET_SCROLL: {
                             if(cursorOverView()) {
@@ -149,8 +160,9 @@ namespace t4editor {
                                 if(m_fov < 1.0f) m_fov = 1.0f;
                                 //printf("fov: %f | scroll fac: %f\n", m_fov, fac);
                                 vec2 dims = getActualSize();
-                                m_proj = perspective(radians(m_fov), dims.x / dims.y, 1.0f, 10000.0f);
-                                m_app->set_view(m_view, m_proj);
+                                Camera* cam = m_app->GetCamera();
+                                cam->SetFOV(radians(m_fov));
+                                cam->SetAspectRatio(dims.x / dims.y);
                             }
                             break;
                         }
@@ -168,8 +180,8 @@ namespace t4editor {
                 min_bound.y += wPos.y;
                 max_bound.x += wPos.x;
                 max_bound.y += wPos.y;
-				
-				//ImGuiWindow* win = FindHoveredWindow(GetCursorScreenPos(), true);
+
+                //ImGuiWindow* win = FindHoveredWindow(GetCursorScreenPos(), true);
 
                 if(m_level) {
                     if(cursorOverView()) {
@@ -188,7 +200,9 @@ namespace t4editor {
                             m_camPos.z += nPos.z;
                             
                             m_view = eulerAngleXYZ(m_camAngles.y, m_camAngles.x, 0.0f) * translate(m_camPos);
-                            m_app->set_view(m_view, m_proj);
+                            Camera* cam = m_app->GetCamera();
+                            cam->SetAngles(glm::vec2(m_camAngles.x, m_camAngles.y));
+                            cam->SetPosition(m_camPos);
                         }
                         
                         picking();
@@ -222,40 +236,40 @@ namespace t4editor {
                 return vec2(2.0f, 2.0f);
             }
 
-			void selectPickedActor() {
-				bool sendSelected = false;
-				bool sendDeselected = false;
-				if(m_actorUnderCursor.actorId != -1) {
-					if(m_selectedActor.actorId != -1) {
-						sendDeselected = true;
-					}
-					sendSelected = true;
-				} else {
-					if(m_selectedActor.actorId != -1) sendDeselected = true;
-				}
-                                    
-				if(sendDeselected) {
-					actor* a = m_level->actors()[m_selectedActor.actorId];
-					actor_mesh* m = m_level->actors()[m_selectedActor.actorId]->meshes[m_selectedActor.actorSubmeshId];
-					actor_selection_event e(m_level, a, m, m_selectedActor.actorId, m_selectedActor.actorSubmeshId, m_selectedActor.actorSubmeshChunkId, true);
-					m_app->onEvent(&e);
-				}
-                                    
-				if(sendSelected) {
-					actor* a = m_level->actors()[m_actorUnderCursor.actorId];
-					actor_mesh* m = a->meshes[m_actorUnderCursor.actorSubmeshId];
-					actor_selection_event e(m_level, a, m, m_actorUnderCursor.actorId, m_actorUnderCursor.actorSubmeshId, m_actorUnderCursor.actorSubmeshChunkId, false);
-					m_app->onEvent(&e);
-				}
-                                    
-				if(sendSelected) m_selectedActor = m_actorUnderCursor;
-				else if(sendDeselected) {
-					m_selectedActor.actorId = -1;
-					m_selectedActor.actorSubmeshId = -1;
-					m_selectedActor.actorSubmeshChunkId = -1;
-				}
-				m_app->set_picked_actor_info(m_actorUnderCursor, m_selectedActor);
-			}
+            void selectPickedActor() {
+                bool sendSelected = false;
+                bool sendDeselected = false;
+                if(m_actorUnderCursor.actorId != -1) {
+                    if(m_selectedActor.actorId != -1) {
+                        sendDeselected = true;
+                    }
+                    sendSelected = true;
+                } else {
+                    if(m_selectedActor.actorId != -1) sendDeselected = true;
+                }
+
+                if(sendDeselected) {
+                    actor* a = m_level->actors()[m_selectedActor.actorId];
+                    actor_mesh* m = m_level->actors()[m_selectedActor.actorId]->meshes[m_selectedActor.actorSubmeshId];
+                    actor_selection_event e(m_level, a, m, m_selectedActor.actorId, m_selectedActor.actorSubmeshId, m_selectedActor.actorSubmeshChunkId, true);
+                    m_app->onEvent(&e);
+                }
+
+                if(sendSelected) {
+                    actor* a = m_level->actors()[m_actorUnderCursor.actorId];
+                    actor_mesh* m = a->meshes[m_actorUnderCursor.actorSubmeshId];
+                    actor_selection_event e(m_level, a, m, m_actorUnderCursor.actorId, m_actorUnderCursor.actorSubmeshId, m_actorUnderCursor.actorSubmeshChunkId, false);
+                    m_app->onEvent(&e);
+                }
+
+                if(sendSelected) m_selectedActor = m_actorUnderCursor;
+                else if(sendDeselected) {
+                    m_selectedActor.actorId = -1;
+                    m_selectedActor.actorSubmeshId = -1;
+                    m_selectedActor.actorSubmeshChunkId = -1;
+                }
+                m_app->set_picked_actor_info(m_actorUnderCursor, m_selectedActor);
+            }
 
             void picking() {
                 //get actor info under cursor
@@ -322,6 +336,6 @@ namespace t4editor {
             float m_fov;
             float m_mouseBtnDown[3];
             float m_keyDown[GLFW_KEY_LAST];
-			bool m_clickedOutside;
+            bool m_clickedOutside;
     };
 }

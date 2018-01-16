@@ -35,9 +35,9 @@ namespace t4editor {
         
         return true;
     }
-	void level::actor_added() {
-		ActorDef* def = m_atr->GetActors()->GetActorDef(m_atr->GetActors()->GetActorCount() - 1);
-		m_actors.push_back(new actor(m_app, def->Actor->GetATR()->GetMesh(), def));
-		m_actors[m_actors.size() - 1]->editor_id = m_actors.size() - 1;
-	}
+    void level::actor_added() {
+        ActorDef* def = m_atr->GetActors()->GetActorDef(m_atr->GetActors()->GetActorCount() - 1);
+        m_actors.push_back(new actor(m_app, def->Actor->GetATR()->GetMesh(), def));
+        m_actors[m_actors.size() - 1]->editor_id = m_actors.size() - 1;
+    }
 }
