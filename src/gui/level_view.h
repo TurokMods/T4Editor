@@ -146,11 +146,6 @@ namespace t4editor {
                                 m_selectedActor.actorSubmeshChunkId = -1;
                                 m_app->set_picked_actor_info(m_actorUnderCursor, m_selectedActor);
                             }
-                            if (input->key == GLFW_KEY_P) {
-                                Camera* cam = m_app->GetCamera();
-                                cam->ToggleUpdateFrustum();
-                                printf("Toggling frustum updating");
-                            }
                             break;
                         case input_event::ET_SCROLL: {
                             if(cursorOverView()) {

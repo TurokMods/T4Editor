@@ -29,6 +29,8 @@ namespace t4editor {
 
             void ToggleUpdateFrustum() { m_UpdateFrustum = !m_UpdateFrustum; }
 
+            bool m_UpdateFrustum;
+
         protected:
             void UpdateViewProj() {
                 if (m_ViewHasChanged)
@@ -52,7 +54,7 @@ namespace t4editor {
 
             void UpdateFrustum();
 
-            bool m_ViewHasChanged, m_ProjHasChanged, m_UpdateFrustum;;
+            bool m_ViewHasChanged, m_ProjHasChanged;
             float m_FOV, m_AspectRatio, m_Near, m_Far;
 
             glm::vec2 m_Angles;

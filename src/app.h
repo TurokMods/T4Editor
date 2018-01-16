@@ -79,6 +79,8 @@ namespace t4editor {
             float get_cache_update_progress() const { return m_cacheProgress; }
             bool is_updating_cache() const { return m_updatingCache; }
             string get_last_file_cached() const { return m_cacheLastFile; }
+            
+            void ToggleCulling() { m_UseCulling = !m_UseCulling; }
 
         protected:
             texture* loadTexture(std::string file_path);
@@ -94,7 +96,7 @@ namespace t4editor {
             int m_windowHeight;
             int m_windowPosX;
             int m_windowPosY;
-            int m_numDrawCalls;
+            bool m_UseCulling;
 
             actorUnderCursor m_actorUnderCursor;
             actorUnderCursor m_selectedActor;

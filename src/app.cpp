@@ -30,7 +30,7 @@ namespace t4editor {
         m_windowPosY = 150;
         m_defaultTex = 0;
         m_updatingCache = false;
-        m_numDrawCalls = 0;
+        m_UseCulling = true;
         m_Camera = new Camera(90, m_windowWidth / m_windowHeight, 1.0f, 1000.0f);
     }
     
@@ -186,7 +186,19 @@ namespace t4editor {
     void application::onEvent(event *e) {
         if(e->name == "load_level") load_level(((load_level_event*)e)->path);
         else if(e->name == "input_event") {
-            //input_event* input = (input_event*)e;
+            input_event* input = (input_event*)e;
+            if (input->type == input_event::ET_KEY_UP)
+            {
+                if (input->key == GLFW_KEY_P) {
+                    m_Camera->ToggleUpdateFrustum();
+                    printf("Toggling frustum updating: %s", m_Camera->m_UpdateFrustum ? "True" : "False");
+                }
+
+                if (input->key == GLFW_KEY_O) {
+                    ToggleCulling();
+                    printf("Toggling culling usage: %s", m_UseCulling ? "True" : "False");
+                }
+            }
         }
         else if(e->name == "window_resize") {
             //app_resize_event* evt = (app_resize_event*)e;
@@ -303,7 +315,7 @@ namespace t4editor {
                     if (actors.size() > 0) {
                         actors[0]->render(m_shader, m_Camera->GetView(), m_Camera->GetViewProj());
                         for (int i = 1; i < actors.size(); i++) {
-                            if (f.intersectFrustumAABB(actors[i]->getBoundingBox()))
+                            if (!m_UseCulling || f.intersectFrustumAABB(actors[i]->getBoundingBox()))
                             {
                                 actors[i]->render(m_shader, m_Camera->GetView(), m_Camera->GetViewProj());
                             }
