@@ -38,6 +38,7 @@ file(GLOB turokfs_src
 
 file(GLOB render_src
     "src/render/*.h"
+    "src/render/*.hpp"
     "src/render/*.cpp"
 )
 
@@ -84,5 +85,5 @@ set(INCLUDE_DIRS ${INCLUDE_DIRS} ${CMAKE_CURRENT_SOURCE_DIR}/opent4/src)
 set(INCLUDE_DIRS ${INCLUDE_DIRS} ${OPENGL_INCLUDE_DIR})
 set(INCLUDE_DIRS ${INCLUDE_DIRS} ${CMAKE_CURRENT_SOURCE_DIR}/deps/imgui)
 set(INCLUDE_DIRS ${INCLUDE_DIRS} /usr/local/include)
- 
+
 target_include_directories(t4editor PUBLIC ${INCLUDE_DIRS})

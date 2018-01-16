@@ -15,6 +15,15 @@
 #include <fstream>
 
 
+#define DEBUG_DRAW_IMPLEMENTATION
+#include <render/debug_draw.hpp>
+
+class DDRenderInterfaceNull final : public dd::RenderInterface
+{
+public:
+    ~DDRenderInterfaceNull() { }
+};
+
 namespace t4editor {
     application::application(int argc, const char* argv[]) {
         for(int i = 0;i < argc;i++) {
@@ -289,6 +298,11 @@ namespace t4editor {
         //glEnable(GL_CULL_FACE);
         glDepthFunc(GL_LESS);
         glCullFace(GL_CW);
+
+        DDRenderInterfaceNull ddRenderIfaceNull;
+
+        dd::initialize(&ddRenderIfaceNull);
+
         while(m_window->isOpen()) {
             if(m_updatingCache) {
                 m_cacheProgress = m_fs->get_cache_progress(m_updatingCache, &m_cacheLastFile);
@@ -324,6 +338,7 @@ namespace t4editor {
                 }
 
                 //m_viewChanged = false;
+                dd::flush();
             }
             
             glBindFramebuffer(GL_FRAMEBUFFER, 0);
@@ -337,6 +352,8 @@ namespace t4editor {
             
             m_window->endFrame();
         }
+
+        dd::shutdown();
         return 0;
     }
 }
