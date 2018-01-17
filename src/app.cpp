@@ -30,8 +30,15 @@ namespace t4editor {
         m_windowPosY = 150;
 		m_defaultTex = 0;
 		m_updatingCache = false;
+		m_restoringBackup = false;
 		m_viewChanged = true;
 		m_actorToImport = nullptr;
+		m_transformingActor = false;
+		m_transformType = ImGuizmo::TRANSLATE;
+		m_selectedActor.actorId = -1;
+		m_actorUnderCursor.actorId = -1;
+		m_cursorOverLevelView = false;
+		m_isImportingActor = false;
     }
     
     application::~application() {
@@ -184,7 +191,8 @@ namespace t4editor {
     }
     
     void application::onEvent(event *e) {
-        if(e->name == "load_level") load_level(((load_level_event*)e)->path);
+        if(e->name == "load_level") m_levelToLoad = ((load_level_event*)e)->path;
+		else if(e->name == "test_level") test_level();
         else if(e->name == "input_event") {
             input_event* input = (input_event*)e;
             switch(input->type) {
@@ -193,38 +201,65 @@ namespace t4editor {
                 case input_event::ET_MOUSE_LEFT_DOWN:
                     break;
                 case input_event::ET_MOUSE_LEFT_UP: {
-					if(m_actorToImport) {
+					if(m_actorToImport && m_cursorOverLevelView) {
 						ActorDef* def = m_level->levelFile()->GetActors()->InstantiateActor(m_actorToImport->actorFile);
 						def->Position.x = m_actorImportPos.x;
 						def->Position.y = m_actorImportPos.y;
 						def->Position.z = m_actorImportPos.z;
-						m_level->actor_added();
+						actor* a = m_level->actor_added();
+						m_selectedActor.actorId = a->editor_id;
+						actor_selection_event evt(m_level, a, nullptr, a->editor_id, -1, -1, false);
+						onEvent(&evt);
 					}
 					m_actorToImport = nullptr;
+					m_viewChanged = true;
                     break;
                 }
+				case input_event::ET_MOUSE_RIGHT_DOWN:
+					m_actorToImport = nullptr;
+					break;
 			}
         }
         else if(e->name == "window_resize") {
             //app_resize_event* evt = (app_resize_event*)e;
-        } else if(e->name == "define_av_type") {
+        }
+		else if(e->name == "define_av_type") {
             set_actor_var_type_event* evt = (set_actor_var_type_event*)e;
             define_actor_var_type(evt->vname, evt->vtype);
-        } else if(e->name == "define_ab_type") {
+        }
+		else if(e->name == "define_ab_type") {
             set_actor_block_type_event* evt = (set_actor_block_type_event*)e;
             define_actor_block_type(evt->bname, evt->btype);
-        } else if(e->name == "actor_added") {
+        }
+		else if(e->name == "actor_added") {
 			m_level->actor_added();
-		} else if(e->name == "save_level") {
+		}
+		else if(e->name == "actor_deleted") {
+			m_level->actor_deleted((actor_deleted_event*)e);
+			m_viewChanged = true;
+		}
+		else if(e->name == "save_level") {
 			if(m_level) m_level->levelFile()->Save(m_dataPath + "/" + m_level->levelFile()->GetFileName());
 			else printf("No level loaded\n");
-		} else if(e->name == "update_actor_cache") {
-			update_actor_cache();
-			m_updatingCache = true;
-			m_cacheProgress = 0.0f;
-		} else if(e->name == "actor_selection") {
+		}
+		else if(e->name == "update_actor_cache") {
+			if(!m_updatingCache && !m_restoringBackup) {
+				update_actor_cache();
+				m_updatingCache = true;
+				m_cacheProgress = 0.0f;
+			}
+		}
+		else if(e->name == "restore_backups") {
+			if(!m_updatingCache && !m_restoringBackup) {
+				restore_backups();
+				m_restoringBackup = true;
+				m_restoreProgress = 0.0f;
+			}
+		}
+		else if(e->name == "actor_selection") {
 			trigger_repaint();
-		} else if(e->name == "begin_actor_import") {
+		}
+		else if(e->name == "begin_actor_import") {
 			import_actor_begin_event* evt = (import_actor_begin_event*)e;
 			m_actorToImport = evt->actorToImport;
 		}
@@ -252,6 +287,38 @@ namespace t4editor {
         m_viewChanged = true;
         return;
     }
+
+	void application::test_level() {
+		if(!m_level) return;
+		
+		if(m_level->levelFile()->Save(m_dataPath + "/data/levels/u_jcowlishaw/screens/BootUpSequence/bootupsequence.atr")) {
+			monitor_testing(m_dataPath + "/Turok4.exe");
+		} else {
+			printf("Failed to save current level for testing\n");
+		}
+	}
+
+	void application::level_test_done() {
+		m_level->levelFile()->Restore();
+
+		printf("Restoring previous bootupsequence.atr\n");
+		string backup = m_dataPath + "/data/levels/u_jcowlishaw/screens/BootUpSequence/bootupsequence.atr.editorbak";
+		string original = m_dataPath + "/data/levels/u_jcowlishaw/screens/BootUpSequence/bootupsequence.atr";
+		FILE* fp = fopen(backup.c_str(), "rb");
+		if(fp) {
+			ByteStream b(fp);
+			fclose(fp);
+
+			fp = fopen(original.c_str(), "wb");
+			if(fp) {
+				if(fwrite(b.Ptr(), b.GetSize() - 1, 1, fp) != 1) printf("WARNING: Failed to restore backup file %s!\n", backup.c_str());
+				fclose(fp);
+			} else printf("WARNING: Failed to restore backup file %s!\n", backup.c_str());
+
+		} else {
+			printf("WARNING: Failed to restore backup file %s!\n", backup.c_str());
+		}
+	}
     
     string application::get_actor_var_type(const string &vname) const {
         auto i = m_actor_var_types.find(vname);
@@ -259,6 +326,7 @@ namespace t4editor {
         
         return i->second;
     }
+
     string application::get_actor_block_type(const string &vname) const {
         auto i = m_actor_block_types.find(vname);
         if(i == m_actor_block_types.end()) return "";
@@ -297,7 +365,14 @@ namespace t4editor {
         //glEnable(GL_CULL_FACE);
         glDepthFunc(GL_LESS);
         glCullFace(GL_CW);
+
         while(m_window->isOpen()) {
+			if(m_levelToLoad.length() > 0) {
+				load_level(m_levelToLoad);
+				m_levelToLoad = "";
+				m_selectedActor.actorId = -1;
+			}
+
 			if(m_updatingCache) {
 				m_cacheProgress = m_fs->get_cache_progress(m_updatingCache, &m_cacheLastFile);
 				m_updatingCache = !m_updatingCache;
@@ -307,8 +382,33 @@ namespace t4editor {
 				}
 			}
 
+			if(m_restoringBackup) {
+				m_restoreProgress = m_fs->get_backup_restore_progress(m_restoringBackup, &m_restoreLastFile);
+				m_restoringBackup = !m_restoringBackup;
+				if(!m_restoringBackup) {
+					m_restoreLastFile = "";
+					dispatchNamedEvent("backup_restore_completed");
+
+					if(m_level) load_level(m_level->levelFile()->GetFileName());
+				}
+			}
+
             m_window->poll();
             m_window->beginFrame();
+
+			ImGuizmo::BeginFrame();
+			ImGuizmo::Enable(true);
+			ImGuizmo::SetRect(0, 0, m_framebuffer->w, m_framebuffer->h);
+			
+			if(m_selectedActor.actorId >= 0) {
+				actor* a = m_level->actors()[m_selectedActor.actorId];
+				if(a->actorTraits) {
+					m_viewChanged = true;
+					if(ImGuizmo::IsOver() || ImGuizmo::IsUsing()) {
+						m_transformingActor = true;
+					} else m_transformingActor = false;
+				} else m_transformingActor = false;
+			} else m_transformingActor = false;
 
 			if(m_actorToImport) m_viewChanged = true;
             
@@ -324,7 +424,7 @@ namespace t4editor {
 					}
 				}
 
-				if(m_actorToImport) {
+				if(m_actorToImport && m_cursorOverLevelView) {
 					float dpth = m_framebuffer->getDepth(levelViewCursorPos.x, levelViewCursorPos.y, false);
 
 					m_actorImportPos = unProject(vec3(levelViewCursorPos.x, levelViewCursorPos.y, dpth), m_view, m_proj, vec4(0, 0, levelViewSize.x, levelViewSize.y));
@@ -346,6 +446,8 @@ namespace t4editor {
             }
             
             m_window->endFrame();
+
+			m_isImportingActor = m_actorToImport != nullptr;
         }
         return 0;
     }

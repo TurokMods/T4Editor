@@ -34,6 +34,7 @@ file(GLOB gui_src
 file(GLOB turokfs_src
     "src/turokfs/*.h"
     "src/turokfs/*.cpp"
+    "src/turokfs/*.c"
 )
 
 file(GLOB render_src
@@ -75,6 +76,7 @@ add_executable(t4editor ${editor_src} ${turokfs_src} ${gui_src} ${imgui_src} ${r
 include_directories(SYSTEM ${GLEWDIR}/include ${GLMDIR}/include ${GLFWDIR}/include)
 
 target_link_libraries(t4editor opent4 Glfw Glew ${GLFW_LIBRARIES})
+
 
 set(INCLUDE_DIRS ${CMAKE_CURRENT_SOURCE_DIR}/src)
 set(INCLUDE_DIRS ${INCLUDE_DIRS} ${CMAKE_CURRENT_SOURCE_DIR}/deps/glew/include)

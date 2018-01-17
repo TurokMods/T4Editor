@@ -4,6 +4,8 @@
 
 #include <glm/gtx/transform.hpp>
 #include <glm/gtx/euler_angles.hpp>
+#include <glm/gtx/matrix_decompose.hpp>
+#include <gui/ImGuizmo.h>
 
 #include <render/shader.h>
 #include <render/texture.h>
@@ -20,6 +22,8 @@ namespace t4editor {
     actor_mesh::actor_mesh(SubMesh* mesh, texture* tex, vector<texture*>sm_textures) {
 		submesh_textures = sm_textures;
 		m_Texture = tex;
+		vao = 0;
+		vbo = 0;
 
         for(size_t i = 0;i < mesh->GetVertexCount();i++) {
             mesh_vert vert;
@@ -72,7 +76,7 @@ namespace t4editor {
         glBindBuffer(GL_ARRAY_BUFFER, vbo);
         glBufferData(GL_ARRAY_BUFFER, sizeof(mesh_vert) * vertices.size(), &vertices[0].position.x, GL_STATIC_DRAW);
         
-        ibos = 0;
+		ibos = nullptr;
         if(chunkIndices.size() > 0) {
             ibos = new GLuint[chunkIndices.size()];
             memset(ibos, 0, chunkIndices.size() * sizeof(GLuint));
@@ -87,18 +91,27 @@ namespace t4editor {
     }
 
     actor_mesh::~actor_mesh() {
+        int err = 0;
+        err = glGetError();
+		if(err != 0)
+			printf("err: %d | %s\n", err, glewGetErrorString(err));
         if(vao) glDeleteVertexArrays(1, &vao);
         if(vbo) glDeleteBuffers(1, &vbo);
         if(ibos) {
             glDeleteBuffers(chunkIndices.size(), ibos);
             delete [] ibos;
         }
+        err = glGetError();
+		if(err != 0)
+			printf("err: %d | %s\n", err, glewGetErrorString(err));
     }
     
     void actor_mesh::render(shader* s, bool preview) {
         if(vertices.size() == 0) return;
         int err = 0;
-        err = glGetError(); if(err != 0) printf("err: %d | %s\n", err, glewGetErrorString(err));
+        err = glGetError();
+		if(err != 0)
+			printf("err: %d | %s\n", err, glewGetErrorString(err));
         glBindBuffer(GL_ARRAY_BUFFER, vbo);
         glEnableVertexAttribArray(0);
         glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(mesh_vert), 0);
@@ -137,7 +150,9 @@ namespace t4editor {
         glDisableVertexAttribArray(0);
         glDisableVertexAttribArray(1);
         glDisableVertexAttribArray(2);
-        err = glGetError(); if(err != 0) printf("err: %d | %s\n", err, glewGetErrorString(err));
+        err = glGetError();
+		if(err != 0)
+			printf("err: %d | %s\n", err, glewGetErrorString(err));
     }
 
     actor::actor(application* app, ActorMesh* mesh, ActorDef* def, ATRFile* atr) {
@@ -241,6 +256,30 @@ namespace t4editor {
 			mat4 R = eulerAngleXYZ(radians(rotation.x),radians(rotation.y),radians(rotation.z));
 			mat4 S = glm::scale(scale);
 			model = T * R * S;
+			
+			if(m_app->getSelectedActor().actorId == editor_id && actorTraits) {
+				mat4 v = view;
+				mat4 p = m_app->proj();
+				mat4 m = model;
+				ImGuizmo::MODE mode = m_app->get_transform_operation() == ImGuizmo::SCALE ? ImGuizmo::LOCAL : ImGuizmo::WORLD;
+				ImGuizmo::Manipulate(&v[0][0], &p[0][0], m_app->get_transform_operation(), mode, &m[0][0]);
+
+				vec3 pos, rot, scl, skw;
+				vec4 prs;
+				quat qrot;
+				decompose(m, scl, qrot, pos, skw, prs);
+				rot = degrees(eulerAngles(qrot));
+					
+				actorTraits->Position.x = pos.x;
+				actorTraits->Position.y = pos.y;
+				actorTraits->Position.z = pos.z;
+				actorTraits->Scale.x = scl.x;
+				actorTraits->Scale.y = scl.y;
+				actorTraits->Scale.z = scl.z;
+				actorTraits->Rotation.x = -rot.x;
+				actorTraits->Rotation.y = -rot.y;
+				actorTraits->Rotation.z = -rot.z;
+			}
 		}
 
         s->uniform("model", model);

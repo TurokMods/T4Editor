@@ -150,4 +150,13 @@ namespace t4editor {
 			
 			actor* actorToImport;
 	};
+
+	class actor_deleted_event : public event {
+		public:
+			actor_deleted_event(actor* a) : event("actor_deleted") {
+				actorToDelete = a;
+			}
+
+			actor* actorToDelete;
+	};
 }

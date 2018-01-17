@@ -12,6 +12,7 @@ using namespace std;
 namespace t4editor {
     class actor;
     class application;
+	class actor_deleted_event;
     class level {
         public:
             level(application* app);
@@ -22,7 +23,8 @@ namespace t4editor {
             vector<actor*> actors() const { return m_actors; }
         
             ATRFile* levelFile() const { return m_atr; }
-			void actor_added();
+			actor* actor_added();
+			void actor_deleted(actor_deleted_event* e);
 
         protected:
             application* m_app;

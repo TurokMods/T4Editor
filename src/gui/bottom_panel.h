@@ -233,7 +233,6 @@ namespace t4editor {
 							for(int a = 0;a < category->second.size();a++) {
 								actor_cache_entry* entry = category->second[a];
 								if(entry->loadedActor) {
-
 									//Make sure there's always enough textures for the displayed row
 									//(really this is way better than one texture per actor)
 									if(a >= m_dispTextures.size()) {
@@ -258,8 +257,7 @@ namespace t4editor {
 										m_draggedActor = entry->loadedActor;
 										import_actor_begin_event evt(m_draggedActor);
 										m_app->onEvent(&evt);
-									}
-									
+									}									
 								} else {
 									if(entry->renderable) {
 										if(entry->failedToLoad) {

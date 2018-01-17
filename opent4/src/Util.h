@@ -132,7 +132,8 @@ namespace opent4
             void    SetOffset(int Offset)   { m_Offset = Offset; }
             void    Offset(int Offset)      { m_Offset += Offset; }
             size_t  GetSize() const         { return m_Bytes.size(); }
-            void*   Ptr()                   { return &m_Bytes[m_Offset]; }
+			void*   Ptr()                   { return (m_Bytes.size() == 0) ? nullptr : &m_Bytes[m_Offset]; }
+			void	Clear()					{ m_Offset = 0; m_Bytes.clear(); }
 
             bool AtEnd(int EndOffset = 0) const { return m_Offset + EndOffset >= m_Bytes.size(); }
 

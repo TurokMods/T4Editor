@@ -120,6 +120,11 @@ std::string casename(std::string dir, std::string filename)
 
 namespace opent4
 {
+	inline bool fexists(const std::string& name) {
+		struct stat buffer;   
+		return (stat (name.c_str(), &buffer) == 0); 
+	}
+
     std::string _tDir;
     void SetTurokDirectory(const std::string& TurokDir)
     {
@@ -366,33 +371,90 @@ namespace opent4
 		return true;
 	}
 
-    bool ATRFile::Save(const std::string& Filename)
+    bool ATRFile::Save(const std::string& Filename, bool doSaveAti)
     {
-		SaveBlocks();
+		bool doSave = false;
 
-		ByteStream* Data = new ByteStream();
-        if(!Data->WriteData(4, m_Hdr)) {
+		//back up the file
+		if(!fexists(Filename+".editorbak")) {
+			FILE* fp = fopen(Filename.c_str(), "rb");
+			if(fp) {
+				ByteStream* d = new ByteStream(fp);
+				d->SetOffset(0);
+				fclose(fp);
+				fp = fopen((Filename+".editorbak").c_str(), "wb");
+				if(fp) {
+					if(fwrite(d->Ptr(), d->GetSize() - 1, 1, fp) != 1) {
+						printf("Failed to write original data to back up file %s! Not saving changes to this file.\n", (Filename + ".editorbak").c_str());
+					} else doSave = true;
+					fclose(fp);
+				} else printf("Failed to open backup file %s for writing! Not saving changes to this file.\n", (Filename + ".editorbak").c_str());
+			} else printf("Failed to back up file %s! Not saving changes to this file.\n", Filename.c_str());
+		} else doSave = true;
+
+
+		if(doSave) {
+			SaveBlocks();
+
+			ByteStream* Data = new ByteStream();
+			if(!Data->WriteData(4, m_Hdr)) {
+				delete Data;
+				return false;
+			}
+
+			m_Root->GetData()->SetOffset(0);
+			if(!m_Root->Save(Data)) {
+				delete Data;
+				return false;
+			}
+			Data->SetOffset(0);
+
+			FILE* fp = fopen(Filename.c_str(), "wb");
+			if(fp) {
+				fwrite(Data->Ptr(), Data->GetSize(), 1, fp);
+				fclose(fp);
+			} else {
+				printf("Failed to modify %s\n", Filename.c_str());
+			}
 			delete Data;
-			return false;
-		}
 
-		m_Root->GetData()->SetOffset(0);
-        if(!m_Root->Save(Data)) {
-			delete Data;
-			return false;
+			if(doSaveAti) {
+				for(int i = 0;i < m_ActorInstanceFiles.size();i++) {
+					m_ActorInstanceFiles[i]->Save(m_ActorInstanceFiles[i]->GetFile().c_str());
+				}
+			}
+			return true;
 		}
-
-		Data->SetOffset(0);
-		FILE* fp = fopen(Filename.c_str(), "wb");
-		fwrite(Data->Ptr(), Data->GetSize(), 1, fp);
-		fclose(fp);
-		delete Data;
-
-		for(int i = 0;i < m_ActorInstanceFiles.size();i++) {
-			m_ActorInstanceFiles[i]->Save(m_ActorInstanceFiles[i]->GetFile().c_str());
-		}
-        return true;
+		return false;
     }
+
+	bool ATRFile::Restore() {
+		printf("Restoring previous %s\n", m_RealFile.c_str());
+		FILE* fp = fopen((m_RealFile + ".editorbak").c_str(), "rb");
+		if(fp) {
+			ByteStream b(fp);
+			fclose(fp);
+
+			fp = fopen(m_RealFile.c_str(), "wb");
+			if(fp) {
+				if(fwrite(b.Ptr(), b.GetSize() - 1, 1, fp) != 1) {
+					printf("WARNING: Failed to restore backup file %s.editorbak!\n", m_RealFile.c_str());
+					return false;
+				}
+				fclose(fp);
+			} else {
+				printf("WARNING: Failed to restore backup file %s.editorbak!\n", m_RealFile.c_str());
+				return false;
+			}
+
+		} else {
+			printf("WARNING: Failed to restore backup file %s.editorbak!\n", m_RealFile.c_str());
+			return false;
+		}
+
+		for(size_t i = 0;i < m_ActorInstanceFiles.size();i++) m_ActorInstanceFiles[i]->Restore();
+		return true;
+	}
 
     bool ATRFile::CheckHeader()
     {
@@ -419,12 +481,18 @@ namespace opent4
 		}
 	}
 
-	ATRFile* ATRStorageInterface::LoadATR(const std::string& path) {
+	ATRFile* ATRStorageInterface::LoadATR(const std::string& path, bool doReload) {
         //see if the file was loaded already
         for(size_t i = 0;i < m_LoadedAtrs.size();i++) {
             if(m_LoadedAtrPaths[i] == path) {
-                m_LoadedAttrRefs[i]++;
-                return m_LoadedAtrs[i];
+				if(!doReload) {
+					m_LoadedAttrRefs[i]++;
+					return m_LoadedAtrs[i];
+				} else {
+					m_LoadedAttrRefs[i]--;
+					delete m_LoadedAtrs[i];
+					m_LoadedAtrs.erase(m_LoadedAtrs.begin() + i);
+				}
             }
         }
         
@@ -436,7 +504,7 @@ namespace opent4
             delete file;
             return 0;
         }
-        
+
         m_LoadedAtrs.push_back(file);
         m_LoadedAtrPaths.push_back(path);
         m_LoadedAttrRefs.push_back(1);
@@ -489,39 +557,89 @@ namespace opent4
 
     bool ATIFile::Save(const std::string& File)
     {
-        ByteStream* out = new ByteStream();
-		out->WriteData(4, m_Hdr);
-		for(size_t i = 0;i < m_Blocks.size();i++) {
-			switch(m_Blocks[i]->GetType())
-            {
-				case BT_ACTOR           : { if(!SaveActorBlock(i)) { return false; } break; }
-                case BT_PATH            : { break; }
-                case BT_NAVDATA         : { break; }
-                case BT_ACTOR_VARIABLES : { break; }
-                case BT_VERSION         : { break; }
-                default:
-                {
-                    //printf("Unsupported ATI block type (%s).\n",BlockTypeIDs[m_Blocks[i]->GetType()].c_str());
-                    break;
-                }
-            }
+		bool doSave = false;
 
-			if(!m_Blocks[i]->Save(out)) {
-				printf("Failed to save block %d\n", i);
+		//back up the file
+		if(!fexists(File+".editorbak")) {
+			FILE* fp = fopen(File.c_str(), "rb");
+			if(fp) {
+				ByteStream* d = new ByteStream(fp);
+				d->SetOffset(0);
+				fclose(fp);
+				fp = fopen((File+".editorbak").c_str(), "wb");
+				if(fp) {
+					if(fwrite(d->Ptr(), d->GetSize() - 1, 1, fp) != 1) {
+						printf("Failed to write original data to back up file %s! Not saving changes to this file.\n", (File + ".editorbak").c_str());
+					} else doSave = true;
+					fclose(fp);
+				} else printf("Failed to open backup file %s for writing! Not saving changes to this file.\n", (File + ".editorbak").c_str());
+			} else printf("Failed to back up file %s! Not saving changes to this file.\n", File.c_str());
+		} else doSave = true;
+
+		if(doSave) {
+			ByteStream* out = new ByteStream();
+			out->WriteData(4, m_Hdr);
+			for(size_t i = 0;i < m_Blocks.size();i++) {
+				switch(m_Blocks[i]->GetType())
+				{
+					case BT_ACTOR           : { if(!SaveActorBlock(i)) { return false; } break; }
+					case BT_PATH            : { break; }
+					case BT_NAVDATA         : { break; }
+					case BT_ACTOR_VARIABLES : { break; }
+					case BT_VERSION         : { break; }
+					default:
+					{
+						//printf("Unsupported ATI block type (%s).\n",BlockTypeIDs[m_Blocks[i]->GetType()].c_str());
+						break;
+					}
+				}
+
+				if(!m_Blocks[i]->Save(out)) {
+					printf("Failed to save block %d\n", i);
+				}
 			}
-		}
 		
-		out->SetOffset(0);
-		FILE* fp = fopen(File.c_str(), "wb");
-		fwrite(out->Ptr(), out->GetSize(), 1, fp);
-		fclose(fp);
-		delete out;
+			out->SetOffset(0);
+			FILE* fp = fopen(File.c_str(), "wb");
+			fwrite(out->Ptr(), out->GetSize(), 1, fp);
+			fclose(fp);
+			delete out;
 
-		for(size_t i = 0;i < m_LoadedAtrs.size();i++) {
-			m_LoadedAtrs[i]->Save(m_LoadedAtrPaths[i]);
+			for(size_t i = 0;i < m_LoadedAtrs.size();i++) {
+				m_LoadedAtrs[i]->Save(m_LoadedAtrPaths[i]);
+			}
+			return true;
 		}
-        return true;
+        return false;
     }
+
+	bool ATIFile::Restore() {
+		printf("Restoring previous %s\n", m_File.c_str());
+		FILE* fp = fopen((m_File + ".editorbak").c_str(), "rb");
+		if(fp) {
+			ByteStream b(fp);
+			fclose(fp);
+
+			fp = fopen(m_File.c_str(), "wb");
+			if(fp) {
+				if(fwrite(b.Ptr(), b.GetSize() - 1, 1, fp) != 1) {
+					printf("WARNING: Failed to restore backup file %s.editorbak!\n", m_File.c_str());
+					return false;
+				}
+				fclose(fp);
+			} else {
+				printf("WARNING: Failed to restore backup file %s.editorbak!\n", m_File.c_str());
+				return false;
+			}
+
+		} else {
+			printf("WARNING: Failed to restore backup file %s.editorbak!\n", m_File.c_str());
+			return false;
+		}
+
+		for(size_t i = 0;i < m_LoadedAtrs.size();i++) m_LoadedAtrs[i]->Restore();
+		return true;
+	}
 
 	ActorDef* ATIFile::DuplicateActor(ActorDef* newActor) {
 		if(!newActor) return 0;
@@ -574,11 +692,12 @@ namespace opent4
 			if(clone->GetChild(cb)->GetTypeString() == "ID") {
 				Block* idblock = clone->GetChild(cb);
 				ByteStream* data = idblock->GetData();
-				size_t original_size = data->GetSize();
-				size_t offset = data->GetOffset();
 				data->SetOffset(0);
-				if(id <= UINT8_MAX && original_size != 2) data->WriteByte(id);
-				else data->WriteInt16(id);
+				if(id <= UINT8_MAX) data->WriteByte(id);
+				else {
+					if(id >= 384) idblock->setFlag(0x46);
+					data->WriteInt16(id);
+				}
 				data->SetOffset(0);
 				break;
 			}
@@ -614,7 +733,10 @@ namespace opent4
 		ByteStream* data = actorId->GetData();
 		data->SetOffset(0);
 		if(id < UINT8_MAX) data->WriteByte((unsigned char)id);
-		else data->WriteInt16(id);
+		else {
+			if(id >= 384) actorId->setFlag(0x46);
+			data->WriteInt16(id);
+		}
 		data->SetOffset(0);
 		atiBlock->AddChildBlock(actorId);
 
@@ -671,6 +793,26 @@ namespace opent4
 
 		printf("Processing new actor instance block...\n");
 		return ProcessActorBlock(std::distance(m_Blocks.begin(), process_idx));
+	}
+	
+	void ATIFile::DeleteActor(size_t block_idx) {
+		bool foundActor = false;
+        for(size_t i = 0; i < m_Actors.size(); i++)
+        {
+			if(m_Actors[i]->BlockIdx == block_idx) {
+				foundActor = true;
+				if(m_Actors[i]->Actor->GetActorVariables()) delete m_Actors[i]->Actor->GetActorVariables();
+				delete m_Actors[i];
+				m_Actors.erase(m_Actors.begin() + i);
+			}
+			if(i != m_Actors.size()) m_Actors[i]->BlockIdx = i;
+        }
+		if(!foundActor) {
+			printf("Warning: could not find actor def to delete!\n");
+			return;
+		}
+		delete m_Blocks[block_idx];
+		m_Blocks.erase(m_Blocks.begin() + block_idx);
 	}
 
 	std::vector<Block*>::iterator ATIFile::GetLastActorBlock() {
@@ -867,7 +1009,11 @@ namespace opent4
                 }
                 case BT_ACTOR_VARIABLES:
                 {
-                    if(!d->Actor->GetActorVariables()->Save(Data)) return false;
+					cBlock->DeleteChildren();
+					Data->Clear();
+					ActorVariables* local = d->localVariables();
+					for(int v = 0;v < local->GetBlockCount();v++) cBlock->AddChildBlock(new Block(*local->GetBlock(v)));
+					if(!local->Save(Data)) return false;
                     break;
                 }
                 case BT_ACTOR_LINK:
@@ -890,6 +1036,10 @@ namespace opent4
     ATRFile* ATIFile::LoadATR(const std::string &path) {
 		ATRFile* file = m_atrStorage->LoadATR(path);
 		if(!file) return nullptr;
+
+		for(size_t i = 0;i < m_LoadedAtrPaths.size();i++) {
+			if(m_LoadedAtrPaths[i] == path) return file;
+		}
 
         m_LoadedAtrs.push_back(file);
         m_LoadedAtrPaths.push_back(path);

@@ -3,6 +3,7 @@
 
 #include <string>
 #include <vector>
+#include <mutex>
 #include <stdint.h>
 
 #include "Actor.h"
@@ -21,12 +22,13 @@ namespace opent4
 			ATRStorageInterface() { }
 			~ATRStorageInterface();
 
-			ATRFile* LoadATR(const std::string& path);
+			ATRFile* LoadATR(const std::string& path, bool doReload = false);
 
 		protected:
             std::vector<ATRFile*> m_LoadedAtrs;
             std::vector<std::string> m_LoadedAtrPaths;
             std::vector<uint32_t> m_LoadedAttrRefs;
+			std::mutex m_mutex;
 	};
     
     class ATRFile;
@@ -38,6 +40,7 @@ namespace opent4
 
             bool Load(const std::string& File);
             bool Save(const std::string& File);
+			bool Restore();
 
             size_t GetActorCount() const { return m_Actors.size(); }
             ActorDef* GetActorDef(size_t Idx) const { return m_Actors[Idx]; }
@@ -45,8 +48,10 @@ namespace opent4
 
 			ActorDef* DuplicateActor(ActorDef* def);
 			ActorDef* InstantiateActor(ATRFile* atr);
+			void DeleteActor(size_t block_idx);
 			std::vector<Block*>::iterator GetLastActorBlock();
 			unsigned short GetNextActorID();
+			const std::vector<Block*>& blocks() const { return m_Blocks; }
 
         protected:
             void ProcessBlocks();
@@ -71,7 +76,8 @@ namespace opent4
             ATRFile() : m_Mesh(0), m_Data(0), m_Root(0), m_Variables(0) {}
 
             bool Load(const std::string& Filename, ATRStorageInterface* atrStorage);
-            bool Save(const std::string& Filename);
+            bool Save(const std::string& Filename, bool doSaveATI = true);
+			bool Restore();
 			std::string GetFileName() const { return m_RealFile; }
 			std::string GetTurokFileName() const { return m_File; }
 

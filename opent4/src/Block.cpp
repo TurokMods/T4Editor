@@ -10,6 +10,9 @@ namespace opent4
         "ACTOR",
         "PATH",
         "NAVDATA",
+		"NAVNODES",
+		"NAVLINKS",
+		"NAVLINK",
 		"NAVNODE",
 		"NODES",
 		"NODE",
@@ -347,6 +350,7 @@ namespace opent4
             case 0x46:
             case 0x47:
             case 0x48:
+			case 0x49:
             case 0x4A:
             case 0x4B:
             case 0x4C:
@@ -507,6 +511,9 @@ namespace opent4
 			case BT_ACTOR_EVENT:
 			case BT_ACTOR_VARIABLES:
 			case BT_NAVDATA:
+			case BT_NAVNODES:
+			case BT_NAVLINKS:
+			case BT_NAVLINK:
 			case BT_NAVNODE:
 			case BT_PATH:
 			case BT_NODES:

@@ -65,6 +65,8 @@ namespace t4editor {
                 } else if(e->name == "level_unloaded") {
 					Level = nullptr;
 					Actor = nullptr;
+				} else if(e->name == "actor_deleted") {
+					if(((actor_deleted_event*)e)->actorToDelete == Actor) Actor = nullptr;
 				}
             }
         
@@ -73,8 +75,10 @@ namespace t4editor {
                     if(Actor->actorTraits) {
 						Columns(2);
 							Indent(10.0f);
-								InputText("##name", Actor->actorTraits->Name, 254);
-								DragInt("##aid", &Actor->actorTraits->ID, 1, 0, 2048);
+                                PushItemWidth(getSize().x - 110.0f);
+									InputText("##name", Actor->actorTraits->Name, 254);
+									DragInt("##aid", &Actor->actorTraits->ID, 1, 0, 2048);
+								PopItemWidth();
 							Unindent(10.0f);
 						NextColumn();
                             ImVec2 cp = GetCursorPos();
@@ -94,7 +98,8 @@ namespace t4editor {
                         if(CollapsingHeader("Transform")) {
                             Columns(2);
                                 Indent(10.0f);
-                                    PushItemWidth(GetColumnWidth() - 16.0f);
+									SetColumnWidth(-1, getSize().x - 90.0f);
+                                    PushItemWidth(getSize().x - 110.0f);
 										ActorVec3 lastPos = Actor->actorTraits->Position;
 										ActorVec3 lastRot = Actor->actorTraits->Rotation;
 										ActorVec3 lastScl = Actor->actorTraits->Scale;

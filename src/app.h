@@ -7,6 +7,7 @@ using namespace std;
 
 #include <window.h>
 #include <gui/panel.h>
+#include <gui/ImGuizmo.h>
 
 #include <turokfs/fs.h>
 #include <turokfs/entry.h>
@@ -65,15 +66,21 @@ namespace t4editor {
         
             actorUnderCursor getActorUnderCursor() const { return m_actorUnderCursor; }
             actorUnderCursor getSelectedActor() const { return m_selectedActor; }
+			bool is_importing_actor() const { return m_isImportingActor; }
+
             void set_picked_actor_info(actorUnderCursor hovered, actorUnderCursor selected) {
                 m_actorUnderCursor = hovered;
                 m_selectedActor = selected;
             }
 
             void load_level(const string& path);
+			void test_level();
+			void level_test_done();
 
 			//threaded processes
 			void update_actor_cache();
+			void restore_backups();
+			void monitor_testing(const string& path);
         
             //actor variables
             void define_actor_var_type(const string& vname, const string& vtype) { m_actor_var_types[vname] = vtype; }
@@ -82,16 +89,26 @@ namespace t4editor {
             //actor properties
             void define_actor_block_type(const string& bname, const string& btype) { m_actor_block_types[bname] = btype; }
             string get_actor_block_type(const string& bname) const;
+
             int run();
         
 			texture* getTexture(std::string file_path);
-
+			
 			float get_cache_update_progress() const { return m_cacheProgress; }
 			bool is_updating_cache() const { return m_updatingCache; }
 			string get_last_file_cached() const { return m_cacheLastFile; }
 
+			float get_restore_progress() const { return m_restoreProgress; }
+			bool is_restoring_backups() const { return m_restoringBackup; }
+			string get_last_file_restored() const { return m_restoreLastFile; }
+
+			bool is_transforming_actor() const { return m_transformingActor; }
+			ImGuizmo::OPERATION get_transform_operation() const { return m_transformType; }
+			void set_transform_operation(ImGuizmo::OPERATION op) { m_transformType = op; }
+
 			vec2 levelViewCursorPos;
 			vec2 levelViewSize;
+			bool m_cursorOverLevelView;
 
         protected:
 			texture* loadTexture(std::string file_path);
@@ -115,9 +132,12 @@ namespace t4editor {
             mat4 m_proj;
             mat4 m_vp;
 			bool m_viewChanged;
+			bool m_transformingActor;
+			ImGuizmo::OPERATION m_transformType;
             
             vector<ui_panel*> m_panels;
         
+			string m_levelToLoad;
             level* m_level;
             shader* m_shader;
 			texture* m_defaultTex;
@@ -126,11 +146,16 @@ namespace t4editor {
 			bool m_updatingCache;
 			string m_cacheLastFile;
 			float m_cacheProgress;
+
+			bool m_restoringBackup;
+			string m_restoreLastFile;
+			float m_restoreProgress;
         
             unordered_map<string, string> m_actor_var_types;
             unordered_map<string, string> m_actor_block_types;
 
 			actor* m_actorToImport;
 			vec3 m_actorImportPos;
+			bool m_isImportingActor;
     };
 }

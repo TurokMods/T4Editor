@@ -16,6 +16,9 @@ namespace opent4
         BT_ACTOR,
         BT_PATH,
         BT_NAVDATA,
+		BT_NAVNODES,
+		BT_NAVLINKS,
+		BT_NAVLINK,
 		BT_NAVNODE,
 		BT_NODES,
 		BT_NODE,
@@ -166,6 +169,8 @@ namespace opent4
 			void useUIBuf();
 
 			void setFlag(unsigned char flag) { m_PreBlockFlag = flag; }
+			unsigned char getFlag() const { return m_PreBlockFlag; }
+			unsigned char* getHeader() { return m_Hdr; }
 			void setPostHdrString(const std::string& str) { m_PostHdrString = str; }
 			std::string getPostHdrString() const { return m_PostHdrString; }
 
