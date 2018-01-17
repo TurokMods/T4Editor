@@ -62,14 +62,39 @@ namespace t4editor {
                     actor_selection_event* evt = (actor_selection_event*)e;
                     if(evt->deselected) disconnect();
                     else connect(evt);
-                }
+                } else if(e->name == "level_unloaded") {
+					Level = nullptr;
+					Actor = nullptr;
+				} else if(e->name == "actor_deleted") {
+					if(((actor_deleted_event*)e)->actorToDelete == Actor) Actor = nullptr;
+				}
             }
         
             virtual void renderContent() {
                 if(Actor) {
                     if(Actor->actorTraits) {
-                        Text("Actor: %s", Actor->actorTraits->Name.c_str());
-                        
+						Columns(2);
+							Indent(10.0f);
+                                PushItemWidth(getSize().x - 110.0f);
+									InputText("##name", Actor->actorTraits->Name, 254);
+									DragInt("##aid", &Actor->actorTraits->ID, 1, 0, 2048);
+								PopItemWidth();
+							Unindent(10.0f);
+						NextColumn();
+                            ImVec2 cp = GetCursorPos();
+								
+                            SetCursorPos(ImVec2(cp.x, cp.y + 2.0f));
+                            Text("Name");
+                            cp = GetCursorPos();
+                            SetCursorPos(ImVec2(cp.x, cp.y + 2.0f));
+                            cp = GetCursorPos();
+								
+                            SetCursorPos(ImVec2(cp.x, cp.y + 2.0f));
+                            Text("ATI ID");
+                            cp = GetCursorPos();
+                            SetCursorPos(ImVec2(cp.x, cp.y + 2.0f));
+                            cp = GetCursorPos();
+						EndColumns();
                         if(CollapsingHeader("Transform")) {
                             Columns(2);
                                 Indent(10.0f);
@@ -83,23 +108,26 @@ namespace t4editor {
                                         ActorVec3 curPos = Actor->actorTraits->Position;
                                         ActorVec3 curRot = Actor->actorTraits->Rotation;
                                         ActorVec3 curScl = Actor->actorTraits->Scale;
-                                        //if(lastPos.x != curPos.x || lastPos.y != curPos.y || lastPos.z != curPos.z) m_app->trigger_repaint();
-                                        //if(lastRot.x != curRot.x || lastRot.y != curRot.y || lastRot.z != curRot.z) m_app->trigger_repaint();
-                                        //if(lastScl.x != curScl.x || lastScl.y != curPos.y || lastScl.z != curScl.z) m_app->trigger_repaint();
+                                        if(lastPos.x != curPos.x || lastPos.y != curPos.y || lastPos.z != curPos.z) m_app->trigger_repaint();
+                                        if(lastRot.x != curRot.x || lastRot.y != curRot.y || lastRot.z != curRot.z) m_app->trigger_repaint();
+                                        if(lastScl.x != curScl.x || lastScl.y != curPos.y || lastScl.z != curScl.z) m_app->trigger_repaint();
                                     PopItemWidth();
                                 Unindent(10.0f);
                             NextColumn();
-                                ImVec2 cp = GetCursorPos();
+                                cp = GetCursorPos();
+
                                 SetCursorPos(ImVec2(cp.x, cp.y + 2.0f));
                                 Text("Position");
                                 cp = GetCursorPos();
                                 SetCursorPos(ImVec2(cp.x, cp.y + 2.0f));
                                 cp = GetCursorPos();
+
                                 SetCursorPos(ImVec2(cp.x, cp.y + 2.0f));
                                 Text("Rotation");
                                 cp = GetCursorPos();
                                 SetCursorPos(ImVec2(cp.x, cp.y + 2.0f));
                                 cp = GetCursorPos();
+
                                 SetCursorPos(ImVec2(cp.x, cp.y + 2.0f));
                                 Text("Scale");
                                 cp = GetCursorPos();

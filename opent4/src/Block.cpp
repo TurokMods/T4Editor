@@ -10,6 +10,12 @@ namespace opent4
         "ACTOR",
         "PATH",
         "NAVDATA",
+		"NAVNODES",
+		"NAVLINKS",
+		"NAVLINK",
+		"NAVNODE",
+		"NODES",
+		"NODE",
 
         "ID",
         "POS",
@@ -164,8 +170,96 @@ namespace opent4
         }
         return BT_COUNT;
     }
+
+	Block::Block(BLOCK_TYPE type) {
+		m_useUiBuf = false;
+		switch(type) {
+			case BT_ACTOR: {
+				m_PreBlockFlag = 0x82;
+				m_Type = BT_ACTOR;
+				m_BlockID = "ACTOR";
+				memset(&m_Hdr[0], 0, 8);
+				m_Hdr[3] = 5; //length of "ACTOR"
+
+				break;
+			}
+			case BT_ACTOR_ID: {
+				m_PreBlockFlag = 0x45;
+				m_Type = BT_ACTOR_ID;
+				m_BlockID = "ID";
+				memset(&m_Hdr[0], 0, 8);
+				m_Hdr[0] = 1; //always 1
+				m_Hdr[1] = 1; //length of ID value (Todo: find out what to do when ids are > UINT8_MAX
+				m_Hdr[2] = 2; //length of "ID"
+
+				break;
+			}
+			case BT_ACTOR_NAME: {
+				m_PreBlockFlag = 0x4B;
+				m_Type = BT_ACTOR_NAME;
+				m_BlockID = "NAME";
+				memset(&m_Hdr[0], 0, 8);
+				m_Hdr[0] = 1; //always 1
+				m_Hdr[1] = 0; //reserved for name length
+				m_Hdr[2] = 4; //length of "NAME"
+
+				break;
+			}
+			case BT_ACTOR_POSITION: {
+				m_PreBlockFlag = 0x4A;
+				m_Type = BT_ACTOR_POSITION;
+				m_BlockID = "POS";
+				memset(&m_Hdr[0], 0, 8);
+				m_Hdr[0] = 1; //always 1
+				m_Hdr[1] = 12; //sizeof vec3
+				m_Hdr[2] = 3; //length of "POS"
+
+				break;
+			}
+			case BT_ACTOR_ROTATION: {
+				m_PreBlockFlag = 0x4A;
+				m_Type = BT_ACTOR_ROTATION;
+				m_BlockID = "ROT";
+				memset(&m_Hdr[0], 0, 8);
+				m_Hdr[0] = 1; //always 1
+				m_Hdr[1] = 12; //sizeof vec3
+				m_Hdr[2] = 3; //length of "ROT"
+
+				break;
+			}
+			case BT_ACTOR_SCALE: {
+				m_PreBlockFlag = 0x4A;
+				m_Type = BT_ACTOR_SCALE;
+				m_BlockID = "SCALE";
+				memset(&m_Hdr[0], 0, 8);
+				m_Hdr[0] = 1; //always 1
+				m_Hdr[1] = 12; //sizeof vec3
+				m_Hdr[2] = 5; //length of "SCALE"
+
+				break;
+			}
+			case BT_ACTOR_VARIABLES: {
+				m_PreBlockFlag = 0x61;
+				m_Type = BT_ACTOR_VARIABLES;
+				m_BlockID = "ACTOR_VARIABLES";
+				memset(&m_Hdr[0], 0, 8);
+				m_Hdr[0] = 1;
+				//m_Hdr[1] = reserved for unsigned char length of variable data
+				//m_Hdr[2] = reserved for unsigned char number of variables?
+				m_Hdr[4] = 15; //length of "ACTOR_VARIABLES"
+
+				break;
+			}
+			default: {
+				printf("Can't create blocks of this type yet\n");
+				return;
+			}
+		}
+		m_Data = new ByteStream();
+	}
 	Block::Block(const Block& b) {
 		m_PreBlockFlag = b.m_PreBlockFlag;
+		m_PostHdrString = b.m_PostHdrString;
 		memcpy(m_Hdr, b.m_Hdr, 8);
 		m_BlockID = b.GetTypeString();
 		m_Type = b.GetType();
@@ -177,7 +271,7 @@ namespace opent4
 			m_Data = new ByteStream();
 			size_t off = data->GetOffset();
 			data->SetOffset(0);
-			if(!m_Data->WriteData(data->GetSize(), data->Ptr())) {
+			if(data->GetSize() > 0 && !m_Data->WriteData(data->GetSize(), data->Ptr())) {
 				printf("Failed to copy block %s\n", b.m_BlockID.c_str());
 				delete m_Data;
 				m_Data = 0;
@@ -211,14 +305,52 @@ namespace opent4
 
         switch(m_PreBlockFlag)
         {
+			case 0x03: {
+                //Hdr[0] = Block size in bytes (starts after block ID, including the null)
+                //Hdr[1] = Block ID string length
+
+                //Read block header
+                Data->GetData(2,m_Hdr);
+
+                //Read block ID string (ACTOR, ID, ACTOR_VARIABLES, EVENTS, etc...)
+                m_BlockID = Data->GetString();
+
+                //Establish block size
+                Size = (size_t)(unsigned char)m_Hdr[0];
+				m_Data = Data->SubData(Size);
+				m_Data->SetOffset(0);
+                break;
+			}
             case 0x41:
-            case 0x42:
+            case 0x42: {
+                //Hdr[0] = Unknown
+                //Hdr[1] = 8 bit integer representing block size
+                //Hdr[3] = Block ID string length
+
+                //Read block header
+                Data->GetData(3,m_Hdr);
+
+                //Read block ID string (ACTOR, ID, ACTOR_VARIABLES, EVENTS, etc...)
+                m_BlockID = Data->GetString();
+
+                //Establish block size
+                Size = (size_t)*((uint8_t*)&m_Hdr[1]);
+				
+				m_Data = Data->SubData(Size);
+				m_Data->SetOffset(0);
+				if(m_Hdr[0] == 0) {
+					unsigned char StrLen = m_Data->GetByte();
+					m_PostHdrString = m_Data->GetString();
+				}
+				break;
+			}
             case 0x43:
             case 0x44:
             case 0x45:
             case 0x46:
             case 0x47:
             case 0x48:
+			case 0x49:
             case 0x4A:
             case 0x4B:
             case 0x4C:
@@ -237,9 +369,11 @@ namespace opent4
 
                 //Establish block size
                 Size = (size_t)(unsigned char)m_Hdr[1];
+				m_Data = Data->SubData(Size);
+				m_Data->SetOffset(0);
                 break;
             }
-            case 0x81: { }
+            case 0x81: {}
             case 0x82:
             {
                 //Hdr[0] = Unknown
@@ -255,14 +389,22 @@ namespace opent4
 
                 //Establish block size
                 Size = (size_t)*((uint16_t*)&m_Hdr[1]);
+				m_Data = Data->SubData(Size);
+				m_Data->SetOffset(0);
+
+				if(m_BlockID == "ACTOR" || m_BlockID == "PATH") {
+					unsigned char StrLen = m_Data->GetByte();
+					m_PostHdrString = m_Data->GetString();
+				}
+				
                 break;
             }
             case 0x61:
             case 0x6C:
             {
-                //Hdr[0] = Unknown
+                //Hdr[0] = Unknown (1 or 0 mostly)
                 //Hdr[1] = 8 bit integer representing block size
-                //Hdr[2] = Unknown
+                //Hdr[2] = Unknown (possibly child count)
                 //Hdr[3] = Unknown
                 //Hdr[4] = Block ID string length
 
@@ -274,6 +416,9 @@ namespace opent4
 
                 //Establish block size
                 Size = (size_t)(unsigned char)m_Hdr[1];
+				m_experimental_childCount = m_Hdr[2];
+				m_Data = Data->SubData(Size);
+				m_Data->SetOffset(0);
 
                 break;
             }
@@ -294,9 +439,12 @@ namespace opent4
 
                 //Establish block size
                 Size = (size_t)*((uint16_t*)&m_Hdr[1]);
+				m_Data = Data->SubData(Size);
+				m_Data->SetOffset(0);
 
                 break;
             }
+			case 0xC1: { }
             case 0xC2:
             {
                 //Hdr[0] = Unknown
@@ -314,6 +462,13 @@ namespace opent4
 
                 //Establish block size
                 Size = (size_t)*((uint32_t*)&m_Hdr[1]);
+				m_Data = Data->SubData(Size);
+				m_Data->SetOffset(0);
+				
+				if(m_BlockID == "ACTOR" || m_BlockID == "PATH") {
+					unsigned char StrLen = m_Data->GetByte();
+					m_PostHdrString = m_Data->GetString();
+				}
                 break;
             }
             case 0xE1:
@@ -335,23 +490,50 @@ namespace opent4
 
                 //Establish block size
                 Size = (size_t)*((uint32_t*)&m_Hdr[1]);
+				m_Data = Data->SubData(Size);
+				m_Data->SetOffset(0);
+
                 break;
             }
             default  :
             {
                 printf("Unknown block type 0x%2X.\n",m_PreBlockFlag);
+				return false;
             }
         }
 
         //printf("0x%2X | %10zu | %16s\n",m_PreBlockFlag,Size,m_BlockID.c_str());
         m_Type = GetBlockTypeFromID(m_BlockID);
 
-        m_Data = Data->SubData(Size);
-        if(m_Data) m_Data->SetOffset(0);
+		bool hasChildren = false;
+		switch(m_Type) {
+			case BT_ACTOR_CAUSE:
+			case BT_ACTOR_EVENT:
+			case BT_ACTOR_VARIABLES:
+			case BT_NAVDATA:
+			case BT_NAVNODES:
+			case BT_NAVLINKS:
+			case BT_NAVLINK:
+			case BT_NAVNODE:
+			case BT_PATH:
+			case BT_NODES:
+			case BT_NODE:
+			case BT_ACTOR: { hasChildren = true; break; }
+			default: { }
+		}
+
+        if(m_Data && hasChildren) {
+			while(!m_Data->AtEnd(1)) {
+				Block* b = new Block();
+				if(b->Load(m_Data)) m_Children.push_back(b);
+				else { delete b; break; }
+			}
+			m_Data->SetOffset(0);
+		}
         return true;
     }
 
-    bool Block::Save(ByteStream *Data, bool isRoot)
+    bool Block::Save(ByteStream *Data)
     {
 		/*
 			If this is a known branch block with children, we need to
@@ -359,24 +541,15 @@ namespace opent4
 			header The size might change depending on what happens in
 			the editor, so it must be serialized now
 		*/
-
+		
+		m_Data->SetOffset(0);
 		if(m_Children.size() > 0) {
-			unsigned char PathLen = 0;
-			std::string path;
-			
-			if(isRoot) {
-				//Save these before deleting the data
-				m_Data->SetOffset(0);
-				PathLen = m_Data->GetByte();
-				path = m_Data->GetString(PathLen);
-			}
-
 			delete m_Data;
 			m_Data = new ByteStream();
 
-			if(isRoot) {
-				if(!m_Data->WriteByte(PathLen)) return false;
-				if(!m_Data->WriteString(path)) return false;
+			if(m_PostHdrString.length() > 0) {
+				if(!m_Data->WriteByte(m_PostHdrString.length())) return false;
+				if(!m_Data->WriteString(m_PostHdrString)) return false;
 			}
 		
 			if(m_Children.size() > 0) {
@@ -385,20 +558,18 @@ namespace opent4
 				}
 			}
 		} else {
-			m_Data->SetOffset(0);
 			if(m_useUiBuf) {
 				size_t len = strlen(m_uitextbuf);
 				m_Data->WriteString(std::string(m_uitextbuf,len));
-				m_Data->SetOffset(0);
 			}
 		}
+		m_Data->SetOffset(0);
 
 		/*
 			Can't change the pre-block-flag, it's not fully understood,
 			if it's incorrect for the block it can cause the game to
 			crash or hang.
 		*/
-		if(!Data->WriteByte(m_PreBlockFlag)) return false;
 		if(!CheckSizeForHeaderType(m_Data->GetSize(), m_PreBlockFlag)) {
 			if(m_Type == BT_ACTOR) {
 				m_PreBlockFlag = 0x82;
@@ -412,8 +583,18 @@ namespace opent4
 			}
 		}
 
+		//Data == nullptr -> Just solidify the block data
+		if(!Data) return true;
+
+		if(!Data->WriteByte(m_PreBlockFlag)) return false;
 		switch(m_PreBlockFlag)
         {
+			case 0x03: {
+				m_Hdr[0] = (unsigned char)m_Data->GetSize();
+                Data->WriteData(2,m_Hdr);
+                Data->WriteString(m_BlockID);
+                break;
+			}
             case 0x41:
             case 0x42:
             case 0x43:
@@ -484,6 +665,13 @@ namespace opent4
 		}
 		return true;
     }
+
+	void Block::DeleteChildren() {
+        for(size_t i = 0;i < m_Children.size();i++) {
+            delete m_Children[i];
+        }
+		m_Children.clear();
+	}
 	
 	void Block::useUIBuf() {
 		if(m_Children.size() != 0) {

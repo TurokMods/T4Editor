@@ -65,17 +65,18 @@ namespace t4editor {
     
     class actor {
         public:
-            actor(application* app, ActorMesh* mesh, ActorDef* def);
+            actor(application* app, ActorMesh* mesh, ActorDef* def, ATRFile* atr);
             ~actor();
             
             //Expects shader to already be bound
-            void render(shader* s, const mat4& view, const mat4& viewproj, bool preview = false);
-            
+            void render(shader* s, const mat4& view, const mat4& viewproj, bool preview = false, mat4* overrideModel = 0);
+        
             vector<actor_mesh*> meshes;
             
             int actor_id;
             int editor_id;
-            
+
+			ATRFile* actorFile;
             ActorDef* actorTraits;
             ActorMesh* meshTraits;
             

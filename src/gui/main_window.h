@@ -39,8 +39,14 @@ namespace t4editor {
 						if(MenuItem("Save Level")) {
 							m_app->dispatchNamedEvent("save_level");
 						}
+						if(MenuItem("Test Level")) {
+							m_app->dispatchNamedEvent("test_level");
+						}
 						if(MenuItem("Update Actor Cache")) {
 							m_app->dispatchNamedEvent("update_actor_cache");
+						}
+						if(MenuItem("Restore Backup Files")) {
+							m_app->dispatchNamedEvent("restore_backups");
 						}
                         if(MenuItem("Exit")) {
                             m_app->dispatchNamedEvent("shutdown");
@@ -48,17 +54,6 @@ namespace t4editor {
                         EndMenu();
                     }
                     if(BeginMenu("View")) {
-                        //if(BeginMenu("Windows")) {
-                            //I'll just let this be open by default...
-                            //if(MenuItem("Level View")) {
-                            //    m_app->dispatchNamedEvent("show_level_view");
-                            //}
-                            //This one too...
-                            //if(MenuItem("Actor Instance Properties")) {
-                            //    m_app->dispatchNamedEvent("show_instance_properties");
-                            //}
-                        //    EndMenu();
-                        //}
                         if(BeginMenu("Debug")) {
                             if(MenuItem("Framebuffer")) {
                                 m_app->dispatchNamedEvent("prompt_framebuffer_view");
@@ -74,7 +69,7 @@ namespace t4editor {
                         EndMenu();
                     }
                     
-                    Text("Average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
+                    Text("%.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
 
 					if(m_app->is_updating_cache()) {
 						char buf[256];
@@ -83,6 +78,13 @@ namespace t4editor {
 						ProgressBar(m_app->get_cache_update_progress(), ImVec2(-1.0f, 0), "");
 						SetCursorPos(ImVec2(cp.x + 5, cp.y));
 						Text("(%d\%%) %s",(int)(m_app->get_cache_update_progress() * 100.0f), m_app->get_last_file_cached().c_str());
+					} else if(m_app->is_restoring_backups()) {
+						char buf[256];
+						memset(buf,0,256);
+						ImVec2 cp = GetCursorPos();
+						ProgressBar(m_app->get_restore_progress(), ImVec2(-1.0f, 0), "");
+						SetCursorPos(ImVec2(cp.x + 5, cp.y));
+						Text("(%d\%%) %s",(int)(m_app->get_restore_progress() * 100.0f), m_app->get_last_file_restored().c_str());
 					}
                     
                     EndMainMenuBar();

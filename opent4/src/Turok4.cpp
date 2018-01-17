@@ -120,6 +120,11 @@ std::string casename(std::string dir, std::string filename)
 
 namespace opent4
 {
+	inline bool fexists(const std::string& name) {
+		struct stat buffer;   
+		return (stat (name.c_str(), &buffer) == 0); 
+	}
+
     std::string _tDir;
     void SetTurokDirectory(const std::string& TurokDir)
     {
@@ -191,12 +196,16 @@ namespace opent4
     ATRFile::~ATRFile() {
         if(m_Data) delete m_Data;
         if(m_Root) delete m_Root;
-        if(m_Mesh) delete m_Mesh;
+        //if(m_Mesh) delete m_Mesh; apparently something else deletes this
         if(m_Variables) delete m_Variables;
+
+		for(size_t i = 0;i < m_ActorInstanceFiles.size();i++) {
+			delete m_ActorInstanceFiles[i];
+		}
     }
 
     /* ATRFile */
-    bool ATRFile::Load(const std::string& Filename)
+    bool ATRFile::Load(const std::string& Filename, ATRStorageInterface* atrStorage)
     {
 		m_RealFile = Filename;
         printf("ATR: %s\n", Filename.c_str());
@@ -209,25 +218,15 @@ namespace opent4
         if(!CheckHeader()) return false;
         m_Root = new Block();
         m_Root->Load(m_Data);
-
-        unsigned char PathLen = m_Root->GetData()->GetByte();
-        m_File = m_Root->GetData()->GetString(PathLen);
-        m_Root->GetData()->Offset(1);
-
-        while(!m_Root->GetData()->AtEnd(1))
-        {
-            Block* b = new Block();
-            b->Load(m_Root->GetData());
-            m_Root->AddChildBlock(b);
-        }
+		m_File = m_Root->getPostHdrString();
 
 		m_Root->GetData()->SetOffset(0);
 
-        ProcessBlocks();
+        ProcessBlocks(atrStorage);
         return true;
     }
 
-    void ATRFile::ProcessBlocks()
+    void ATRFile::ProcessBlocks(ATRStorageInterface* atrStorage)
     {
         for(std::size_t i = 0; i < m_Root->GetChildCount(); i++)
         {
@@ -253,7 +252,7 @@ namespace opent4
                     Data->GetByte(); //Path length (not needed)
                     m_InstancesFile = Data->GetString();
 
-                    ATIFile* ATI = new ATIFile();
+                    ATIFile* ATI = new ATIFile(atrStorage);
                     std::string path = TransformPseudoPathToRealPath(m_InstancesFile);
                     if(!ATI->Load(path)) break;
                     m_ActorInstanceFiles.push_back(ATI);
@@ -372,33 +371,90 @@ namespace opent4
 		return true;
 	}
 
-    bool ATRFile::Save(const std::string& Filename)
+    bool ATRFile::Save(const std::string& Filename, bool doSaveAti)
     {
-		SaveBlocks();
+		bool doSave = false;
 
-		ByteStream* Data = new ByteStream();
-        if(!Data->WriteData(4, m_Hdr)) {
+		//back up the file
+		if(!fexists(Filename+".editorbak")) {
+			FILE* fp = fopen(Filename.c_str(), "rb");
+			if(fp) {
+				ByteStream* d = new ByteStream(fp);
+				d->SetOffset(0);
+				fclose(fp);
+				fp = fopen((Filename+".editorbak").c_str(), "wb");
+				if(fp) {
+					if(fwrite(d->Ptr(), d->GetSize() - 1, 1, fp) != 1) {
+						printf("Failed to write original data to back up file %s! Not saving changes to this file.\n", (Filename + ".editorbak").c_str());
+					} else doSave = true;
+					fclose(fp);
+				} else printf("Failed to open backup file %s for writing! Not saving changes to this file.\n", (Filename + ".editorbak").c_str());
+			} else printf("Failed to back up file %s! Not saving changes to this file.\n", Filename.c_str());
+		} else doSave = true;
+
+
+		if(doSave) {
+			SaveBlocks();
+
+			ByteStream* Data = new ByteStream();
+			if(!Data->WriteData(4, m_Hdr)) {
+				delete Data;
+				return false;
+			}
+
+			m_Root->GetData()->SetOffset(0);
+			if(!m_Root->Save(Data)) {
+				delete Data;
+				return false;
+			}
+			Data->SetOffset(0);
+
+			FILE* fp = fopen(Filename.c_str(), "wb");
+			if(fp) {
+				fwrite(Data->Ptr(), Data->GetSize(), 1, fp);
+				fclose(fp);
+			} else {
+				printf("Failed to modify %s\n", Filename.c_str());
+			}
 			delete Data;
-			return false;
-		}
 
-		m_Root->GetData()->SetOffset(0);
-        if(!m_Root->Save(Data, true)) {
-			delete Data;
-			return false;
+			if(doSaveAti) {
+				for(int i = 0;i < m_ActorInstanceFiles.size();i++) {
+					m_ActorInstanceFiles[i]->Save(m_ActorInstanceFiles[i]->GetFile().c_str());
+				}
+			}
+			return true;
 		}
-
-		Data->SetOffset(0);
-		FILE* fp = fopen(Filename.c_str(), "wb");
-		fwrite(Data->Ptr(), Data->GetSize(), 1, fp);
-		fclose(fp);
-		delete Data;
-
-		for(int i = 0;i < m_ActorInstanceFiles.size();i++) {
-			m_ActorInstanceFiles[i]->Save(m_ActorInstanceFiles[i]->GetFile().c_str());
-		}
-        return true;
+		return false;
     }
+
+	bool ATRFile::Restore() {
+		printf("Restoring previous %s\n", m_RealFile.c_str());
+		FILE* fp = fopen((m_RealFile + ".editorbak").c_str(), "rb");
+		if(fp) {
+			ByteStream b(fp);
+			fclose(fp);
+
+			fp = fopen(m_RealFile.c_str(), "wb");
+			if(fp) {
+				if(fwrite(b.Ptr(), b.GetSize() - 1, 1, fp) != 1) {
+					printf("WARNING: Failed to restore backup file %s.editorbak!\n", m_RealFile.c_str());
+					return false;
+				}
+				fclose(fp);
+			} else {
+				printf("WARNING: Failed to restore backup file %s.editorbak!\n", m_RealFile.c_str());
+				return false;
+			}
+
+		} else {
+			printf("WARNING: Failed to restore backup file %s.editorbak!\n", m_RealFile.c_str());
+			return false;
+		}
+
+		for(size_t i = 0;i < m_ActorInstanceFiles.size();i++) m_ActorInstanceFiles[i]->Restore();
+		return true;
+	}
 
     bool ATRFile::CheckHeader()
     {
@@ -419,6 +475,42 @@ namespace opent4
         return true;
     }
 
+	ATRStorageInterface::~ATRStorageInterface() {
+		for(int i = 0;i < m_LoadedAtrs.size();i++) {
+			delete m_LoadedAtrs[i];
+		}
+	}
+
+	ATRFile* ATRStorageInterface::LoadATR(const std::string& path, bool doReload) {
+        //see if the file was loaded already
+        for(size_t i = 0;i < m_LoadedAtrs.size();i++) {
+            if(m_LoadedAtrPaths[i] == path) {
+				if(!doReload) {
+					m_LoadedAttrRefs[i]++;
+					return m_LoadedAtrs[i];
+				} else {
+					m_LoadedAttrRefs[i]--;
+					delete m_LoadedAtrs[i];
+					m_LoadedAtrs.erase(m_LoadedAtrs.begin() + i);
+				}
+            }
+        }
+        
+        //nope
+        ATRFile* file = new ATRFile();
+        if(!file->Load(path, this)) {
+            printf("Failed to load an ATR file referenced by the level\n");
+            printf("The file was %s\n", path.c_str());
+            delete file;
+            return 0;
+        }
+
+        m_LoadedAtrs.push_back(file);
+        m_LoadedAtrPaths.push_back(path);
+        m_LoadedAttrRefs.push_back(1);
+        return file;
+	}
+
     /* ATIFile */
     ATIFile::~ATIFile()
     {
@@ -427,10 +519,6 @@ namespace opent4
         {
             if(m_Actors[i]->Actor->GetActorVariables()) delete m_Actors[i]->Actor->GetActorVariables();
             delete m_Actors[i];
-        }
-        
-        for(size_t i = 0;i < m_LoadedAtrs.size();i++) {
-            delete m_LoadedAtrs[i];
         }
     }
 
@@ -469,41 +557,93 @@ namespace opent4
 
     bool ATIFile::Save(const std::string& File)
     {
-        ByteStream* out = new ByteStream();
-		out->WriteData(4, m_Hdr);
-		for(size_t i = 0;i < m_Blocks.size();i++) {
-			switch(m_Blocks[i]->GetType())
-            {
-				case BT_ACTOR           : { if(!SaveActorBlock(i)) { return false; } break; }
-                case BT_PATH            : { break; }
-                case BT_NAVDATA         : { break; }
-                case BT_ACTOR_VARIABLES : { break; }
-                case BT_VERSION         : { break; }
-                default:
-                {
-                    //printf("Unsupported ATI block type (%s).\n",BlockTypeIDs[m_Blocks[i]->GetType()].c_str());
-                    break;
-                }
-            }
-			bool isRootNode = false;
-			if(m_Blocks[i]->GetTypeString() == "ACTOR") isRootNode = true;
-			if(!m_Blocks[i]->Save(out, isRootNode)) {
-				printf("Failed to save block %d\n", i);
-			}
-		}
-		
-		out->SetOffset(0);
-		FILE* fp = fopen(File.c_str(), "wb");
-		fwrite(out->Ptr(), out->GetSize(), 1, fp);
-		fclose(fp);
-		delete out;
+		bool doSave = false;
 
-		for(size_t i = 0;i < m_LoadedAtrs.size();i++) {
-			m_LoadedAtrs[i]->Save(m_LoadedAtrPaths[i]);
+		//back up the file
+		if(!fexists(File+".editorbak")) {
+			FILE* fp = fopen(File.c_str(), "rb");
+			if(fp) {
+				ByteStream* d = new ByteStream(fp);
+				d->SetOffset(0);
+				fclose(fp);
+				fp = fopen((File+".editorbak").c_str(), "wb");
+				if(fp) {
+					if(fwrite(d->Ptr(), d->GetSize() - 1, 1, fp) != 1) {
+						printf("Failed to write original data to back up file %s! Not saving changes to this file.\n", (File + ".editorbak").c_str());
+					} else doSave = true;
+					fclose(fp);
+				} else printf("Failed to open backup file %s for writing! Not saving changes to this file.\n", (File + ".editorbak").c_str());
+			} else printf("Failed to back up file %s! Not saving changes to this file.\n", File.c_str());
+		} else doSave = true;
+
+		if(doSave) {
+			ByteStream* out = new ByteStream();
+			out->WriteData(4, m_Hdr);
+			for(size_t i = 0;i < m_Blocks.size();i++) {
+				switch(m_Blocks[i]->GetType())
+				{
+					case BT_ACTOR           : { if(!SaveActorBlock(i)) { return false; } break; }
+					case BT_PATH            : { break; }
+					case BT_NAVDATA         : { break; }
+					case BT_ACTOR_VARIABLES : { break; }
+					case BT_VERSION         : { break; }
+					default:
+					{
+						//printf("Unsupported ATI block type (%s).\n",BlockTypeIDs[m_Blocks[i]->GetType()].c_str());
+						break;
+					}
+				}
+
+				if(!m_Blocks[i]->Save(out)) {
+					printf("Failed to save block %d\n", i);
+				}
+			}
+		
+			out->SetOffset(0);
+			FILE* fp = fopen(File.c_str(), "wb");
+			fwrite(out->Ptr(), out->GetSize(), 1, fp);
+			fclose(fp);
+			delete out;
+
+			for(size_t i = 0;i < m_LoadedAtrs.size();i++) {
+				m_LoadedAtrs[i]->Save(m_LoadedAtrPaths[i]);
+			}
+			return true;
 		}
-        return true;
+        return false;
     }
-	void ATIFile::DuplicateActor(ActorDef* newActor) {
+
+	bool ATIFile::Restore() {
+		printf("Restoring previous %s\n", m_File.c_str());
+		FILE* fp = fopen((m_File + ".editorbak").c_str(), "rb");
+		if(fp) {
+			ByteStream b(fp);
+			fclose(fp);
+
+			fp = fopen(m_File.c_str(), "wb");
+			if(fp) {
+				if(fwrite(b.Ptr(), b.GetSize() - 1, 1, fp) != 1) {
+					printf("WARNING: Failed to restore backup file %s.editorbak!\n", m_File.c_str());
+					return false;
+				}
+				fclose(fp);
+			} else {
+				printf("WARNING: Failed to restore backup file %s.editorbak!\n", m_File.c_str());
+				return false;
+			}
+
+		} else {
+			printf("WARNING: Failed to restore backup file %s.editorbak!\n", m_File.c_str());
+			return false;
+		}
+
+		for(size_t i = 0;i < m_LoadedAtrs.size();i++) m_LoadedAtrs[i]->Restore();
+		return true;
+	}
+
+	ActorDef* ATIFile::DuplicateActor(ActorDef* newActor) {
+		if(!newActor) return 0;
+		printf("Finding actor instance block for actor with ID %d...\n", newActor->ID);
 		//Find corresponding actor block
 		Block* b = 0;
 		for(size_t i = 0;i < m_Blocks.size();i++) {
@@ -521,6 +661,9 @@ namespace opent4
 						data->SetOffset(0);
 
 						if(actor_id == newActor->ID) {
+							printf("Found actor instance block at position %d\n", i);
+							printf("Saving modifications to instance block %d\n", i);
+							SaveActorBlock(i);
 							b = m_Blocks[i];
 							break;
 						}
@@ -531,55 +674,178 @@ namespace opent4
 		}
 		
 		if(!b) {
-			printf("Actor to duplicate not found?\n");
-			return;
+			printf("Actor instance block to duplicate not found?\n");
+			return nullptr;
 		}
 
+		printf("Cloning source actor instance block\n");
 		Block* clone = new Block(*b);
 
 		//Get next actor ID, insert index in the block list
-		unsigned short id = 0;
+		unsigned short id = GetNextActorID();
 		auto process_idx = GetLastActorBlock();
-		for(size_t cb = 0;cb < (*process_idx)->GetChildCount();cb++) {
-			if((*process_idx)->GetChild(cb)->GetTypeString() == "ID") {
-				ByteStream* data = (*process_idx)->GetChild(cb)->GetData();
-				size_t offset = data->GetOffset();
-				data->SetOffset(0);
-				if(data->GetSize() == 1) id = (unsigned char)data->GetByte();
-				else if(data->GetSize() == 2) id = (unsigned short)data->GetInt16();
-				data->SetOffset(0);
+		if(process_idx != m_Blocks.end()) process_idx++;
+		printf("New actor ID: %d\n", id);
 
-				id++;
-			}
-		}
-		process_idx++;
-		
 		//Set the actor ID
 		for(size_t cb = 0;cb < clone->GetChildCount();cb++) {
 			if(clone->GetChild(cb)->GetTypeString() == "ID") {
 				Block* idblock = clone->GetChild(cb);
 				ByteStream* data = idblock->GetData();
-				size_t original_size = data->GetSize();
-				size_t offset = data->GetOffset();
 				data->SetOffset(0);
-				if(id <= UINT8_MAX && original_size != 2) data->WriteByte(id);
-				else data->WriteInt16(id);
+				if(id <= UINT8_MAX) data->WriteByte(id);
+				else {
+					if(id >= 384) idblock->setFlag(0x46);
+					data->WriteInt16(id);
+				}
 				data->SetOffset(0);
-
-				//eeek, only do this if the original block header definitely didn't support 16bit integer ids
-				if(id > UINT8_MAX && original_size != 2) idblock->setFlag(0x46);
+				break;
 			}
 		}
 
+
+		printf("Serializing actor instance block data...\n");
+		clone->Save(0);
+
+		printf("Inserting cloned actor instance block at the end of the instance block list\n");
 		process_idx = m_Blocks.insert(process_idx, clone);
-		ProcessActorBlock(std::distance(m_Blocks.begin(), process_idx));
+
+		printf("Processing cloned actor instance block...\n");
+		return ProcessActorBlock(std::distance(m_Blocks.begin(), process_idx));
 	}
+
+	ActorDef* ATIFile::InstantiateActor(ATRFile* atr) {
+		printf("Creating actor instance block...\n");
+		Block* atiBlock = new Block(BT_ACTOR);
+
+		//write actor path
+		printf("Writing path to .atr file\n");
+		atiBlock->setPostHdrString(atr->GetTurokFileName());
+
+		//Get next actor ID, insert index in the block list
+		unsigned short id = GetNextActorID();
+		auto process_idx = GetLastActorBlock();
+		if(process_idx != m_Blocks.end()) process_idx++;
+		
+		//Set actor ID
+		printf("Creating actor instance ID block with ID: %d\n", id);
+		Block* actorId = new Block(BT_ACTOR_ID);
+		ByteStream* data = actorId->GetData();
+		data->SetOffset(0);
+		if(id < UINT8_MAX) data->WriteByte((unsigned char)id);
+		else {
+			if(id >= 384) actorId->setFlag(0x46);
+			data->WriteInt16(id);
+		}
+		data->SetOffset(0);
+		atiBlock->AddChildBlock(actorId);
+
+		//default to just the file name with no path and no extension, should be fine
+		string name = atr->GetFileName();
+		name = name.substr(name.find_last_of('/') + 1);
+		name = name.substr(0, name.find_last_of('.'));
+		
+		//Set actor name
+		printf("Creating actor instance NAME block with name: %s\n", name.c_str());
+		Block* actorName = new Block(BT_ACTOR_NAME);
+		actorName->GetData()->WriteString(name);
+		actorName->GetData()->SetOffset(0);
+		atiBlock->AddChildBlock(actorName);
+		
+		//Set actor position
+		printf("Creating actor instance POS block with position 0, 0, 0\n");
+		Block* actorPos = new Block(BT_ACTOR_POSITION);
+		actorPos->GetData()->WriteFloat(0.0f);
+		actorPos->GetData()->WriteFloat(0.0f);
+		actorPos->GetData()->WriteFloat(0.0f);
+		actorPos->GetData()->SetOffset(0);
+		atiBlock->AddChildBlock(actorPos);
+		
+		//Set actor position
+		printf("Creating actor instance ROT block with rotation 0, 0, 0\n");
+		Block* actorRot = new Block(BT_ACTOR_ROTATION);
+		actorRot->GetData()->WriteFloat(0.0f);
+		actorRot->GetData()->WriteFloat(0.0f);
+		actorRot->GetData()->WriteFloat(0.0f);
+		actorRot->GetData()->SetOffset(0);
+		atiBlock->AddChildBlock(actorRot);
+		
+		//Set actor position
+		printf("Creating actor instance SCALE block with scale 1, 1, 1\n");
+		Block* actorScl = new Block(BT_ACTOR_SCALE);
+		actorScl->GetData()->WriteFloat(1.0f);
+		actorScl->GetData()->WriteFloat(1.0f);
+		actorScl->GetData()->WriteFloat(1.0f);
+		actorScl->GetData()->SetOffset(0);
+		atiBlock->AddChildBlock(actorScl);
+
+		//Set actor variables
+		printf("Creating actor instance ACTOR_VARIABLES block\n");
+		Block* actorVariables = new Block(BT_ACTOR_VARIABLES);
+		//this can be empty, they can add variables with the editor
+		atiBlock->AddChildBlock(actorVariables);
+
+		printf("Serializing actor instance block data...\n");
+		atiBlock->Save(0);
+		
+		printf("Inserting actor instance block at the end of the instance block list\n");
+		process_idx = m_Blocks.insert(process_idx, atiBlock);
+
+		printf("Processing new actor instance block...\n");
+		return ProcessActorBlock(std::distance(m_Blocks.begin(), process_idx));
+	}
+	
+	void ATIFile::DeleteActor(size_t block_idx) {
+		bool foundActor = false;
+        for(size_t i = 0; i < m_Actors.size(); i++)
+        {
+			if(m_Actors[i]->BlockIdx == block_idx) {
+				foundActor = true;
+				if(m_Actors[i]->Actor->GetActorVariables()) delete m_Actors[i]->Actor->GetActorVariables();
+				delete m_Actors[i];
+				m_Actors.erase(m_Actors.begin() + i);
+			}
+			if(i != m_Actors.size()) m_Actors[i]->BlockIdx = i;
+        }
+		if(!foundActor) {
+			printf("Warning: could not find actor def to delete!\n");
+			return;
+		}
+		delete m_Blocks[block_idx];
+		m_Blocks.erase(m_Blocks.begin() + block_idx);
+	}
+
 	std::vector<Block*>::iterator ATIFile::GetLastActorBlock() {
-		for(auto i = m_Blocks.begin();i != m_Blocks.end();i++) {
-			auto next = i; next++;
-			if((*next)->GetTypeString() != "ACTOR") return i;
+		for(size_t i = 0;i < m_Blocks.size();i++) {
+			if(m_Blocks[i]->GetType() != BT_ACTOR) return m_Blocks.begin() + (i - 1);
 		}
 		return m_Blocks.end();
+	}
+	
+	unsigned short ATIFile::GetNextActorID() {
+		unsigned short id = 0;
+
+		for(auto b = m_Blocks.begin();b != m_Blocks.end();b++) {
+			if((*b)->GetTypeString() == "ACTOR") {
+				for(size_t cb = 0;cb < (*b)->GetChildCount();cb++) {
+					if((*b)->GetChild(cb)->GetTypeString() == "ID") {
+						ByteStream* data = (*b)->GetChild(cb)->GetData();
+						size_t offset = data->GetOffset();
+						data->SetOffset(0);
+						unsigned short c_id = 0;
+						if(data->GetSize() == 1) c_id = (unsigned char)data->GetByte();
+						else if(data->GetSize() == 2) c_id = (unsigned short)data->GetInt16();
+						data->SetOffset(0);
+						
+						if(c_id > id) id = c_id;
+
+						break;
+					}
+				}
+			}
+		}
+
+		return id + 1;
 	}
 
     void ATIFile::ProcessBlocks()
@@ -589,10 +855,10 @@ namespace opent4
             switch(m_Blocks[i]->GetType())
             {
                 case BT_ACTOR           : { ProcessActorBlock(i); break; }
-                case BT_PATH            : { break; }
-                case BT_NAVDATA         : { break; }
-                case BT_ACTOR_VARIABLES : { break; }
-                case BT_VERSION         : { break; }
+                //case BT_PATH            : { break; }
+                //case BT_NAVDATA         : { break; }
+                //case BT_ACTOR_VARIABLES : { break; }
+                //case BT_VERSION         : { break; }
                 default:
                 {
                     //printf("Unsupported ATI block type (%s).\n",BlockTypeIDs[m_Blocks[i]->GetType()].c_str());
@@ -602,26 +868,14 @@ namespace opent4
         }
     }
 
-    void ATIFile::ProcessActorBlock(size_t Idx)
-    {
+    ActorDef* ATIFile::ProcessActorBlock(size_t Idx)
+    {        
         Block* b = m_Blocks[Idx];
-        b->GetData()->SetOffset(0);
-        unsigned char PathLen = b->GetData()->GetByte();
-        std::string Path = b->GetData()->GetString(PathLen);
-        b->GetData()->Offset(1);
-
-        while(!b->GetData()->AtEnd(1))
-        {
-            Block* aBlock = new Block();
-            aBlock->Load(b->GetData());
-            b->AddChildBlock(aBlock);
-        }
-        
-        ATRFile* atr = LoadATR(TransformPseudoPathToRealPath(Path));
-        if(!atr) return;
+        ATRFile* atr = LoadATR(TransformPseudoPathToRealPath(b->getPostHdrString()));
+        if(!atr) return nullptr;
 
         ActorDef* d = new ActorDef();
-        d->ActorFile = Path;
+        d->ActorFile = b->getPostHdrString();
         d->BlockIdx  = Idx ;
         d->Parent    = this;
         d->PathID = d->ID = -1;
@@ -657,15 +911,15 @@ namespace opent4
                 }
                 case BT_ACTOR_NAME    :
                 {
-                    d->Name = Data->GetString();
+                    std::string name = Data->GetString();
+					memset(d->Name, 0, 255);
+					snprintf(d->Name, 255, "%s", name.c_str());
                     break;
                 }
                 case BT_ACTOR_ID      :
                 {
-
                     if(Data->GetSize() == 1) d->ID = (unsigned char)Data->GetByte();
 					else if(Data->GetSize() == 2) d->ID = (unsigned short)Data->GetInt16();
-					else if(Data->GetSize() == 4) d->ID = (unsigned int)Data->GetInt32();
                     break;
                 }
                 case BT_ACTOR_PATH_ID :
@@ -695,17 +949,17 @@ namespace opent4
 
         m_Actors.push_back(d);
         d->Actor->m_Def = d;
+		return d;
     }
 
     bool ATIFile::SaveActorBlock(size_t Idx)
     {
         Block* b = m_Blocks[Idx];
-		ActorDef* d = m_Actors[Idx]; // I hope this is right... I think it is;
-        b->GetData()->SetOffset(0);
+		ActorDef* d = m_Actors[Idx];
+
 		//We don't need to re-save this value, but we need to navigate to the end of this data for the next part
-        unsigned char PathLen = b->GetData()->GetByte();
-        std::string Path = b->GetData()->GetString(PathLen);
-        b->GetData()->Offset(1);
+        b->GetData()->SetOffset(1);
+        b->GetData()->GetString();
 
 		//update block data
         for(int i = 0;i < b->GetChildCount();i++)
@@ -746,7 +1000,6 @@ namespace opent4
                 {
                     if(Data->GetSize() == 1) Data->WriteByte(d->ID);
 					else if(Data->GetSize() == 2) Data->WriteInt16(d->ID);
-					else if(Data->GetSize() == 4) d->ID = Data->WriteInt32(d->ID);
                     break;
                 }
                 case BT_ACTOR_PATH_ID :
@@ -756,7 +1009,11 @@ namespace opent4
                 }
                 case BT_ACTOR_VARIABLES:
                 {
-                    if(!d->Actor->GetActorVariables()->Save(Data)) return false;
+					cBlock->DeleteChildren();
+					Data->Clear();
+					ActorVariables* local = d->localVariables();
+					for(int v = 0;v < local->GetBlockCount();v++) cBlock->AddChildBlock(new Block(*local->GetBlock(v)));
+					if(!local->Save(Data)) return false;
                     break;
                 }
                 case BT_ACTOR_LINK:
@@ -771,30 +1028,21 @@ namespace opent4
 
 			Data->SetOffset(0);
         }
+
+		b->GetData()->SetOffset(0);
 		return true;
     }
     
     ATRFile* ATIFile::LoadATR(const std::string &path) {
-        //see if the file was loaded already
-        for(size_t i = 0;i < m_LoadedAtrs.size();i++) {
-            if(m_LoadedAtrPaths[i] == path) {
-                m_LoadedAttrRefs[i]++;
-                return m_LoadedAtrs[i];
-            }
-        }
-        
-        //nope
-        ATRFile* file = new ATRFile();
-        if(!file->Load(path)) {
-            printf("Failed to load an ATR file referenced by the level\n");
-            printf("The file was %s\n", path.c_str());
-            delete file;
-            return 0;
-        }
-        
+		ATRFile* file = m_atrStorage->LoadATR(path);
+		if(!file) return nullptr;
+
+		for(size_t i = 0;i < m_LoadedAtrPaths.size();i++) {
+			if(m_LoadedAtrPaths[i] == path) return file;
+		}
+
         m_LoadedAtrs.push_back(file);
         m_LoadedAtrPaths.push_back(path);
-        m_LoadedAttrRefs.push_back(1);
         return file;
     }
 }

@@ -141,4 +141,22 @@ namespace t4editor {
             u8* data;
             size_t size;
     };
+
+	class import_actor_begin_event : public event {
+		public:
+			import_actor_begin_event(actor* a) : event("begin_actor_import") {
+				actorToImport = a;
+			}
+			
+			actor* actorToImport;
+	};
+
+	class actor_deleted_event : public event {
+		public:
+			actor_deleted_event(actor* a) : event("actor_deleted") {
+				actorToDelete = a;
+			}
+
+			actor* actorToDelete;
+	};
 }

@@ -79,6 +79,7 @@ namespace opent4
 
         protected:
             BLOCK_TYPE m_Type;
+			std::string m_TypeString;
     };
 
     class MeshChunk
@@ -92,6 +93,7 @@ namespace opent4
 
             size_t GetIndexCount() const { return m_Indices.size(); }
             int16_t GetIndex(size_t Idx) { return m_Indices[Idx];   }
+			void ClearIndices() { m_Indices.clear(); }
 
         protected:
             SubMesh* m_Mesh;

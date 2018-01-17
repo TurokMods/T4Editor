@@ -21,7 +21,7 @@ namespace t4editor {
         ATRFile* relatedActor = 0;
         string entityName;
         if(Actor || Level) {
-            if(Actor->actorTraits) {
+            if(Actor && Actor->actorTraits) {
                 entityName = Actor->actorTraits->Name;
                 relatedActor = Actor->actorTraits->Actor->GetATR();
             } else {

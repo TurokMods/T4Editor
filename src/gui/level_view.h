@@ -3,6 +3,7 @@
 #include <event.h>
 
 #include <imgui.h>
+#include <imgui_internal.h>
 using namespace ImGui;
 
 #include <glm/glm.hpp>
@@ -34,6 +35,8 @@ namespace t4editor {
                 m_selectedActor.actorId = -1;
                 m_selectedActor.actorSubmeshId = -1;
                 m_selectedActor.actorSubmeshChunkId = -1;
+				m_contextActorId = -1;
+				m_doHideContextMenu = false;
             }
             ~level_view() {
             }
@@ -46,6 +49,8 @@ namespace t4editor {
                 vec2 sizeOff = getSizeCorrection();
                 vec2 fbSize = sz - sizeOff;
                 m_app->getFrame()->resize(fbSize.x, fbSize.y);
+				m_app->levelViewSize = fbSize;
+
                 Camera* cam = m_app->GetCamera();
                 m_proj = perspective(radians(m_fov), fbSize.x / fbSize.y, 1.0f, 1000.0f);
                 cam->SetFOV(radians(m_fov));
@@ -68,8 +73,11 @@ namespace t4editor {
                     vec2 sizeOff = getSizeCorrection();
                     vec2 fbSz = sz - sizeOff;
                     m_app->getFrame()->resize(fbSz.x, fbSz.y);
+					m_app->levelViewSize = fbSz;
+
                     Camera* cam = m_app->GetCamera();
                     cam->SetAspectRatio(fbSz.x / fbSz.y);
+                    m_proj = perspective(radians(m_fov), fbSz.x / fbSz.y, 1.0f, 2500.0f);
                 }
                 else if(e->name == "show_level_view") {
                     open();
@@ -84,8 +92,8 @@ namespace t4editor {
                     input_event* input = (input_event*)e;
                     //printf("input: %d\n", input->type);
                     switch(input->type) {
-                        case input_event::ET_MOUSE_MOVE:
-                            if(!m_clickedOutside) {
+                        case input_event::ET_MOUSE_MOVE: {
+                            if(!m_clickedOutside && !m_app->is_transforming_actor()) {
                                 if(m_mouseBtnDown[0] != 0.0f && glfwGetTime() - m_mouseBtnDown[0] > MOUSE_BTN_DRAG_VIEW_HOLD_TIME && cursorOverView()) { //left mouse
                                     vec2 delta = input->cursorPosition - m_curCursor;
                                     float fac = std::max((m_fov - 10.0f) / (170.0f - 10.0f), 0.03f);
@@ -96,23 +104,35 @@ namespace t4editor {
                                     if(m_camAngles.x > 360.0f) m_camAngles.x -= 360.0f;
                                     if(m_camAngles.x < -360.0f) m_camAngles.x += 360.0f;
                                 
-                                    //m_view = eulerAngleXYZ(m_camAngles.y, m_camAngles.x, 0.0f) * translate(m_camPos);
                                     Camera* cam = m_app->GetCamera();
                                     cam->SetAngles(glm::vec2(m_camAngles.x, m_camAngles.y));
                                     cam->SetPosition(m_camPos);
 
+									m_app->trigger_repaint();
                                 }
                                 m_curCursor = input->cursorPosition;
-                            }
+								m_app->m_cursorOverLevelView = cursorOverView();
+							}
+							if(cursorOverView()) {
+								vec2 cPos = getCursorPos();
+								int x = cPos.x;
+								int y = ((max_bound.y - min_bound.y) - 1 - cPos.y);
+								m_app->levelViewCursorPos = vec2(x, y);
+							}
+							else m_app->levelViewCursorPos = vec2(0, 0);
                             break;
-                        case input_event::ET_MOUSE_LEFT_DOWN:
+						}
+                        case input_event::ET_MOUSE_LEFT_DOWN: {
                             m_mouseBtnDown[0] = glfwGetTime();
                             if(!cursorOverView()) m_clickedOutside = true;
+							if(!cursorOverView()) m_clickedOutside = true;
+							//m_doHideContextMenu = true;
                             break;
+						}
                         case input_event::ET_MOUSE_LEFT_UP: {
                             float delta = glfwGetTime() - m_mouseBtnDown[0];
                             m_mouseBtnDown[0] = 0.0f;
-                            if(m_level != 0 && cursorOverView() && !m_clickedOutside) {
+                            if(m_level != 0 && cursorOverView() && !m_clickedOutside && !m_app->is_transforming_actor() && !m_app->is_importing_actor()) {
                                 if(delta > 0.0f && delta < MOUSE_BTN_SELECT_ACTOR_MAX_CLICK_HOLD_TIME) selectPickedActor();
                             }
                             m_clickedOutside = false;
@@ -124,16 +144,23 @@ namespace t4editor {
                         case input_event::ET_MOUSE_MIDDLE_UP:
                             m_mouseBtnDown[1] = 0.0f;
                             break;
-                        case input_event::ET_MOUSE_RIGHT_DOWN:
+                        case input_event::ET_MOUSE_RIGHT_DOWN: {
                             m_mouseBtnDown[2] = glfwGetTime();
+                            if(m_level != 0 && cursorOverView() && !m_clickedOutside && !m_app->is_transforming_actor()) {
+								m_contextActorId = -1;
+								picking();
+                                selectPickedActor();
+								m_contextActorId = m_selectedActor.actorId;
+                            }
                             break;
+						}
                         case input_event::ET_MOUSE_RIGHT_UP:
                             m_mouseBtnDown[2] = 0.0f;
                             break;
                         case input_event::ET_KEY_DOWN:
                             m_keyDown[input->key] = glfwGetTime();
                             break;
-                        case input_event::ET_KEY_UP:
+                        case input_event::ET_KEY_UP: {
                             m_keyDown[input->key] = 0.0f;
                             if(input->key == GLFW_KEY_ESCAPE && cursorOverView() && m_selectedActor.actorId != -1) {
                                 actor* a = m_level->actors()[m_selectedActor.actorId];
@@ -147,6 +174,7 @@ namespace t4editor {
                                 m_app->set_picked_actor_info(m_actorUnderCursor, m_selectedActor);
                             }
                             break;
+						}
                         case input_event::ET_SCROLL: {
                             if(cursorOverView()) {
                                 float fac = std::max((m_fov - 1.0f) / (110.0f - 1.0f), 0.01f);
@@ -155,16 +183,20 @@ namespace t4editor {
                                 if(m_fov < 1.0f) m_fov = 1.0f;
                                 //printf("fov: %f | scroll fac: %f\n", m_fov, fac);
                                 vec2 dims = getActualSize();
+
                                 Camera* cam = m_app->GetCamera();
                                 cam->SetFOV(radians(m_fov));
                                 cam->SetAspectRatio(dims.x / dims.y);
+								m_app->trigger_repaint();
                             }
                             break;
                         }
                         default:
                             break;
                     }
-                }
+                } else if(e->name == "actor_selection") {
+					m_selectedActor.actorId = ((actor_selection_event*)e)->actorId;
+				}
             }
         
             virtual void renderContent() {
@@ -179,6 +211,7 @@ namespace t4editor {
                 //ImGuiWindow* win = FindHoveredWindow(GetCursorScreenPos(), true);
 
                 if(m_level) {
+                    framebuffer* fb = m_app->getFrame();
                     if(cursorOverView()) {
                         float moveSpeed = 1.0f; // units per frame
                         vec3 moveDir = vec3(0.0f, 0.0f, 0.0f);
@@ -198,12 +231,15 @@ namespace t4editor {
                             Camera* cam = m_app->GetCamera();
                             cam->SetAngles(glm::vec2(m_camAngles.x, m_camAngles.y));
                             cam->SetPosition(m_camPos);
+
+							m_app->trigger_repaint();
                         }
                         
                         picking();
+						contextMenu();
                     }
+
                     
-                    framebuffer* fb = m_app->getFrame();
                     vec2 dims = getActualSize();
                     ImGui::Image((GLuint*)fb->attachments[0]->id, ImVec2(dims.x,dims.y), ImVec2(0, 1), ImVec2(1, 0));
                 } else {
@@ -213,6 +249,43 @@ namespace t4editor {
                     SetWindowFontScale(1.0f);
                 }
             }
+
+			void contextMenu() {
+				if(m_contextActorId != -1) {
+					actor* a = m_level->actors()[m_contextActorId];
+					if(a->actorTraits && ImGui::BeginPopupContextWindow()) {
+						ImGui::Text("--Transform--");
+						if(ImGui::MenuItem("Translate")) m_app->set_transform_operation(ImGuizmo::TRANSLATE);
+						if(ImGui::MenuItem("Scale")) m_app->set_transform_operation(ImGuizmo::SCALE);
+						if(ImGui::MenuItem("Rotate")) m_app->set_transform_operation(ImGuizmo::ROTATE);
+							
+						ImGui::Text("--Options--");
+						if(ImGui::MenuItem("Duplicate")) {
+							m_level->levelFile()->GetActors()->DuplicateActor(a->actorTraits);
+							m_app->dispatchNamedEvent("actor_added");
+							m_actorUnderCursor.actorId = m_level->actors().size() - 1;
+							selectPickedActor();
+						}
+
+						if(ImGui::MenuItem("Delete")) {
+							ActorDef* def = a->actorTraits;
+							actor_deleted_event evt(a);
+							m_app->onEvent(&evt);
+							m_level->levelFile()->GetActors()->DeleteActor(def->BlockIdx);
+							m_actorUnderCursor.actorId = -1;
+							m_selectedActor.actorId = -1;
+							m_contextActorId = -1;
+						}
+	
+						ImGui::EndPopup();
+					}
+				} else m_contextActorId = -1;
+
+				if(m_doHideContextMenu) {
+					m_contextActorId = -1;
+					m_doHideContextMenu = false;
+				}
+			}
         
             bool cursorOverView() const {
                 vec2 cPos = getCursorPos();
@@ -220,7 +293,7 @@ namespace t4editor {
             }
         
             vec2 getCursorPos() const {
-                return m_curCursor - vec2(min_bound.x, min_bound.y - 20.0f);
+                return m_curCursor - vec2(min_bound.x, min_bound.y);
             }
         
             vec2 getActualSize() const {
@@ -228,45 +301,46 @@ namespace t4editor {
             }
 
             vec2 getSizeCorrection() const {
-                return vec2(2.0f, 2.0f);
+                return vec2(0.0f, 0.0f);
             }
 
-            void selectPickedActor() {
-                bool sendSelected = false;
-                bool sendDeselected = false;
-                if(m_actorUnderCursor.actorId != -1) {
-                    if(m_selectedActor.actorId != -1) {
-                        sendDeselected = true;
-                    }
-                    sendSelected = true;
-                } else {
-                    if(m_selectedActor.actorId != -1) sendDeselected = true;
-                }
-
-                if(sendDeselected) {
-                    actor* a = m_level->actors()[m_selectedActor.actorId];
-                    actor_mesh* m = m_level->actors()[m_selectedActor.actorId]->meshes[m_selectedActor.actorSubmeshId];
-                    actor_selection_event e(m_level, a, m, m_selectedActor.actorId, m_selectedActor.actorSubmeshId, m_selectedActor.actorSubmeshChunkId, true);
-                    m_app->onEvent(&e);
-                }
-
-                if(sendSelected) {
-                    actor* a = m_level->actors()[m_actorUnderCursor.actorId];
-                    actor_mesh* m = a->meshes[m_actorUnderCursor.actorSubmeshId];
-                    actor_selection_event e(m_level, a, m, m_actorUnderCursor.actorId, m_actorUnderCursor.actorSubmeshId, m_actorUnderCursor.actorSubmeshChunkId, false);
-                    m_app->onEvent(&e);
-                }
-
-                if(sendSelected) m_selectedActor = m_actorUnderCursor;
-                else if(sendDeselected) {
-                    m_selectedActor.actorId = -1;
-                    m_selectedActor.actorSubmeshId = -1;
-                    m_selectedActor.actorSubmeshChunkId = -1;
-                }
-                m_app->set_picked_actor_info(m_actorUnderCursor, m_selectedActor);
-            }
+			void selectPickedActor() {
+				bool sendSelected = false;
+				bool sendDeselected = false;
+				if(m_actorUnderCursor.actorId != -1) {
+					if(m_selectedActor.actorId != -1) {
+						sendDeselected = true;
+					}
+					sendSelected = true;
+				} else {
+					if(m_selectedActor.actorId != -1) sendDeselected = true;
+				}
+                                    
+				if(sendDeselected) {
+					actor* a = m_level->actors()[m_selectedActor.actorId];
+					actor_mesh* m = nullptr;//m_level->actors()[m_selectedActor.actorId]->meshes[m_selectedActor.actorSubmeshId];
+					actor_selection_event e(m_level, a, m, m_selectedActor.actorId, m_selectedActor.actorSubmeshId, m_selectedActor.actorSubmeshChunkId, true);
+					m_app->onEvent(&e);
+				}
+                                    
+				if(sendSelected) {
+					actor* a = m_level->actors()[m_actorUnderCursor.actorId];
+					actor_mesh* m = nullptr;//a->meshes[m_actorUnderCursor.actorSubmeshId];
+					actor_selection_event e(m_level, a, m, m_actorUnderCursor.actorId, m_actorUnderCursor.actorSubmeshId, m_actorUnderCursor.actorSubmeshChunkId, false);
+					m_app->onEvent(&e);
+				}
+                                    
+				if(sendSelected) m_selectedActor = m_actorUnderCursor;
+				else if(sendDeselected) {
+					m_selectedActor.actorId = -1;
+					m_selectedActor.actorSubmeshId = -1;
+					m_selectedActor.actorSubmeshChunkId = -1;
+				}
+				m_app->set_picked_actor_info(m_actorUnderCursor, m_selectedActor);
+			}
 
             void picking() {
+				if(m_contextActorId != -1) return;
                 //get actor info under cursor
                 if(m_level && cursorOverView()) {
                     unsigned char asset_id[3];
@@ -286,7 +360,7 @@ namespace t4editor {
                         m_actorUnderCursor.actorId = -1;
                         m_actorUnderCursor.actorSubmeshId = -1;
                         m_actorUnderCursor.actorSubmeshChunkId = -1;
-                    } else {
+                    }/* else {
                         glReadBuffer(GL_COLOR_ATTACHMENT2);
                         glReadPixels(x, y, 1, 1, GL_RGB, GL_UNSIGNED_BYTE, &asset_submesh_id);
                         m_actorUnderCursor.actorSubmeshId = asset_submesh_id[0] + (asset_submesh_id[1] * 256) + (asset_submesh_id[2] * 256 * 256);
@@ -306,7 +380,7 @@ namespace t4editor {
                                 m_actorUnderCursor.actorSubmeshChunkId = -1;
                             }
                         }
-                    }
+                    }*/
                 } else {
                     m_actorUnderCursor.actorId = -1;
                     m_actorUnderCursor.actorSubmeshId = -1;
@@ -320,6 +394,7 @@ namespace t4editor {
             ImVec2 max_bound;
         
         protected:
+			u32 m_contextActorId;
             actorUnderCursor m_actorUnderCursor;
             actorUnderCursor m_selectedActor;
             level* m_level;
@@ -331,6 +406,7 @@ namespace t4editor {
             float m_fov;
             float m_mouseBtnDown[3];
             float m_keyDown[GLFW_KEY_LAST];
-            bool m_clickedOutside;
+			bool m_clickedOutside;
+			bool m_doHideContextMenu;
     };
 }

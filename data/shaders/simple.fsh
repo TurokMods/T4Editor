@@ -6,15 +6,15 @@ in vec3 lightDir;
 uniform sampler2D diffuse_map;
 
 uniform vec3 actor_id;
-uniform vec3 actor_submesh_id;
-uniform vec3 actor_submesh_chunk_id;
+//uniform vec3 actor_submesh_id;
+//uniform vec3 actor_submesh_chunk_id;
 uniform float actor_selected;
 uniform float debug_float;
 
 layout(location = 0) out vec3 outcolor;
 layout(location = 1) out vec3 out_actor_id;
-layout(location = 2) out vec3 out_actor_submesh_id;
-layout(location = 3) out vec3 out_actor_submesh_chunk_id;
+//layout(location = 2) out vec3 out_actor_submesh_id;
+//layout(location = 3) out vec3 out_actor_submesh_chunk_id;
 
 void main() {
     float ndotl = max(dot(norm, lightDir), 0.0);
@@ -34,6 +34,6 @@ void main() {
 		outcolor.b += 0.2;
 	}
     out_actor_id = actor_id;
-    out_actor_submesh_id = actor_submesh_id;
-    out_actor_submesh_chunk_id = actor_submesh_chunk_id;
+    //out_actor_submesh_id = actor_submesh_id;
+    //out_actor_submesh_chunk_id = actor_submesh_chunk_id;
 }

@@ -92,4 +92,22 @@ namespace t4editor {
         glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
         glBlitFramebuffer(0 ,0 ,w ,h, dx, dy, w, h, GL_COLOR_BUFFER_BIT, GL_NEAREST);
     }
+
+	float framebuffer::getDepth(int x, int y, bool doBind) {
+		if(!m_depth) return 0.0f;
+		float depth = 0.0f;
+		if(doBind) {
+			glBindFramebuffer(GL_FRAMEBUFFER, fbo);
+			glBindRenderbuffer(GL_RENDERBUFFER, dbo);
+		}
+
+		glReadPixels(x, y, 1, 1,  GL_DEPTH_COMPONENT, GL_FLOAT, &depth);
+
+		if(doBind) {
+			glBindFramebuffer(GL_FRAMEBUFFER, 0);
+			glBindRenderbuffer(GL_RENDERBUFFER, 0);
+		}
+
+		return depth;
+	}
 }

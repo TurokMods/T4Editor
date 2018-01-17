@@ -66,16 +66,15 @@ namespace opent4
         char bType[4];
         if(std::fread(bType, 4, 1, fp) != 1) return false;
 
-        std::string TypeString;
-        if(bType[0] != 0) TypeString = std::string(bType, 4);
-        else TypeString = std::string(&bType[1], 3);
+        if(bType[0] != 0) m_TypeString = std::string(bType, 4);
+        else m_TypeString = std::string(&bType[1], 3);
         //std::transform(TypeString.begin(), TypeString.end(), TypeString.begin(), ::toupper)
         
 
         m_Type = BT_COUNT;
         for(size_t i = 0; i < BT_COUNT; i++)
         {
-            if(TypeString == MTFBlockTypeIDStrings[i])
+            if(m_TypeString == MTFBlockTypeIDStrings[i])
             {
                 m_Type = (BLOCK_TYPE)i;
                 break;
@@ -85,7 +84,6 @@ namespace opent4
         if(m_Type == BT_COUNT)
         {
             //std::cout << "Unexpected type string: \"" << TypeString << "\"." << std::endl;
-
         }
 
         //TODO: Replace with fread directly into a struct of this data
@@ -100,7 +98,7 @@ namespace opent4
 
     std::string MTFBlock::GetTypeString() const
     {
-        return MTFBlockTypeIDStrings[m_Type];
+        return m_TypeString;
     }
 
     /* Sub Mesh */
@@ -483,25 +481,18 @@ namespace opent4
                 MeshChunk* Chunk = new MeshChunk(m);
 
                 int dPos = 0;
-                dPos += 4; //There always seems to be two null indices at the start of every index list too
                 while(dPos != b->m_DataSize)
                 {
+					uint32_t clear_flag = 0;
+					std::memcpy(&clear_flag, &b->m_Data[dPos], sizeof(uint32_t));
+					if(clear_flag == 0xFFFFFFFF) {
+						Chunk->ClearIndices();
+						dPos += sizeof(uint32_t) * 2;
+					}
+
                     int16_t Idx = 0;
                     std::memcpy(&Idx,&b->m_Data[dPos],sizeof(int16_t));
                     dPos += sizeof(int16_t);
-                    if((uint16_t)Idx == 0xFFFF)
-                    {
-                        //Last two indices always null for some reason
-                        Chunk->Remove(Chunk->GetIndexCount() - 1);
-                        Chunk->Remove(Chunk->GetIndexCount() - 1);
-
-                        //m->AddChunk(Chunk);
-
-                        //Chunk = new MeshChunk(m);
-                        dPos += 2; //There's always a second 0xFFFF
-                        dPos += 4; //There always seems to be two null indices at the start of every index list too
-                        continue;
-                    }
 
                     Chunk->AddIndex(Idx);
                 }
